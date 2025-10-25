@@ -1,16 +1,16 @@
 import { Navbar } from "@/components/ui/navbar"
 import InfiniteHero from "@/components/ui/infinite-hero"
+import FeaturesSectionDemo from "@/components/ui/features-section-demo-3"
 import { HowItWorksSection } from "@/components/ui/how-it-works-section"
 import { FeatureSection } from "@/components/ui/feature-section"
-import { WalletSection } from "@/components/ui/wallet-section"
-import { FulfillmentSection } from "@/components/ui/fulfillment-section"
-import { RefiImpactSection } from "@/components/ui/refi-impact-section"
+import HoverFooter from "@/components/ui/hover-footer-demo"
 
 export default function Home() {
   return (
     <>
       <Navbar />
       <InfiniteHero />
+      <FeaturesSectionDemo />
       <HowItWorksSection />
 
       <FeatureSection
@@ -33,9 +33,7 @@ export default function Home() {
         accentColor="blue"
       />
 
-      <WalletSection />
-      <FulfillmentSection />
-      <RefiImpactSection />
+      <HoverFooter />
     </>
   )
 }

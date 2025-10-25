@@ -46,6 +46,10 @@ const config = getDefaultConfig({
   appName: 'Mizu Pay',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
   chains: [celoSepolia, celo], // Only CELO Sepolia and CELO mainnet
+  transports: {
+    [celoSepolia.id]: http(),
+    [celo.id]: http(),
+  },
 })
 
 const queryClient = new QueryClient()

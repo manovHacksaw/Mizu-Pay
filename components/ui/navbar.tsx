@@ -18,29 +18,9 @@ const Navbar = () => {
 
   return (
     <div className="flex justify-center w-full py-6 px-4 fixed top-0 left-0 right-0 z-40">
-      <div className="flex items-center justify-between px-6 py-3 bg-white rounded-full shadow-lg w-full max-w-3xl relative z-10">
+      <div className="flex items-center justify-between px-6 py-3 bg-white/10 backdrop-blur-xl rounded-full w-full max-w-3xl relative z-10 shadow-2xl ">
         <div className="flex items-center">
-          <motion.div
-            className="w-8 h-8 mr-6"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            whileHover={{ rotate: 10 }}
-            transition={{ duration: 0.3 }}
-          >
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="16" cy="16" r="16" fill="url(#paint0_linear)" />
-              <text x="16" y="20" textAnchor="middle" fontSize="14" fontWeight="bold" fill="white" fontFamily="Arial">
-                M
-              </text>
-              <defs>
-                <linearGradient id="paint0_linear" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#00D4FF" />
-                  <stop offset="1" stopColor="#0099CC" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </motion.div>
-          <span className="font-bold text-gray-900">Mizu Pay</span>
+          <span className="font-bold text-white">Mizu Pay</span>
         </div>
 
         {/* Desktop Navigation */}
@@ -53,7 +33,7 @@ const Navbar = () => {
               transition={{ duration: 0.3 }}
               whileHover={{ scale: 1.05 }}
             >
-              <a href="#" className="text-sm text-gray-900 hover:text-gray-600 transition-colors font-medium">
+              <a href="#" className="text-sm text-white hover:text-gray-200 transition-colors font-medium">
                 {item}
               </a>
             </motion.div>
@@ -82,7 +62,7 @@ const Navbar = () => {
             <>
               <Link
                 href="/sign-in"
-                className="inline-flex items-center justify-center px-4 py-2 text-sm text-gray-700 hover:text-gray-900 transition-colors font-medium"
+                className="inline-flex items-center justify-center px-4 py-2 text-sm text-white hover:text-gray-200 transition-colors font-medium"
               >
                 Sign In
               </Link>
@@ -98,7 +78,7 @@ const Navbar = () => {
 
         {/* Mobile Menu Button */}
         <motion.button className="md:hidden flex items-center" onClick={toggleMenu} whileTap={{ scale: 0.9 }}>
-          <Menu className="h-6 w-6 text-gray-900" />
+          <Menu className="h-6 w-6 text-white" />
         </motion.button>
       </div>
 
