@@ -17,8 +17,11 @@
       width: 380px;
       min-height: 500px;
       font-family: 'Poppins', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2d2d2d 100%);
       color: #fff;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      overflow: hidden;
     }
     
     .header {
@@ -26,7 +29,21 @@
       color: white;
       padding: 20px;
       text-align: center;
-      border-radius: 0 0 12px 12px;
+      border-radius: 0 0 16px 16px;
+      box-shadow: 0 8px 32px rgba(53, 208, 127, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%);
+      pointer-events: none;
     }
     
     .header h1 {
@@ -41,17 +58,35 @@
     }
     
     .content {
-      padding: 20px;
+      padding: 24px;
+      position: relative;
+      z-index: 1;
     }
     
     .payment-card {
       background: rgba(255, 255, 255, 0.95);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.15),
+        0 8px 16px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .payment-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%);
+      pointer-events: none;
     }
     
     .payment-header {
@@ -61,17 +96,21 @@
     }
     
     .celo-icon {
-      width: 40px;
-      height: 40px;
-      background: #FFD700;
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-right: 12px;
+      margin-right: 16px;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+      box-shadow: 
+        0 8px 24px rgba(255, 215, 0, 0.4),
+        0 4px 12px rgba(255, 215, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      z-index: 2;
     }
     
     .celo-icon::before {
@@ -125,18 +164,49 @@
       background: linear-gradient(135deg, #35D07F 0%, #2ECC71 100%);
       color: white;
       border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
+      border-radius: 12px;
+      padding: 12px 24px;
       font-size: 14px;
       font-weight: 600;
       font-family: 'Poppins', sans-serif;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 
+        0 4px 16px rgba(53, 208, 127, 0.3),
+        0 2px 8px rgba(53, 208, 127, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .use-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
     }
     
     .use-button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(53, 208, 127, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 
+        0 8px 24px rgba(53, 208, 127, 0.4),
+        0 4px 16px rgba(53, 208, 127, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    
+    .use-button:hover::before {
+      left: 100%;
+    }
+    
+    .use-button:active {
+      transform: translateY(0);
+      box-shadow: 
+        0 2px 8px rgba(53, 208, 127, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
     
     .token-logos {
@@ -147,35 +217,154 @@
     }
     
     .token-logo {
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
+      font-size: 12px;
       font-weight: bold;
       color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    .token-logo:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
     }
     
     .cusd-logo {
       background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
     }
     
     .celo-logo {
-      background: #FFD700;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
       color: #1a1a1a;
       font-weight: 700;
-      box-shadow: 0 1px 3px rgba(255, 215, 0, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
     }
     
     .status-card {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 16px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .status-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 50%, rgba(255, 255, 255, 0.02) 100%);
+      pointer-events: none;
+    }
+    
+    .guidance-card {
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    
+    .guidance-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 50%, rgba(255, 255, 255, 0.01) 100%);
+      pointer-events: none;
+    }
+    
+    .guidance-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #35D07F 0%, #2ECC71 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 
+        0 4px 12px rgba(53, 208, 127, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    
+    .guidance-content {
+      flex: 1;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .guidance-content h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 12px;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .guidance-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 12px 0;
+    }
+    
+    .guidance-list li {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 6px;
+      padding-left: 16px;
+      position: relative;
+      font-family: 'Roboto', sans-serif;
+      line-height: 1.4;
+    }
+    
+    .guidance-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #35D07F;
+      font-weight: bold;
+      font-size: 10px;
+    }
+    
+    .guidance-note {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+      font-style: italic;
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      line-height: 1.4;
+      padding: 8px 12px;
+      background: rgba(53, 208, 127, 0.1);
+      border-radius: 6px;
+      border-left: 3px solid #35D07F;
     }
     
     .status-card h3 {
@@ -314,10 +503,23 @@
     
     .footer {
       text-align: center;
-      padding: 16px;
+      padding: 20px 24px;
       font-size: 11px;
-      color: #6c757d;
-      border-top: 1px solid #e9ecef;
+      color: rgba(255, 255, 255, 0.6);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      position: relative;
+    }
+    
+    .footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     }
     
     .hidden {
@@ -372,6 +574,24 @@
       <div class="status-card">
         <h3>✅ Extension Active</h3>
         <p>CELO Pay is monitoring this page for checkout opportunities.</p>
+      </div>
+      
+      <!-- Checkout Guidance Card -->
+      <div class="guidance-card">
+        <div class="guidance-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="guidance-content">
+          <h4>Before proceeding, please ensure:</h4>
+          <ul class="guidance-list">
+            <li>You're on the checkout page</li>
+            <li>All required details are filled out</li>
+            <li>You see the option to pay with a gift card</li>
+          </ul>
+          <p class="guidance-note">Once everything looks good, you'll be redirected to complete your payment securely with Mizu Pay.</p>
+        </div>
       </div>
       
       <div id="checkout-info" class="checkout-info hidden">
