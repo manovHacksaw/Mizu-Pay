@@ -11,6 +11,40 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
+// Skeleton Loader Component
+const SkeletonCard = () => (
+ <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
+  <CardContent className="p-0">
+   <div className="flex items-center justify-between mb-4">
+    <div className="h-5 bg-white/20 rounded w-32 animate-pulse"></div>
+    <div className="h-5 w-5 bg-white/20 rounded animate-pulse"></div>
+   </div>
+   <div className="mb-2">
+    <div className="h-8 bg-white/20 rounded w-24 animate-pulse"></div>
+   </div>
+   <div className="h-4 bg-white/20 rounded w-20 animate-pulse"></div>
+  </CardContent>
+ </Card>
+)
+
+const SkeletonMainCard = () => (
+ <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
+  <CardContent className="p-0">
+   <div className="flex items-center justify-between mb-6">
+    <div className="h-6 bg-white/20 rounded w-40 animate-pulse"></div>
+    <div className="h-5 w-5 bg-white/20 rounded animate-pulse"></div>
+   </div>
+   <div className="space-y-4">
+    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+     <div className="h-4 bg-white/20 rounded w-24 mb-2 animate-pulse"></div>
+     <div className="h-4 bg-white/20 rounded w-32 animate-pulse"></div>
+    </div>
+    <div className="h-10 bg-white/20 rounded w-full animate-pulse"></div>
+   </div>
+  </CardContent>
+ </Card>
+)
+
 // Sub-component for animating numbers
 const AnimatedNumber = ({ value }: { value: number }) => {
  const count = useMotionValue(0);
@@ -37,9 +71,16 @@ function DashboardContent() {
  const [mounted, setMounted] = useState(false)
  const [savedWallets, setSavedWallets] = useState<any[]>([])
  const [loadingWallets, setLoadingWallets] = useState(false)
+ const [isLoading, setIsLoading] = useState(true)
+ const [isWalletVerified, setIsWalletVerified] = useState(false)
 
  useEffect(() => {
  setMounted(true)
+ // Simulate loading time
+ const timer = setTimeout(() => {
+  setIsLoading(false)
+ }, 1500)
+ return () => clearTimeout(timer)
  }, [])
 
  useEffect(() => {
@@ -47,6 +88,18 @@ function DashboardContent() {
  fetchSavedWallets()
  }
  }, [user, mounted])
+
+ // Check if current wallet is already verified
+ useEffect(() => {
+ if (address && savedWallets.length > 0) {
+  const isVerified = savedWallets.some(wallet => 
+   wallet.address.toLowerCase() === address.toLowerCase()
+  )
+  setIsWalletVerified(isVerified)
+ } else {
+  setIsWalletVerified(false)
+ }
+ }, [address, savedWallets])
 
  const fetchSavedWallets = async () => {
  try {
@@ -180,9 +233,9 @@ function DashboardContent() {
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 0.5 }}
  >
- <div className="flex items-center justify-between px-6 py-3 bg-white/5 backdrop-blur-xl rounded-full w-full max-w-7xl relative z-10 shadow-2xl border border-white/10">
+ <div className="flex items-center justify-between px-6 py-3 rounded-full w-full max-w-7xl relative z-10">
  <div className="flex items-center">
- <span className="font-bold text-white tracking-tight">Mizu Pay Dashboard</span>
+ 
  </div>
 
  {/* Right Section - Connect Button */}
@@ -199,17 +252,17 @@ function DashboardContent() {
 
  {/* Welcome Section */}
  <motion.div 
- className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-24"
+ className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-24 relative z-10"
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 0.5 }}
  >
  <div className="text-left mb-12">
- <h1 className="text-4xl font-bold text-white mb-4">
+ <h1 className="text-[clamp(2.25rem,6vw,4rem)] font-extralight leading-[0.95] tracking-tight text-white mb-4">
  Welcome back, {user.firstName || user.emailAddresses[0]?.emailAddress}!
  </h1>
- <p className="text-xl text-white/70">
- Manage your payments and wallet connections
+ <p className="text-lg tracking-tight text-white/70 md:text-xl max-w-2xl">
+ Manage your payments and wallet connections with fluid, regenerative finance.
  </p>
  </div>
  </motion.div>
@@ -222,24 +275,32 @@ function DashboardContent() {
  animate="visible"
  >
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+ {isLoading ? (
+  <>
+   <SkeletonCard />
+   <SkeletonCard />
+   <SkeletonCard />
+  </>
+ ) : (
+  <>
  <motion.div 
  variants={itemVariants}
  whileHover={{ scale: 1.05, y: -5 }}
  transition={hoverTransition}
  >
- <Card className="p-6 rounded-2xl bg-black border border-white/10">
+ <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
- <h3 className="text-lg font-semibold text-white">Total Payments</h3>
+ <h3 className="text-lg font-semibold text-white tracking-tight">Total Payments</h3>
  <Clock className="w-5 h-5 text-white/70" />
  </div>
  <div className="mb-2">
- <span className="text-4xl font-bold text-white">
+ <span className="text-4xl font-bold text-white tracking-tight">
  <AnimatedNumber value={0} />
  </span>
  <span className="ml-1 text-white/70">payments</span>
  </div>
- <p className="text-white/70 text-sm">All time</p>
+ <p className="text-white/70 text-sm tracking-tight">All time</p>
  </CardContent>
  </Card>
  </motion.div>
@@ -249,19 +310,19 @@ function DashboardContent() {
  whileHover={{ scale: 1.05, y: -5 }}
  transition={hoverTransition}
  >
- <Card className="p-6 rounded-2xl bg-black border border-white/10">
+ <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
- <h3 className="text-lg font-semibold text-white">Connected Wallets</h3>
+ <h3 className="text-lg font-semibold text-white tracking-tight">Connected Wallets</h3>
  <Wallet className="w-5 h-5 text-white/70" />
  </div>
  <div className="mb-2">
- <span className="text-4xl font-bold text-white">
+ <span className="text-4xl font-bold text-white tracking-tight">
  <AnimatedNumber value={isConnected ? 1 : 0} />
  </span>
  <span className="ml-1 text-white/70">wallets</span>
  </div>
- <p className="text-white/70 text-sm">Active wallets</p>
+ <p className="text-white/70 text-sm tracking-tight">Active wallets</p>
  </CardContent>
  </Card>
  </motion.div>
@@ -271,33 +332,44 @@ function DashboardContent() {
  whileHover={{ scale: 1.05, y: -5 }}
  transition={hoverTransition}
  >
- <Card className="p-6 rounded-2xl bg-black border border-white/10">
+ <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
- <h3 className="text-lg font-semibold text-white">ReFi Impact</h3>
+ <h3 className="text-lg font-semibold text-white tracking-tight">ReFi Impact</h3>
  <TrendingUp className="w-5 h-5 text-white/70" />
  </div>
  <div className="mb-2">
- <span className="text-4xl font-bold text-white">
+ <span className="text-4xl font-bold text-white tracking-tight">
  $<AnimatedNumber value={0} />
  </span>
  <span className="ml-1 text-white/70">contributed</span>
  </div>
- <p className="text-white/70 text-sm">Contributed</p>
+ <p className="text-white/70 text-sm tracking-tight">Contributed</p>
  </CardContent>
  </Card>
  </motion.div>
+  </>
+ )}
  </div>
 
  {/* Main Content Cards */}
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+ {isLoading ? (
+  <>
+   <SkeletonMainCard />
+   <SkeletonMainCard />
+   <SkeletonMainCard />
+   <SkeletonMainCard />
+  </>
+ ) : (
+  <>
  {/* Wallet Connection Card */}
  <motion.div 
  variants={itemVariants}
  whileHover={{ scale: 1.03, y: -5 }}
  transition={hoverTransition}
  >
- <Card className="h-full p-6 overflow-hidden rounded-2xl bg-black border border-white/10">
+ <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-6">
  <h2 className="text-xl font-semibold text-white">Wallet Connection</h2>
@@ -310,13 +382,24 @@ function DashboardContent() {
  <p className="text-sm text-white/70 mb-1">Connected Wallet</p>
  <p className="font-mono text-sm text-white">{address}</p>
  </div>
- 
+
+ {/* Verification Status */}
+ {isWalletVerified ? (
+ <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+ <div className="flex items-center gap-2 mb-2">
+  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+  <p className="text-green-400 text-sm font-medium">Wallet Verified</p>
+ </div>
+ <p className="text-green-300/70 text-xs">This wallet is already associated with your account</p>
+ </div>
+ ) : (
+ <>
  <Button
- onClick={handleSignMessage}
- disabled={isSigning}
- className="w-full bg-white text-black hover:bg-white/90 font-medium"
+  onClick={handleSignMessage}
+  disabled={isSigning}
+  className="w-full group relative overflow-hidden border border-white/30 bg-gradient-to-r from-white/20 to-white/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:shadow-white/10 disabled:opacity-50"
  >
- {isSigning ? 'Signing...' : 'Sign Message to Verify Ownership'}
+  {isSigning ? 'Signing...' : 'Sign Message to Verify Ownership'}
  </Button>
 
  {signature && (
@@ -330,6 +413,8 @@ function DashboardContent() {
  <div className="bg-white/5 border border-white/10 rounded-lg p-4">
  <p className="text-white text-sm">{error}</p>
  </div>
+ )}
+ </>
  )}
  </div>
  ) : (
@@ -349,7 +434,7 @@ function DashboardContent() {
  whileHover={{ scale: 1.03, y: -5 }}
  transition={hoverTransition}
  >
- <Card className="h-full p-6 overflow-hidden rounded-2xl bg-black border border-white/10">
+ <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-6">
  <h2 className="text-xl font-semibold text-white">Account Information</h2>
@@ -379,7 +464,7 @@ function DashboardContent() {
  whileHover={{ scale: 1.03, y: -5 }}
  transition={hoverTransition}
  >
- <Card className="h-full p-6 overflow-hidden rounded-2xl bg-black border border-white/10">
+ <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-6">
  <h2 className="text-xl font-semibold text-white">Your Saved Wallets</h2>
@@ -430,7 +515,7 @@ function DashboardContent() {
  whileHover={{ scale: 1.03, y: -5 }}
  transition={hoverTransition}
  >
- <Card className="h-full p-6 overflow-hidden rounded-2xl bg-black border border-white/10">
+ <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-6">
  <h2 className="text-xl font-semibold text-white">Recent Transactions</h2>
@@ -458,6 +543,8 @@ function DashboardContent() {
  </CardContent>
  </Card>
  </motion.div>
+  </>
+ )}
  </div>
 
  {/* CTA Banner */}
@@ -467,7 +554,7 @@ function DashboardContent() {
  transition={hoverTransition}
  className="mt-8"
  >
- <div className="flex items-center justify-between p-6 rounded-2xl bg-black border border-white/10">
+ <div className="flex items-center justify-between p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <div className="flex items-center gap-3">
  <div className="p-2 rounded-full bg-white/5">
  <Zap className="w-5 h-5 text-white" />
@@ -477,7 +564,7 @@ function DashboardContent() {
  <p className="text-xs text-white/70">Process payments using CUSD or CELO tokens</p>
  </div>
  </div>
- <Button asChild className="bg-white text-black hover:bg-white/90 font-medium">
+ <Button asChild className="group relative overflow-hidden border border-white/30 bg-gradient-to-r from-white/20 to-white/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:shadow-white/10">
  <Link href="/payment">
  Go to Payment Page
  <ArrowRight className="w-4 h-4 ml-2" />
