@@ -14,8 +14,11 @@
     "@prisma/client": "^6.18.0",
     "@radix-ui/react-slot": "^1.2.3",
     "@rainbow-me/rainbowkit": "^2.2.9",
+    "@react-email/components": "^0.5.7",
+    "@react-email/render": "^1.4.0",
     "@react-three/fiber": "^9.4.0",
     "@tanstack/react-query": "^5.90.5",
+    "@types/nodemailer": "^7.0.3",
     "@walletconnect/ethereum-provider": "^2.22.4",
     "@walletconnect/modal": "^2.7.0",
     "@walletconnect/web3-provider": "^1.8.0",
@@ -26,12 +29,14 @@
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.548.0",
     "next": "15.2.4",
+    "nodemailer": "^7.0.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "resend": "^6.2.2",
     "siwe": "^3.0.0",
     "tailwind-merge": "^3.3.1",
     "viem": "^2.38.4",
-    "wagmi": "^2.18.2"
+    "wagmi": "^0.12.10"
   },
   "devDependencies": {
     "@types/node": "^20",

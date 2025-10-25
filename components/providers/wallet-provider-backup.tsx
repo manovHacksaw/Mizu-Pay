@@ -41,7 +41,6 @@ const celoSepolia = defineChain({
   testnet: true,
 })
 
-// Create config with proper error handling
 const config = getDefaultConfig({
   appName: 'Mizu Pay',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id',

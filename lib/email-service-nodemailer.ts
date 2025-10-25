@@ -1,7 +1,7 @@
-// Email service for sending payment confirmations
-// Using Nodemailer with Gmail SMTP - 100% FREE solution
+// Free email service using Nodemailer with Gmail SMTP
+// This allows sending emails to ANY address without domain verification
 
-import nodemailer from 'nodemailer'
+import nodemailer from 'nodemailer';
 
 interface PaymentEmailData {
   userEmail: string
@@ -15,7 +15,7 @@ interface PaymentEmailData {
 }
 
 // Create transporter using Gmail SMTP
-const transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransporter({
   host: 'smtp.gmail.com',
   port: 587,
   secure: false, // true for 465, false for other ports
@@ -30,8 +30,8 @@ export async function sendPaymentConfirmationEmail(data: PaymentEmailData) {
     console.log('📧 Sending payment confirmation email to:', data.userEmail)
     
     const mailOptions = {
-      from: 'Mizu Pay <anuskaswork@gmail.com>',
-      to: data.userEmail, // Can send to ANY email address!
+      from: 'Mizu Pay <manovmandal@gmail.com>', // Your Gmail address
+      to: data.userEmail, // Can send to ANY email!
       subject: 'Payment Successful - Gift Card Processing',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

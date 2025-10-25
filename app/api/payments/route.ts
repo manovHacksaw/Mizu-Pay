@@ -32,22 +32,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Create payment record
-    const payment = await prisma.payment.create({
-      data: {
-        sessionId,
-        amount: parseFloat(amount),
-        token,
-        store: store || null,
-        brand: brand || null,
-        giftCardCode: giftCardCode || null,
-        status: status || 'PENDING',
-        txHash: txHash || null,
-        userId: user.id,
-      },
+    // Check if payment already exists
+    const existingPayment = await prisma.payment.findUnique({
+      where: { sessionId }
     })
 
-    console.log('Payment created:', payment)
+    let payment
+    if (existingPayment) {
+      // Update existing payment
+      payment = await prisma.payment.update({
+        where: { sessionId },
+        data: {
+          amount: parseFloat(amount),
+          token,
+          store: store || null,
+          brand: brand || null,
+          giftCardCode: giftCardCode || null,
+          status: status || 'PENDING',
+          txHash: txHash || null,
+        },
+      })
+      console.log('Payment updated:', payment)
+    } else {
+      // Create new payment record
+      payment = await prisma.payment.create({
+        data: {
+          sessionId,
+          amount: parseFloat(amount),
+          token,
+          store: store || null,
+          brand: brand || null,
+          giftCardCode: giftCardCode || null,
+          status: status || 'PENDING',
+          txHash: txHash || null,
+          userId: user.id,
+        },
+      })
+      console.log('Payment created:', payment)
+    }
 
     return NextResponse.json({
       success: true,

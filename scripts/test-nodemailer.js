@@ -1,38 +1,27 @@
-// Email service for sending payment confirmations
-// Using Nodemailer with Gmail SMTP - 100% FREE solution
+// Test script for Nodemailer with Gmail SMTP
+// This allows sending emails to ANY address for FREE
 
-import nodemailer from 'nodemailer'
-
-interface PaymentEmailData {
-  userEmail: string
-  userName: string
-  amount: number
-  token: string
-  store: string
-  product: string
-  sessionId: string
-  txHash: string
-}
+const nodemailer = require('nodemailer');
 
 // Create transporter using Gmail SMTP
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // true for 465, false for other ports
+  service: 'gmail',
   auth: {
-    user: 'anuskaswork@gmail.com', // Your Gmail
-    pass: 'rqeg awex uzxd xvoj' // Gmail App Password
+    user: 'manovmandal@gmail.com', // Your Gmail
+    pass: 'rqegawexuzxdxvoj' // Gmail App Password (no spaces)
   }
 });
 
-export async function sendPaymentConfirmationEmail(data: PaymentEmailData) {
+async function testNodemailer() {
+  console.log('🧪 Testing Nodemailer with Gmail SMTP...');
+  console.log('📧 Target: anuskaswork@gmail.com');
+  console.log('🎯 This should work to send emails to ANY address for FREE!');
+  
   try {
-    console.log('📧 Sending payment confirmation email to:', data.userEmail)
-    
     const mailOptions = {
-      from: 'Mizu Pay <anuskaswork@gmail.com>',
-      to: data.userEmail, // Can send to ANY email address!
-      subject: 'Payment Successful - Gift Card Processing',
+      from: 'Mizu Pay <manovmandal@gmail.com>', // Your Gmail address
+      to: 'anuskaswork@gmail.com', // Can send to ANY email!
+      subject: 'Payment Successful - Gift Card Processing (Nodemailer Test)',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -41,8 +30,8 @@ export async function sendPaymentConfirmationEmail(data: PaymentEmailData) {
           </div>
           
           <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-            <h2>Hello ${data.userName || 'Valued Customer'},</h2>
-            <p><strong>Payment confirmation for:</strong> ${data.userEmail}</p>
+            <h2>Hello Anuska!</h2>
+            <p><strong>Payment confirmation for:</strong> anuskaswork@gmail.com</p>
             
             <p>Great news! Your payment has been successfully processed and confirmed on the blockchain.</p>
             
@@ -50,19 +39,19 @@ export async function sendPaymentConfirmationEmail(data: PaymentEmailData) {
               <h3>Payment Details</h3>
               <div style="display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #eee;">
                 <span style="font-weight: bold; color: #666;">Amount:</span>
-                <span style="color: #333;">${data.amount} ${data.token}</span>
+                <span style="color: #333;">17.08 CUSD</span>
               </div>
               <div style="display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #eee;">
                 <span style="font-weight: bold; color: #666;">Store:</span>
-                <span style="color: #333;">${data.store || 'N/A'}</span>
+                <span style="color: #333;">Flipkart.com</span>
               </div>
               <div style="display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #eee;">
                 <span style="font-weight: bold; color: #666;">Product:</span>
-                <span style="color: #333;">${data.product || 'N/A'}</span>
+                <span style="color: #333;">Purchase</span>
               </div>
               <div style="display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #eee;">
                 <span style="font-weight: bold; color: #666;">Transaction Hash:</span>
-                <span style="color: #333; font-family: monospace; font-size: 12px;">${data.txHash}</span>
+                <span style="color: #333; font-family: monospace; font-size: 12px;">0x94f8b57adc22d497bdd36c78abb365e3142ef85a906eb8b3a8fbabe17b462989</span>
               </div>
             </div>
             
@@ -79,6 +68,15 @@ export async function sendPaymentConfirmationEmail(data: PaymentEmailData) {
               <p>📧 Gift card delivery within 2-3 minutes</p>
             </div>
             
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+              <h3>🚀 FREE Email Solution!</h3>
+              <p><strong>This email was sent using Nodemailer with Gmail SMTP - 100% FREE!</strong></p>
+              <p>✅ No domain verification required</p>
+              <p>✅ No monthly costs</p>
+              <p>✅ Send to any email address</p>
+              <p>✅ Professional Gmail infrastructure</p>
+            </div>
+            
             <div style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
               <p>Thank you for using Mizu Pay!</p>
               <p>If you have any questions, please contact our support team.</p>
@@ -90,11 +88,22 @@ export async function sendPaymentConfirmationEmail(data: PaymentEmailData) {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully:', result);
-    return { success: true, message: 'Email sent successfully', data: result };
+    console.log('✅ Email sent successfully!');
+    console.log('📧 Result:', result);
+    console.log('🎯 Check Gmail inbox: anuskaswork@gmail.com');
+    console.log('🎉 SUCCESS: Nodemailer with Gmail SMTP works perfectly!');
     
   } catch (error) {
-    console.error('❌ Email sending error:', error);
-    return { success: false, message: `Email error: ${error.message}` };
+    console.error('❌ Email error:', error);
+    console.log('💡 This error is expected if you haven\'t set up Gmail App Password yet');
+    console.log('📋 Next steps:');
+    console.log('1. Go to: https://myaccount.google.com/');
+    console.log('2. Security: Enable 2-Factor Authentication');
+    console.log('3. App Passwords: Generate app password for "Mail"');
+    console.log('4. Update the script with your Gmail App Password');
+    console.log('5. Run the test again');
   }
 }
+
+// Run test
+testNodemailer();
