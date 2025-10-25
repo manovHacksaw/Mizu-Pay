@@ -51,3 +51,49 @@ model RefiContribution {
   createdAt DateTime @default(now())
   payment   Payment  @relation(fields: [paymentId], references: [id])
 }
+
+// Indexed blockchain transaction data
+model IndexedPayment {
+  id             String   @id
+  payer          String
+  amount         String
+  currency       String
+  sessionId      String
+  timestamp      Int
+  blockNumber    BigInt
+  transactionHash String
+  logIndex       Int
+  createdAt      DateTime @default(now())
+}
+
+model IndexedWithdrawal {
+  id             String   @id
+  to             String
+  amount         String
+  currency       String
+  timestamp      Int
+  blockNumber    BigInt
+  transactionHash String
+  logIndex       Int
+  createdAt      DateTime @default(now())
+}
+
+model IndexedUser {
+  id            String   @id
+  address       String   @unique
+  totalPaid     String
+  paymentCount  Int
+  firstPaymentAt DateTime?
+  lastPaymentAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model GlobalStats {
+  id            String   @id
+  totalPayments Int
+  totalVolume   String
+  uniqueUsers   Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

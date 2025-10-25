@@ -1,0 +1,15 @@
+name: MizuPayIndexer
+description: Indexer for MizuPay contract on Celo Testnet
+contracts:
+  - name: MizuPay
+    abi: ./lib/abi/MizuPay.json
+    networks:
+      - id: 11142220 # Celo Sepolia Testnet
+        start_block: 0 # Start from genesis, adjust as needed
+        contracts:
+          - name: MizuPay
+            address: "0x6aE731EbaC64f1E9c6A721eA2775028762830CF7"
+            handler: ./src/EventHandlers.ts
+            events:
+              - event: "PaymentReceived(address indexed payer, uint256 amount, string currency, string sessionId, uint256 timestamp)"
+              - event: "Withdrawn(address indexed to, uint256 amount, string currency, uint256 timestamp)"

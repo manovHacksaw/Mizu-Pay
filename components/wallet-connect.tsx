@@ -1,7 +1,7 @@
 'use client'
 
 import { useAccount, useSignMessage } from 'wagmi'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { WalletConnectButton } from '@/components/ui/wallet-connect-button'
 import { useState, useEffect } from 'react'
 import { SiweMessage } from 'siwe'
 
@@ -100,7 +100,7 @@ export default function WalletConnect({ onWalletConnected }: WalletConnectProps)
       </div>
 
       <div className="flex justify-center">
-        <ConnectButton />
+        <WalletConnectButton />
       </div>
 
       {isConnected && address && (

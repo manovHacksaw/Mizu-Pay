@@ -2,7 +2,7 @@
 
 import { useUser } from '@clerk/nextjs'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useChainId, useBalance, useReadContract } from 'wagmi'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { WalletConnectButton } from '@/components/ui/wallet-connect-button'
 import { useState, useEffect } from 'react'
 import { parseEther, formatEther } from 'viem'
 import { CONTRACT_ADDRESSES, MIZU_PAY_ABI, MOCK_CUSD_ABI, CELO_SEPOLIA_CONFIG } from '@/lib/contracts'
@@ -520,7 +520,7 @@ export default function PaymentPage() {
                 <div className="text-white font-medium">{user.firstName || 'User'}</div>
                 <div className="text-xs text-gray-400">{user.emailAddresses[0]?.emailAddress}</div>
               </div>
-              <ConnectButton />
+              <WalletConnectButton />
             </div>
           </div>
         </div>
@@ -903,7 +903,7 @@ export default function PaymentPage() {
                     <div className="w-2 h-2 bg-yellow-400 rounded-full mx-auto mb-2"></div>
                     Wallet not connected
                     </div>
-                    <ConnectButton />
+                    <WalletConnectButton />
                   </div>
               ) : (
               <button

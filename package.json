@@ -6,14 +6,21 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "indexer:dev": "envio indexer dev",
+    "indexer:build": "envio indexer build",
+    "indexer:start": "envio indexer start",
+    "indexer:realtime": "node scripts/real-time-indexer.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.34.0",
     "@gsap/react": "^2.1.2",
     "@prisma/client": "^6.18.0",
+    "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
-    "@rainbow-me/rainbowkit": "^2.2.9",
     "@react-email/components": "^0.5.7",
     "@react-email/render": "^1.4.0",
     "@react-three/fiber": "^9.4.0",

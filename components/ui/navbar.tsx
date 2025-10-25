@@ -38,6 +38,16 @@ const Navbar = () => {
               </a>
             </motion.div>
           ))}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            whileHover={{ scale: 1.05 }}
+          >
+            <Link href="/transactions" className="text-sm text-white hover:text-gray-200 transition-colors font-medium">
+              Transactions
+            </Link>
+          </motion.div>
         </nav>
 
         {/* Desktop CTA Buttons */}

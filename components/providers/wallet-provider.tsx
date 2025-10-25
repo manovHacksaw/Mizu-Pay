@@ -1,20 +1,8 @@
 'use client'
 
-import '@rainbow-me/rainbowkit/styles.css'
-import {
-  getDefaultConfig,
-  RainbowKitProvider,
-} from '@rainbow-me/rainbowkit'
-import { WagmiProvider } from 'wagmi'
-import {
-  celo,
-} from 'wagmi/chains'
+import { WagmiProvider, createConfig, http } from 'wagmi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { defineChain } from 'viem'
-import {
-  QueryClientProvider,
-  QueryClient,
-} from "@tanstack/react-query"
-import { http } from 'viem'
 import { useState, useEffect } from 'react'
 
 // CELO Sepolia testnet configuration
@@ -41,14 +29,11 @@ const celoSepolia = defineChain({
   testnet: true,
 })
 
-// Create config with proper error handling
-const config = getDefaultConfig({
-  appName: 'Mizu Pay',
-  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
-  chains: [celoSepolia, celo], // Only CELO Sepolia and CELO mainnet
+// Create a simple config without RainbowKit
+const config = createConfig({
+  chains: [celoSepolia],
   transports: {
     [celoSepolia.id]: http(),
-    [celo.id]: http(),
   },
 })
 
@@ -72,9 +57,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
-          {children}
-        </RainbowKitProvider>
+        {children}
       </QueryClientProvider>
     </WagmiProvider>
   )

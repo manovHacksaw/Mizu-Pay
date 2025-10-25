@@ -2,7 +2,7 @@
 
 import { useUser } from '@clerk/nextjs'
 import { useAccount, useSignMessage } from 'wagmi'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { WalletConnectButton } from '@/components/ui/wallet-connect-button'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
@@ -245,7 +245,7 @@ function DashboardContent() {
  animate={{ opacity: 1, x: 0 }}
  transition={{ duration: 0.3, delay: 0.2 }}
  >
- <ConnectButton />
+          <WalletConnectButton />
  </motion.div>
  </div>
  </motion.div>
@@ -420,7 +420,7 @@ function DashboardContent() {
  ) : (
  <div className="text-center">
  <p className="text-white/70 mb-4">Connect your wallet to get started</p>
- <ConnectButton />
+          <WalletConnectButton />
  </div>
  )}
  </div>
