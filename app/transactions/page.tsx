@@ -335,6 +335,10 @@ export default function TransactionsPage() {
                                 <span className="text-sm text-blue-400 font-mono">{formatAddress(payment.payer)}</span>
                               </div>
                               <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-400">Store:</span>
+                                <span className="text-sm text-orange-400 font-medium">{payment.store || 'Unknown Store'}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
                                 <span className="text-sm text-gray-400">Session:</span>
                                 <span className="text-sm text-purple-400 font-mono bg-gray-700 px-2 py-1 rounded text-xs">{payment.sessionId}</span>
                               </div>

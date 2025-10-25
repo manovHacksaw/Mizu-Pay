@@ -23,10 +23,25 @@ export async function GET(request: NextRequest) {
       skip: offset,
     })
 
+    // Get store information for each payment by sessionId
+    const paymentsWithStore = await Promise.all(
+      payments.map(async (payment) => {
+        const relatedPayment = await prisma.payment.findUnique({
+          where: { sessionId: payment.sessionId },
+          select: { store: true }
+        })
+        
+        return {
+          ...payment,
+          store: relatedPayment?.store || 'Unknown Store'
+        }
+      })
+    )
+
     const total = await prisma.indexedPayment.count({ where: whereClause })
 
     // Convert BigInt values to strings for JSON serialization
-    const serializedPayments = payments.map(payment => ({
+    const serializedPayments = paymentsWithStore.map(payment => ({
       ...payment,
       blockNumber: payment.blockNumber.toString(),
       timestamp: Number(payment.timestamp),
