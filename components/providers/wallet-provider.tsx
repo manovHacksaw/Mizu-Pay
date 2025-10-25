@@ -16,6 +16,7 @@ import {
   QueryClient,
 } from "@tanstack/react-query"
 import { http } from 'viem'
+import { useState, useEffect } from 'react'
 
 const config = getDefaultConfig({
   appName: 'Mizu Pay',
@@ -31,6 +32,16 @@ const config = getDefaultConfig({
 const queryClient = new QueryClient()
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return <>{children}</>
+  }
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>

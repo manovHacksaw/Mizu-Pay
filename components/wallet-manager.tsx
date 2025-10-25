@@ -1,6 +1,5 @@
 'use client'
 
-import { useUser } from '@clerk/nextjs'
 import { useState, useEffect } from 'react'
 import WalletConnect from './wallet-connect'
 
@@ -12,7 +11,6 @@ interface Wallet {
 }
 
 export default function WalletManager() {
-  const { user } = useUser()
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')

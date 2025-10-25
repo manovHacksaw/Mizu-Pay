@@ -2,7 +2,6 @@
 
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { useUser } from '@clerk/nextjs'
 import { useState } from 'react'
 import { SiweMessage } from 'siwe'
 
@@ -11,7 +10,6 @@ interface WalletConnectProps {
 }
 
 export default function WalletConnect({ onWalletConnected }: WalletConnectProps) {
-  const { user } = useUser()
   const { address, isConnected } = useAccount()
   const { signMessageAsync } = useSignMessage()
   const [isSigning, setIsSigning] = useState(false)
