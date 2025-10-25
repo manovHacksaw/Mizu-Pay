@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Checkout Page - CELO Pay Extension</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .checkout-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .store-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .store-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2ECC71;
+        }
+        .order-summary {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .item-name {
+            font-weight: 500;
+        }
+        .item-price {
+            color: #2ECC71;
+            font-weight: bold;
+        }
+        .total-section {
+            background: #2ECC71;
+            color: white;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .total-amount {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .payment-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .payment-method {
+            margin-bottom: 15px;
+        }
+        .payment-method input {
+            margin-right: 10px;
+        }
+        .pay-button {
+            background: linear-gradient(135deg, #35D07F 0%, #2ECC71 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s ease;
+        }
+        .pay-button:hover {
+            transform: translateY(-2px);
+        }
+        .celo-pay-notice {
+            background: #e8f5e8;
+            border: 1px solid #2ECC71;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .celo-pay-notice h3 {
+            color: #2ECC71;
+            margin-bottom: 10px;
+        }
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        .instructions ol {
+            margin-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="checkout-container">
+        <div class="store-header">
+            <div class="store-logo">🛒 TestStore</div>
+            <h1>Checkout</h1>
+        </div>
+
+        <div class="order-summary">
+            <h2>Order Summary</h2>
+            <div class="order-item">
+                <span class="item-name">Wireless Bluetooth Headphones</span>
+                <span class="item-price">$29.99</span>
+            </div>
+            <div class="order-item">
+                <span class="item-name">USB-C Cable</span>
+                <span class="item-price">$12.99</span>
+            </div>
+            <div class="order-item">
+                <span class="item-name">Shipping</span>
+                <span class="item-price">$5.99</span>
+            </div>
+            <div class="order-item">
+                <span class="item-name">Tax</span>
+                <span class="item-price">$3.60</span>
+            </div>
+        </div>
+
+        <div class="total-section">
+            <div>Total Amount</div>
+            <div class="total-amount">$39.58</div>
+        </div>
+
+        <div class="payment-section">
+            <h3>Payment Method</h3>
+            <div class="payment-method">
+                <input type="radio" id="credit-card" name="payment" value="credit-card" checked>
+                <label for="credit-card">Credit Card</label>
+            </div>
+            <div class="payment-method">
+                <input type="radio" id="paypal" name="payment" value="paypal">
+                <label for="paypal">PayPal</label>
+            </div>
+            <div class="payment-method">
+                <input type="radio" id="gift-card" name="payment" value="gift-card">
+                <label for="gift-card">Gift Card</label>
+            </div>
+        </div>
+
+        <button class="pay-button" onclick="processPayment()">
+            Pay Now - $39.58
+        </button>
+
+        <div class="celo-pay-notice">
+            <h3>🌱 CELO Pay Extension Test</h3>
+            <p>This is a test checkout page to verify the CELO Pay extension functionality.</p>
+            <p><strong>Expected behavior:</strong> The extension should detect this as a checkout page and show a floating "Pay with CELO" button.</p>
+        </div>
+
+        <div class="instructions">
+            <h3>🧪 Testing Instructions</h3>
+            <ol>
+                <li>Make sure the CELO Pay extension is installed and enabled</li>
+                <li>Refresh this page</li>
+                <li>Look for a floating green "Pay with CELO" button in the bottom-right corner</li>
+                <li>Click the button to test the DApp redirect functionality</li>
+                <li>Check the browser console for debug messages</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function processPayment() {
+            alert('This is a test page! In a real scenario, this would process the payment.');
+        }
+
+        // Add some dynamic content to test the extension's detection
+        setTimeout(() => {
+            const dynamicContent = document.createElement('div');
+            dynamicContent.innerHTML = `
+                <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                    <strong>Dynamic Content Added:</strong> This simulates content loaded after page load.
+                </div>
+            `;
+            document.querySelector('.checkout-container').appendChild(dynamicContent);
+        }, 2000);
+
+        // Log page load for debugging
+        console.log('CELO Pay Extension: Test checkout page loaded');
+        console.log('CELO Pay Extension: Page contains checkout keywords:', 
+            document.body.textContent.toLowerCase().includes('checkout'));
+        console.log('CELO Pay Extension: Page contains payment keywords:', 
+            document.body.textContent.toLowerCase().includes('pay'));
+    </script>
+</body>
+</html>

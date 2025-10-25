@@ -1,417 +1,550 @@
-// CELO Checkout Helper - Content Script
-console.log('CELO Extension: Content script loaded on', window.location.href);
+// CELO Pay Extension - Content Script
+// Detects checkout pages and extracts payment information
 
-// Blacklist of domains where we don't want to show the popup
-const blacklistedDomains = [
-    'chatgpt.com', 'openai.com', 'claude.ai', 'anthropic.com',
-    'bard.google.com', 'gemini.google.com', 'bing.com', 'google.com',
-    'youtube.com', 'facebook.com', 'twitter.com', 'x.com',
-    'instagram.com', 'linkedin.com', 'reddit.com', 'github.com',
-    'stackoverflow.com', 'wikipedia.org', 'news.ycombinator.com'
-];
+console.log('CELO Pay Extension: Content script loaded on', window.location.href);
 
-// Checkout detection keywords
-const checkoutKeywords = [
-    'checkout', 'cart', 'payment', 'place order', 'pay now', 
-    'billing', 'order summary', 'complete purchase', 'buy now'
-];
+// Configuration - customize these for different e-commerce sites
+const CHECKOUT_CONFIG = {
+  // Keywords to detect checkout pages
+  checkoutKeywords: [
+    'checkout', 'cart', 'payment', 'billing', 'order', 'purchase',
+    'pay now', 'place order', 'complete purchase', 'finalize',
+    'payment method', 'billing address', 'shipping address'
+  ],
+  
+  // Keywords for pay buttons
+  payButtonKeywords: [
+    'pay', 'pay now', 'place order', 'complete purchase', 'checkout',
+    'confirm order', 'finalize order', 'proceed to payment'
+  ],
+  
+  // Common selectors for different e-commerce platforms
+  selectors: {
+    // Amount selectors (try multiple patterns)
+    amount: [
+      '[data-testid*="total"]',
+      '[data-testid*="amount"]',
+      '[data-testid*="price"]',
+      '.total', '.amount', '.price', '.cost',
+      '[class*="total"]', '[class*="amount"]', '[class*="price"]',
+      '[id*="total"]', '[id*="amount"]', '[id*="price"]',
+      'span[class*="currency"]', 'div[class*="currency"]'
+    ],
+    
+    // Store name selectors
+    store: [
+      '[data-testid*="store"]', '[data-testid*="merchant"]',
+      '.store-name', '.merchant-name', '.brand',
+      '[class*="store"]', '[class*="merchant"]', '[class*="brand"]',
+      'h1', 'h2', '.logo', '[class*="logo"]'
+    ],
+    
+    // Product description selectors
+    product: [
+      // Add new, more specific selectors for cart pages
+      '[class*="product-brand"]', 
+      '[class*="item-title"]',
+      '[class*="product-name"]',
+      'a[href*="/product/"]', // Links to product pages
 
-const payButtonKeywords = [
-    'pay', 'pay now', 'place order', 'complete purchase', 
-    'checkout', 'confirm', 'buy now', 'purchase'
-];
-
-// Currency detection patterns
-const currencyPatterns = {
-    'USD': /\$[\d,]+\.?\d*/g,
-    'EUR': /€[\d,]+\.?\d*/g,
-    'GBP': /£[\d,]+\.?\d*/g,
-    'INR': /₹[\d,]+\.?\d*/g,
-    'JPY': /¥[\d,]+\.?\d*/g,
-    'CAD': /C\$[\d,]+\.?\d*/g,
-    'AUD': /A\$[\d,]+\.?\d*/g
+      // Original selectors
+      '[data-testid*="product"]', '[data-testid*="item"]',
+      '.product-name', '.item-name', '.product-title',
+      '[class*="product"]', '[class*="item"]',
+      '.cart-item', '.order-item'
+    ],
+    
+    // Currency selectors
+    currency: [
+      '[data-testid*="currency"]', '.currency', '[class*="currency"]',
+      'span[class*="symbol"]', 'div[class*="symbol"]'
+    ]
+  }
 };
 
-// Country detection from common patterns
-const countryPatterns = {
-    'US': ['united states', 'usa', 'america', 'us$', 'dollar'],
-    'IN': ['india', 'indian', 'inr', 'rupee', '₹'],
-    'GB': ['united kingdom', 'uk', 'britain', 'pound', '£'],
-    'EU': ['europe', 'euro', '€', 'european'],
-    'CA': ['canada', 'canadian', 'cad', 'c$'],
-    'AU': ['australia', 'australian', 'aud', 'a$'],
-    'JP': ['japan', 'japanese', 'yen', '¥']
-};
+// State management
+let isCheckoutDetected = false;
+let checkoutData = null;
+let floatingIcon = null;
 
-function isBlacklisted() {
-    const currentDomain = window.location.hostname.toLowerCase();
-    return blacklistedDomains.some(domain => 
-        currentDomain === domain || currentDomain.endsWith('.' + domain)
+// Initialize the extension
+function init() {
+  try {
+    console.log('CELO Pay Extension: Initializing...');
+    
+    // Wait for page to load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', evaluatePage);
+    } else {
+      evaluatePage();
+    }
+    
+    // Set up mutation observer for dynamic content
+    setupMutationObserver();
+    
+    // Periodic check as fallback
+    setInterval(evaluatePage, 3000);
+  } catch (error) {
+    console.error('CELO Pay Extension: Initialization error', error);
+  }
+}
+
+// Main evaluation function
+async function evaluatePage() {
+  try {
+    // Check if we're on a checkout page
+    const isCheckout = await detectCheckoutPage();
+    
+    if (isCheckout && !isCheckoutDetected) {
+      console.log('CELO Pay Extension: Checkout page detected!');
+      isCheckoutDetected = true;
+      
+      // Extract checkout data
+      checkoutData = await extractCheckoutData();
+      
+      if (checkoutData) {
+        // Show floating icon
+        showFloatingIcon();
+        
+        // Notify background script
+        try {
+          chrome.runtime.sendMessage({
+            type: 'CHECKOUT_DETECTED',
+            data: checkoutData
+          });
+        } catch (msgError) {
+          console.warn('CELO Pay Extension: Could not send message to background', msgError);
+        }
+      }
+    } else if (!isCheckout && isCheckoutDetected) {
+      // No longer on checkout page
+      hideFloatingIcon();
+      isCheckoutDetected = false;
+      checkoutData = null;
+    }
+  } catch (error) {
+    console.error('CELO Pay Extension: Error in evaluation', error);
+  }
+}
+
+// Detect if current page is a checkout page
+async function detectCheckoutPage() {
+  const url = window.location.href.toLowerCase();
+  const pageText = document.body.textContent.toLowerCase();
+  
+  // Check URL for checkout keywords
+  const urlMatch = CHECKOUT_CONFIG.checkoutKeywords.some(keyword => 
+    url.includes(keyword)
+  );
+  
+  // Check page content for checkout keywords
+  const contentMatch = CHECKOUT_CONFIG.checkoutKeywords.some(keyword => 
+    pageText.includes(keyword)
+  );
+  
+  // Check for pay buttons
+  const payButtonMatch = await detectPayButtons();
+  
+  // Check for payment forms
+  const paymentFormMatch = detectPaymentForms();
+  
+  // Check for amount/price elements
+  const amountMatch = detectAmountElements();
+  
+  const score = [urlMatch, contentMatch, payButtonMatch, paymentFormMatch, amountMatch]
+    .filter(Boolean).length;
+  
+  console.log('CELO Pay Extension: Checkout detection score:', {
+    urlMatch, contentMatch, payButtonMatch, paymentFormMatch, amountMatch, score
+  });
+  
+  // Require at least 2 indicators for confidence
+  return score >= 2;
+}
+
+// Detect pay buttons on the page
+async function detectPayButtons() {
+  const buttons = document.querySelectorAll('button, input[type="submit"], a');
+  
+  for (const button of buttons) {
+    const text = button.textContent?.toLowerCase().trim() || '';
+    const hasPayKeyword = CHECKOUT_CONFIG.payButtonKeywords.some(keyword => 
+      text.includes(keyword)
     );
+    
+    if (hasPayKeyword) {
+      console.log('CELO Pay Extension: Pay button found:', text);
+      return true;
+    }
+  }
+  
+  return false;
 }
 
-function textOf(node) {
-    return node && node.textContent ? node.textContent.toLowerCase().trim() : '';
+// Detect payment forms
+function detectPaymentForms() {
+  const forms = document.querySelectorAll('form');
+  
+  for (const form of forms) {
+    const inputs = form.querySelectorAll('input, select');
+    const paymentFields = Array.from(inputs).filter(input => {
+      const name = (input.name || input.id || input.placeholder || '').toLowerCase();
+      return /card|cc|billing|cvv|expiry|zip|address|payment/.test(name);
+    });
+    
+    if (paymentFields.length > 0) {
+      console.log('CELO Pay Extension: Payment form found with', paymentFields.length, 'payment fields');
+      return true;
+    }
+  }
+  
+  return false;
 }
 
-// Extract amount and currency from text
-function extractAmountAndCurrency(text) {
-    const amounts = [];
-    
-    // Try each currency pattern
-    for (const [currency, pattern] of Object.entries(currencyPatterns)) {
-        const matches = text.match(pattern);
-        if (matches) {
-            matches.forEach(match => {
-                const amount = parseFloat(match.replace(/[^\d.,]/g, ''));
-                if (amount > 0) {
-                    amounts.push({ amount, currency, original: match });
-                }
-            });
-        }
+// Detect amount/price elements
+function detectAmountElements() {
+  for (const selector of CHECKOUT_CONFIG.selectors.amount) {
+    const elements = document.querySelectorAll(selector);
+    for (const element of elements) {
+      const text = element.textContent?.trim() || '';
+      if (text && /[\d,]+\.?\d*/.test(text)) {
+        console.log('CELO Pay Extension: Amount element found:', text);
+        return true;
+      }
     }
-    
-    // If no currency symbols found, look for numbers that might be amounts
-    if (amounts.length === 0) {
-        const numberMatches = text.match(/\b\d+[.,]\d{2}\b/g);
-        if (numberMatches) {
-            numberMatches.forEach(match => {
-                const amount = parseFloat(match.replace(',', ''));
-                if (amount > 0) {
-                    amounts.push({ amount, currency: 'USD', original: match });
-                }
-            });
-        }
-    }
-    
-    return amounts;
+  }
+  return false;
 }
 
-// Detect country from page content
-function detectCountry() {
-    const pageText = document.body.textContent.toLowerCase();
+// Extract checkout data from the page
+async function extractCheckoutData() {
+  try {
+    // Extract currency first, as it's more reliable
+    const currency = extractCurrency();
     
-    for (const [country, patterns] of Object.entries(countryPatterns)) {
-        if (patterns.some(pattern => pageText.includes(pattern))) {
-            return country;
-        }
+    const data = {
+      store: extractStoreName(),
+      amount: extractAmount(),
+      currency: currency, // Use the pre-fetched currency
+      product_name: extractProductName(),
+      url: window.location.href,
+      timestamp: Date.now()
+    };
+    
+    // Get conversion rates if needed
+    if (data.amount && data.currency && data.currency !== 'USD') {
+      data.conversion = await getConversionRates(data.currency, data.amount);
     }
     
-    return 'US'; // Default to US
+    console.log('CELO Pay Extension: Extracted checkout data:', data);
+    return data;
+  } catch (error) {
+    console.error('CELO Pay Extension: Error extracting checkout data', error);
+    return null;
+  }
 }
 
 // Extract store name
 function extractStoreName() {
-    // Try to get store name from various sources
-    const title = document.title;
-    const metaTitle = document.querySelector('meta[property="og:title"]')?.content;
-    const metaSiteName = document.querySelector('meta[property="og:site_name"]')?.content;
+  // Try multiple strategies, RE-ORDERED for reliability
+  const strategies = [
+    // STRATEGY 1: 'og:site_name' is most reliable (e.g., content="Myntra")
+    () => document.querySelector('meta[property="og:site_name"]')?.content,
     
-    // Extract from title (remove common suffixes)
-    let storeName = metaSiteName || metaTitle || title;
-    storeName = storeName.replace(/\s*-\s*(checkout|cart|payment|order).*$/i, '');
-    storeName = storeName.replace(/\s*-\s*.*$/i, ''); // Remove everything after last dash
+    // STRATEGY 2: 'application-name' is also good
+    () => document.querySelector('meta[name="application-name"]')?.content,
     
-    return storeName || 'Online Store';
+    // STRATEGY 3: Use the document title, but skip generic titles
+    () => {
+        const title = document.title.split(' - ')[0].split(' | ')[0];
+        const lowerTitle = title.toLowerCase();
+        // Avoid generic titles
+        if (lowerTitle.includes('checkout') || lowerTitle.includes('shopping bag') || lowerTitle.includes('cart')) {
+            return null; // This title is bad, try the next strategy
+        }
+        return title;
+    },
+
+    // STRATEGY 4: Use host name as a last resort
+    () => {
+        let host = window.location.hostname; // e.g., "www.myntra.com"
+        host = host.replace(/^www\./, ''); // "myntra.com"
+        host = host.split('.')[0]; // "myntra"
+        return host.charAt(0).toUpperCase() + host.slice(1); // "Myntra"
+    },
+
+    // STRATEGY 5: (Original) Generic selectors
+    () => {
+      for (const selector of CHECKOUT_CONFIG.selectors.store) {
+        const element = document.querySelector(selector);
+        if (element?.textContent?.trim()) {
+          return element.textContent.trim();
+        }
+      }
+      return null;
+    }
+  ];
+  
+  for (const strategy of strategies) {
+    try {
+      const result = strategy();
+      // Check for valid, non-trivial result
+      if (result && result.trim().length > 0 && result.length < 100) {
+        return result.trim(); // Return the first valid result
+      }
+    } catch (error) {
+      continue;
+    }
+  }
+  
+  return 'Unknown Store';
 }
 
-// Extract product description
-function extractProductDescription() {
-    const selectors = [
-        'h1', 'h2', '.product-title', '.product-name', 
-        '.item-name', '.cart-item', '.order-item'
-    ];
-    
-    const descriptions = [];
-    
-    selectors.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(el => {
-            const text = el.textContent?.trim();
-            if (text && text.length > 3 && text.length < 100) {
-                descriptions.push(text);
-            }
-        });
+// Extract amount
+function extractAmount() {
+  for (const selector of CHECKOUT_CONFIG.selectors.amount) {
+    const elements = document.querySelectorAll(selector);
+    for (const element of elements) {
+      const text = element.textContent?.trim() || '';
+      const amount = extractNumberFromText(text);
+      if (amount > 0) {
+        return amount.toString();
+      }
+    }
+  }
+  
+  // Fallback: search entire page for price patterns
+  const pricePattern = /[\$€£¥₹]\s*[\d,]+\.?\d*/g;
+  const matches = document.body.textContent.match(pricePattern);
+  if (matches && matches.length > 0) {
+    const amount = extractNumberFromText(matches[0]);
+    if (amount > 0) {
+      return amount.toString();
+    }
+  }
+  
+  return '0';
+}
+
+// Extract currency
+function extractCurrency() {
+  // STRATEGY 1: Search the whole page text for a symbol.
+  // This is much more reliable on pages like Myntra/Flipkart.
+  const bodyText = document.body.textContent || '';
+
+  // Prioritize INR symbols for your region
+  if (bodyText.includes('₹') || /Rs\.?/i.test(bodyText)) {
+    return 'INR';
+  }
+  
+  // Try to find other common symbols
+  const currencyPattern = /[\$€£¥]/;
+  let match = bodyText.match(currencyPattern);
+  if (match) {
+    return getCurrencyFromSymbol(match[0]);
+  }
+
+  // STRATEGY 2: Fallback to checking specific "amount" elements
+  for (const selector of CHECKOUT_CONFIG.selectors.amount) {
+    const elements = document.querySelectorAll(selector);
+    for (const element of elements) {
+      const text = element.textContent?.trim() || '';
+      const currency = extractCurrencyFromText(text); // Uses the regex helpers
+      if (currency) {
+        return currency;
+      }
+    }
+  }
+  
+  // STRATEGY 3: Default fallback
+  return 'USD'; // Default fallback
+}
+
+// Extract product name
+function extractProductName() {
+  for (const selector of CHECKOUT_CONFIG.selectors.product) {
+    const elements = document.querySelectorAll(selector);
+    for (const element of elements) {
+      const text = element.textContent?.trim();
+      if (text && text.length > 0 && text.length < 200) {
+        return text;
+      }
+    }
+  }
+  
+  return 'Purchase';
+}
+
+// Helper function to extract number from text
+function extractNumberFromText(text) {
+  // Regex to find all numbers, including with commas and decimals.
+  // e.g., "1", "9,028", "971.50"
+  const matches = text.match(/[\d,]+\.?\d*/g);
+  
+  if (!matches || matches.length === 0) {
+    return 0;
+  }
+  
+  // The total amount is often the LAST price-like number in the element.
+  // e.g., in "Total (1 item): ₹9,028", matches will be ["1", "9,028"].
+  // We want the last one, "9,028".
+  const lastMatch = matches[matches.length - 1];
+  
+  // Clean the number (remove commas) and parse it.
+  // This will correctly parse "9,028" as 9028 and "971.50" as 971.5.
+  return parseFloat(lastMatch.replace(/,/g, ''));
+}
+
+// Helper function to extract currency from text
+function extractCurrencyFromText(text) {
+  // Look for 3-letter codes first (more specific)
+  const currencyCodeMatch = text.match(/\b(USD|EUR|GBP|JPY|INR|CAD|AUD)\b/i);
+  if (currencyCodeMatch) {
+    return currencyCodeMatch[0].toUpperCase();
+  }
+  
+  // Look for symbols, including "Rs" or "Rs." (case-insensitive)
+  const currencySymbolMatch = text.match(/[\$€£¥₹]|Rs\.?/i); 
+  if (currencySymbolMatch) {
+    return getCurrencyFromSymbol(currencySymbolMatch[0]);
+  }
+  
+  return null;
+}
+
+// Helper function to get currency from symbol
+function getCurrencyFromSymbol(symbol) {
+  const symbolMap = {
+    '$': 'USD',
+    '€': 'EUR',
+    '£': 'GBP',
+    '¥': 'JPY',
+    '₹': 'INR',
+    'Rs': 'INR' // Added Rs
+  };
+  
+  // Normalize 'Rs.' to 'Rs' and make case-insensitive
+  const normalizedSymbol = symbol.trim().replace(/\.$/, '').toLowerCase();
+  
+  // Check for 'rs'
+  if (normalizedSymbol === 'rs') {
+    return 'INR';
+  }
+  
+  // Check for standard symbols
+  return symbolMap[symbol.trim()] || 'USD';
+}
+
+// Get conversion rates
+async function getConversionRates(fromCurrency, amount) {
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: 'GET_CONVERSION_RATE',
+      fromCurrency: fromCurrency,
+      toCurrency: 'USD'
     });
     
-    return descriptions.slice(0, 3).join(', ') || 'Shopping Cart';
-}
-
-// URL check for checkout keywords
-function urlCheck() {
-    const url = location.href.toLowerCase();
-    const foundKeywords = checkoutKeywords.filter(k => url.includes(k));
-    console.log('CELO URL Check:', {
-        url: location.href,
-        foundKeywords,
-        passed: foundKeywords.length > 0
-    });
-    return foundKeywords.length > 0;
-}
-
-// Page text check for checkout indicators
-function pageTextCheck() {
-    console.log('CELO Page Text Check: Starting...');
-    
-    // Check headings and meta tags
-    const selectors = ['meta', 'h1', 'h2', 'h3'];
-    for (const sel of selectors) {
-        const nodes = document.querySelectorAll(sel);
-        for (const n of nodes) {
-            const t = textOf(n);
-            if (t) {
-                const foundKeywords = checkoutKeywords.filter(k => t.includes(k));
-                if (foundKeywords.length > 0) {
-                    console.log('CELO Page Text Check: Found match in', sel, {
-                        text: t.substring(0, 100),
-                        keywords: foundKeywords
-                    });
-                    return true;
-                }
-            }
-        }
+    if (response.rate) {
+      const usdAmount = parseFloat(amount) * response.rate;
+      return {
+        celoAmount: (usdAmount * 0.1).toFixed(4), // Assuming 1 CELO = $10 USD
+        cusdAmount: usdAmount.toFixed(2),
+        rate: response.rate,
+        usdAmount: usdAmount.toFixed(2)
+      };
     }
-    
-    // Check forms for payment-related fields
-    const forms = document.querySelectorAll('form');
-    for (const f of forms) {
-        const formText = textOf(f);
-        if (formText) {
-            const foundKeywords = checkoutKeywords.filter(k => formText.includes(k));
-            if (foundKeywords.length > 0) {
-                console.log('CELO Page Text Check: Found form with keywords', {
-                    keywords: foundKeywords,
-                    formText: formText.substring(0, 100)
-                });
-                return true;
-            }
-        }
-        
-        const inputs = f.querySelectorAll('input, select');
-        for (const i of inputs) {
-            const name = (i.name || i.id || i.placeholder || '').toLowerCase();
-            if (/card|cc|billing|cvv|expiry|zip|address|payment/.test(name)) {
-                console.log('CELO Page Text Check: Found payment input', {
-                    name: name,
-                    element: i.tagName,
-                    type: i.type
-                });
-                return true;
-            }
-        }
-    }
-    
-    console.log('CELO Page Text Check: No matches found');
-    return false;
+  } catch (error) {
+    console.error('CELO Pay Extension: Error getting conversion rates', error);
+  }
+  
+  return null;
 }
 
-// Check for payment buttons
-function payButtonCheck() {
-    console.log('CELO Pay Button Check: Starting...');
-    const candidates = Array.from(document.querySelectorAll('button, input[type=submit], a'));
-    
-    const foundButtons = [];
-    for (const el of candidates) {
-        const t = textOf(el);
-        if (t) {
-            const foundKeywords = payButtonKeywords.filter(k => t.includes(k));
-            if (foundKeywords.length > 0) {
-                foundButtons.push({
-                    text: t,
-                    keywords: foundKeywords,
-                    tagName: el.tagName,
-                    type: el.type
-                });
-                console.log('CELO Pay Button Check: Found payment button', {
-                    text: t,
-                    keywords: foundKeywords,
-                    element: el.tagName
-                });
-            }
-        }
-    }
-    
-    console.log('CELO Pay Button Check:', {
-        totalCandidates: candidates.length,
-        foundButtons: foundButtons.length,
-        buttons: foundButtons,
-        passed: foundButtons.length > 0
-    });
-    
-    return foundButtons.length > 0;
-}
-
-// Extract checkout data
-function extractCheckoutData() {
-    const storeName = extractStoreName();
-    const country = detectCountry();
-    const description = extractProductDescription();
-    
-    // Find amounts on the page
-    const pageText = document.body.textContent;
-    const amounts = extractAmountAndCurrency(pageText);
-    
-    // Get the highest amount (likely the total)
-    const totalAmount = amounts.length > 0 ? 
-        amounts.reduce((max, current) => current.amount > max.amount ? current : max) : 
-        { amount: 0, currency: 'USD' };
-    
-    console.log('CELO Checkout Data:', {
-        storeName,
-        country,
-        description,
-        amounts,
-        totalAmount
-    });
-    
-    return {
-        storeName,
-        amount: totalAmount.amount,
-        currency: totalAmount.currency,
-        country,
-        description,
-        returnUrl: window.location.href,
-        timestamp: Date.now()
-    };
-}
-
-// Inject CELO checkout popup
-function injectPopup() {
-    if (document.getElementById('celo-checkout-popup')) {
-        console.log('CELO: Popup already exists');
-        return;
-    }
-    
-    const checkoutData = extractCheckoutData();
-    
-    console.log('CELO: Injecting popup with data:', checkoutData);
-    
-    const div = document.createElement('div');
-    div.id = 'celo-checkout-popup';
-    div.style.position = 'fixed';
-    div.style.right = '18px';
-    div.style.bottom = '18px';
-    div.style.zIndex = '2147483647';
-    div.style.background = '#fff';
-    div.style.padding = '16px';
-    div.style.borderRadius = '12px';
-    div.style.boxShadow = '0 8px 32px rgba(0,0,0,0.15)';
-    div.style.border = '1px solid #e0e0e0';
-    div.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    div.style.maxWidth = '300px';
-    
-    const amountText = checkoutData.amount > 0 ? 
-        `${checkoutData.currency} ${checkoutData.amount.toFixed(2)}` : 
-        'Amount detected';
-    
-    div.innerHTML = `
-      <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
-        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #35D07F 0%, #2ECC71 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
-          C
-        </div>
-        <div style="flex: 1;">
-          <div style="font-weight: 600; font-size: 14px; color: #333;">Pay with CELO</div>
-          <div style="font-size: 12px; color: #666;">${amountText}</div>
-        </div>
-      </div>
-      <div style="font-size: 11px; color: #888; margin-bottom: 12px;">
-        Store: ${checkoutData.storeName}<br>
-        Country: ${checkoutData.country}
-      </div>
-      <button id="celo-pay-btn" style="width: 100%; padding: 10px 16px; border-radius: 8px; border: none; background: linear-gradient(135deg, #35D07F 0%, #2ECC71 100%); color: white; cursor: pointer; font-weight: 600; font-size: 14px;">
+// Show floating CELO icon
+function showFloatingIcon() {
+  if (floatingIcon) {
+    return; // Already showing
+  }
+  
+  floatingIcon = document.createElement('div');
+  floatingIcon.id = 'celo-pay-floating-icon';
+  floatingIcon.innerHTML = `
+    <div style="
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 2147483647;
+      background: #35D07F;
+      border-radius: 8px;
+      padding: 12px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: Arial, sans-serif;
+      max-width: 200px;
+      border: 2px solid #2ECC71;
+    ">
+      <div style="width: 24px; height: 24px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #35D07F; font-weight: bold; font-size: 12px;">C</div>
+      <div style="color: white; font-size: 14px; font-weight: 600;">
         Pay with CELO
-      </button>
-    `;
-    
-    document.body.appendChild(div);
-    
-    // Add click handler
-    document.getElementById('celo-pay-btn').addEventListener('click', () => {
-        console.log('CELO: Pay button clicked');
-        
-        // Build redirect URL with checkout data
-        const params = new URLSearchParams({
-            store: checkoutData.storeName,
-            amount: checkoutData.amount.toString(),
-            currency: checkoutData.currency,
-            country: checkoutData.country,
-            description: checkoutData.description,
-            returnUrl: checkoutData.returnUrl,
-            source: 'browser-extension',
-            timestamp: checkoutData.timestamp.toString()
-        });
-        
-        const redirectUrl = `http://localhost:3000/payment?${params.toString()}`;
-        console.log('CELO: Redirecting to:', redirectUrl);
-        
-        // Open in new tab
-        window.open(redirectUrl, '_blank');
-        
-        // Update button to show success
-        const btn = document.getElementById('celo-pay-btn');
-        btn.textContent = 'Opening CELO Pay...';
-        btn.style.background = '#28a745';
-        btn.disabled = true;
-    });
+      </div>
+    </div>
+  `;
+  
+  // Add click handler
+  floatingIcon.addEventListener('click', handleFloatingIconClick);
+  
+  document.body.appendChild(floatingIcon);
+  console.log('CELO Pay Extension: Floating icon shown');
 }
 
-// Main evaluation function
-function evaluate() {
-    // Check if domain is blacklisted
-    if (isBlacklisted()) {
-        console.log('CELO: Domain is blacklisted, skipping evaluation');
-        return;
-    }
-    
-    const urlScore = urlCheck() ? 1 : 0;
-    const textScore = pageTextCheck() ? 1 : 0;
-    const buttonScore = payButtonCheck() ? 1 : 0;
-    const totalScore = urlScore + textScore + buttonScore;
-    
-    console.log('CELO Extension Debug:', {
-        url: location.href,
-        urlScore,
-        textScore,
-        buttonScore,
-        totalScore,
-        shouldShow: totalScore >= 2
-    });
-    
-    if (totalScore >= 2) {
-        console.log('CELO: Showing popup');
-        injectPopup();
-    }
+// Hide floating icon
+function hideFloatingIcon() {
+  if (floatingIcon) {
+    floatingIcon.remove();
+    floatingIcon = null;
+    console.log('CELO Pay Extension: Floating icon hidden');
+  }
 }
 
-// DOM observer for SPAs
-const observer = new MutationObserver((mutations) => {
-    console.log('CELO: DOM changed, re-evaluating...', mutations.length, 'mutations');
+// Handle floating icon click
+function handleFloatingIconClick() {
+  console.log('CELO Pay Extension: Floating icon clicked');
+  
+  if (checkoutData) {
+    // Open DApp with checkout data
+    chrome.runtime.sendMessage({
+      type: 'OPEN_DAPP',
+      data: checkoutData
+    });
+  }
+}
+
+// Set up mutation observer for dynamic content
+function setupMutationObserver() {
+  const observer = new MutationObserver((mutations) => {
+    let shouldReevaluate = false;
     
-    // Remove existing popup if it exists
-    const existingPopup = document.getElementById('celo-checkout-popup');
-    if (existingPopup) {
-        existingPopup.remove();
+    for (const mutation of mutations) {
+      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+        shouldReevaluate = true;
+        break;
+      }
     }
     
-    // Re-evaluate
-    setTimeout(evaluate, 500);
-});
+    if (shouldReevaluate) {
+      // Debounce re-evaluation
+      clearTimeout(window.celoPayReevaluateTimeout);
+      window.celoPayeReevaluateTimeout = setTimeout(evaluatePage, 1000); // Typo fixed: celoPayeReevaluateTimeout -> celoPayReevaluateTimeout
+    }
+  });
+  
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+}
 
-observer.observe(document.documentElement || document.body, { 
-    childList: true, 
-    subtree: true 
-});
-
-// Initial check
-console.log('CELO: Starting initial evaluation in 1 second...');
-setTimeout(() => {
-    console.log('CELO: Running initial evaluation');
-    evaluate();
-}, 1000);
-
-// Periodic check (fallback)
-console.log('CELO: Setting up periodic evaluation every 3 seconds');
-setInterval(() => {
-    console.log('CELO: Running periodic evaluation');
-    evaluate();
-}, 3000);
+// Initialize when script loads
+init();

@@ -1,19 +1,26 @@
 {
   "manifest_version": 3,
-  "name": "CELO Pay - Simple Version",
+  "name": "CELO Pay - Debug Version",
   "version": "1.0.0",
-  "description": "Simple CELO payment extension - no animations",
+  "description": "Debug version of CELO Pay extension",
   "permissions": [
+    "storage",
     "activeTab"
   ],
   "host_permissions": [
     "<all_urls>"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CELO Pay Debug"
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content-simple-stable.js"],
-      "css": ["content.css"],
+      "js": ["content-simple.js"],
       "run_at": "document_idle"
     }
   ],

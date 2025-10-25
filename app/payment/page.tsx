@@ -20,7 +20,12 @@ export default function PaymentPage() {
     token: 'CUSD',
     store: '',
     brand: '',
-    giftCardCode: ''
+    giftCardCode: '',
+    currency: 'USD',
+    country: 'US',
+    items: '',
+    cartHash: '',
+    originalUrl: ''
   })
   const [sessionId, setSessionId] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
@@ -35,24 +40,51 @@ export default function PaymentPage() {
     // Parse URL parameters from browser extension
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
+      
+      // Extract all possible parameters from extension
       const store = urlParams.get('store')
       const amount = urlParams.get('amount')
+      const currency = urlParams.get('currency')
+      const product_name = urlParams.get('product_name')
       const country = urlParams.get('country')
-      const description = urlParams.get('description')
-      const source = urlParams.get('source')
+      const items = urlParams.get('items')
+      const cartHash = urlParams.get('cartHash')
+      const originalUrl = urlParams.get('original_url')
+      const timestamp = urlParams.get('timestamp')
+      const celoAmount = urlParams.get('celo_amount')
+      const cusdAmount = urlParams.get('cusd_amount')
+      const conversionRate = urlParams.get('conversion_rate')
       
-      if (source === 'browser-extension' && (store || amount)) {
+      // Check if this is from the extension
+      if (store || amount || originalUrl) {
         setIsFromExtension(true)
+        
+        // Auto-fill form with extension data
         setFormData(prev => ({
           ...prev,
           amount: amount || prev.amount,
           store: store || prev.store,
-          brand: description || prev.brand,
+          brand: product_name || prev.brand,
+          currency: currency || prev.currency,
+          country: country || prev.country,
+          items: items || prev.items,
+          cartHash: cartHash || prev.cartHash,
+          originalUrl: originalUrl || prev.originalUrl,
         }))
         
-        // Show a notification that data was pre-filled from extension
-        setPaymentStatus('Payment details loaded from browser extension')
-        setTimeout(() => setPaymentStatus(''), 3000)
+        // Set token based on currency conversion if available
+        if (cusdAmount && celoAmount) {
+          // If we have conversion data, default to cUSD for stablecoin payments
+          setFormData(prev => ({
+            ...prev,
+            token: 'CUSD',
+            amount: cusdAmount
+          }))
+        }
+        
+        // Show notification with extracted data
+        setPaymentStatus(`Payment details loaded from ${store || 'browser extension'}`)
+        setTimeout(() => setPaymentStatus(''), 5000)
       }
     }
   }, [])
@@ -291,16 +323,52 @@ export default function PaymentPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Brand (Optional)
+                  Brand/Product (Optional)
                 </label>
                 <input
                   type="text"
                   name="brand"
                   value={formData.brand}
                   onChange={handleInputChange}
-                  placeholder="Brand name"
+                  placeholder="Product or brand name"
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Currency
+                </label>
+                <select
+                  name="currency"
+                  value={formData.currency}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                >
+                  <option value="USD">USD</option>
+                  <option value="INR">INR</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                  <option value="CAD">CAD</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Country
+                </label>
+                <select
+                  name="country"
+                  value={formData.country}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                >
+                  <option value="US">United States</option>
+                  <option value="IN">India</option>
+                  <option value="GB">United Kingdom</option>
+                  <option value="CA">Canada</option>
+                  <option value="AU">Australia</option>
+                </select>
               </div>
 
               <div>
@@ -316,6 +384,39 @@ export default function PaymentPage() {
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
+
+              {/* Cart Items Display */}
+              {formData.items && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Cart Items
+                  </label>
+                  <div className="bg-white/5 border border-white/20 rounded-lg p-4">
+                    <pre className="text-sm text-gray-300 whitespace-pre-wrap">
+                      {formData.items}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {/* Original URL Display */}
+              {formData.originalUrl && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Original Store URL
+                  </label>
+                  <div className="bg-white/5 border border-white/20 rounded-lg p-3">
+                    <a 
+                      href={formData.originalUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-cyan-400 hover:text-cyan-300 text-sm break-all"
+                    >
+                      {formData.originalUrl}
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Payment Summary */}
@@ -334,6 +435,14 @@ export default function PaymentPage() {
                     <span className="text-white">{formData.token}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-gray-300">Currency:</span>
+                    <span className="text-white">{formData.currency}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Country:</span>
+                    <span className="text-white">{formData.country}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-gray-300">Session ID:</span>
                     <span className="text-white font-mono text-sm">{sessionId}</span>
                   </div>
@@ -341,6 +450,18 @@ export default function PaymentPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-300">Store:</span>
                       <span className="text-white">{formData.store}</span>
+                    </div>
+                  )}
+                  {formData.brand && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Product:</span>
+                      <span className="text-white">{formData.brand}</span>
+                    </div>
+                  )}
+                  {formData.cartHash && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Cart Hash:</span>
+                      <span className="text-white font-mono text-xs">{formData.cartHash.substring(0, 8)}...</span>
                     </div>
                   )}
                 </div>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CELO Pay DApp Integration Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .payment-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .celo-logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .payment-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+        .detail-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        .detail-value {
+            color: #495057;
+            font-weight: 600;
+        }
+        .total-row {
+            border-top: 2px solid #2ECC71;
+            padding-top: 10px;
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2ECC71;
+        }
+        .payment-options {
+            margin-bottom: 20px;
+        }
+        .payment-option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .payment-option:hover {
+            border-color: #2ECC71;
+            background: #e8f5e8;
+        }
+        .payment-option.selected {
+            border-color: #2ECC71;
+            background: #e8f5e8;
+        }
+        .option-header {
+            font-weight: bold;
+            color: #2ECC71;
+            margin-bottom: 5px;
+        }
+        .option-description {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .pay-button {
+            background: linear-gradient(135deg, #35D07F 0%, #2ECC71 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s ease;
+        }
+        .pay-button:hover {
+            transform: translateY(-2px);
+        }
+        .pay-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .debug-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <div class="header">
+            <div class="celo-logo">🌱</div>
+            <h1>CELO Pay</h1>
+            <p>Complete your payment with CELO</p>
+        </div>
+
+        <div class="payment-details">
+            <h3>Payment Details</h3>
+            <div class="detail-row">
+                <span class="detail-label">Store:</span>
+                <span class="detail-value" id="store-name">Loading...</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Amount:</span>
+                <span class="detail-value" id="payment-amount">Loading...</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Currency:</span>
+                <span class="detail-value" id="payment-currency">Loading...</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Product:</span>
+                <span class="detail-value" id="product-name">Loading...</span>
+            </div>
+            <div class="detail-row total-row">
+                <span class="detail-label">Total:</span>
+                <span class="detail-value" id="total-amount">Loading...</span>
+            </div>
+        </div>
+
+        <div class="payment-options">
+            <h3>Payment Options</h3>
+            <div class="payment-option" onclick="selectPaymentOption('celo')">
+                <div class="option-header">🌱 Pay with CELO</div>
+                <div class="option-description" id="celo-amount">Loading...</div>
+            </div>
+            <div class="payment-option" onclick="selectPaymentOption('cusd')">
+                <div class="option-header">💰 Pay with cUSD</div>
+                <div class="option-description" id="cusd-amount">Loading...</div>
+            </div>
+        </div>
+
+        <button class="pay-button" id="pay-button" onclick="processPayment()" disabled>
+            Select Payment Method
+        </button>
+
+        <div class="debug-info">
+            <div class="debug-title">Debug Information</div>
+            <div id="debug-content">Loading extension data...</div>
+        </div>
+    </div>
+
+    <script>
+        // Parse URL parameters from extension
+        const urlParams = new URLSearchParams(window.location.search);
+        const extensionData = {
+            store: urlParams.get('store') || 'Unknown Store',
+            amount: urlParams.get('amount') || '0',
+            currency: urlParams.get('currency') || 'USD',
+            product_name: urlParams.get('product_name') || 'Purchase',
+            celo_amount: urlParams.get('celo_amount') || '0',
+            cusd_amount: urlParams.get('cusd_amount') || '0',
+            conversion_rate: urlParams.get('conversion_rate') || '1',
+            original_url: urlParams.get('original_url') || '',
+            timestamp: urlParams.get('timestamp') || Date.now()
+        };
+
+        // Update UI with extension data
+        document.getElementById('store-name').textContent = extensionData.store;
+        document.getElementById('payment-amount').textContent = extensionData.amount;
+        document.getElementById('payment-currency').textContent = extensionData.currency;
+        document.getElementById('product-name').textContent = extensionData.product_name;
+        document.getElementById('total-amount').textContent = `${extensionData.amount} ${extensionData.currency}`;
+
+        // Update payment options
+        document.getElementById('celo-amount').textContent = `${extensionData.celo_amount} CELO`;
+        document.getElementById('cusd-amount').textContent = `${extensionData.cusd_amount} cUSD`;
+
+        // Update debug info
+        document.getElementById('debug-content').innerHTML = `
+            <strong>Extension Data:</strong><br>
+            Store: ${extensionData.store}<br>
+            Amount: ${extensionData.amount} ${extensionData.currency}<br>
+            Product: ${extensionData.product_name}<br>
+            CELO Amount: ${extensionData.celo_amount}<br>
+            cUSD Amount: ${extensionData.cusd_amount}<br>
+            Conversion Rate: ${extensionData.conversion_rate}<br>
+            Original URL: ${extensionData.original_url}<br>
+            Timestamp: ${new Date(parseInt(extensionData.timestamp)).toLocaleString()}
+        `;
+
+        let selectedPaymentMethod = null;
+
+        function selectPaymentOption(method) {
+            // Remove previous selection
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+
+            // Select new option
+            event.target.closest('.payment-option').classList.add('selected');
+            selectedPaymentMethod = method;
+
+            // Update pay button
+            const payButton = document.getElementById('pay-button');
+            payButton.disabled = false;
+            payButton.textContent = `Pay with ${method.toUpperCase()}`;
+        }
+
+        function processPayment() {
+            if (!selectedPaymentMethod) {
+                alert('Please select a payment method');
+                return;
+            }
+
+            // Simulate payment processing
+            const payButton = document.getElementById('pay-button');
+            payButton.disabled = true;
+            payButton.textContent = 'Processing Payment...';
+
+            // Simulate API call
+            setTimeout(() => {
+                alert(`Payment successful! You paid with ${selectedPaymentMethod.toUpperCase()}`);
+                payButton.textContent = 'Payment Complete';
+                payButton.style.background = '#28a745';
+            }, 2000);
+        }
+
+        // Log extension data for debugging
+        console.log('CELO Pay Extension: DApp received data:', extensionData);
+    </script>
+</body>
+</html>
