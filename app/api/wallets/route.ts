@@ -1,112 +1,93 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { PrismaClient } from '@prisma/client'
 import { auth } from '@clerk/nextjs/server'
-import { prisma } from '@/lib/database'
 
-export async function GET() {
-  try {
-    const { userId } = auth()
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Find or create user in our database
-    let user = await prisma.user.findFirst({
-      where: { clerkId: userId }
-    })
-
-    if (!user) {
-      return NextResponse.json({ wallets: [] })
-    }
-
-    const wallets = await prisma.wallet.findMany({
-      where: { userId: user.id },
-      orderBy: [
-        { isPrimary: 'desc' },
-        { createdAt: 'desc' }
-      ]
-    })
-
-    return NextResponse.json(wallets)
-  } catch (error) {
-    console.error('Error fetching wallets:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = auth()
+    console.log('Wallet API called')
+    const { userId } = await auth()
+    console.log('Auth userId:', userId)
     
     if (!userId) {
+      console.log('No userId found, returning 401')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { address } = await request.json()
+    const { address, signature } = await request.json()
+    console.log('Wallet data:', { address, signature, userId })
 
-    if (!address || typeof address !== 'string') {
-      return NextResponse.json({ error: 'Address is required' }, { status: 400 })
+    if (!address) {
+      return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 })
     }
 
-    // Basic address validation
-    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-      return NextResponse.json({ error: 'Invalid wallet address format' }, { status: 400 })
+    // Check if wallet already exists
+    const existingWallet = await prisma.wallet.findUnique({
+      where: { address }
+    })
+
+    if (existingWallet) {
+      console.log('Wallet already exists:', existingWallet)
+      return NextResponse.json({ message: 'Wallet already exists', wallet: existingWallet })
     }
 
-    // Find or create user in our database
-    let user = await prisma.user.findFirst({
+    // Get user from database
+    const user = await prisma.user.findUnique({
       where: { clerkId: userId }
     })
 
     if (!user) {
-      // Create user if doesn't exist
-      user = await prisma.user.create({
-        data: {
-          clerkId: userId,
-          email: '', // We'll get this from Clerk user data if needed
-          name: ''
-        }
-      })
-    }
-
-    // Check if wallet already exists
-    const existingWallet = await prisma.wallet.findFirst({
-      where: { address: address.toLowerCase() }
-    })
-
-    if (existingWallet) {
-      if (existingWallet.userId === user.id) {
-        return NextResponse.json({ error: 'Wallet already connected to your account' }, { status: 400 })
-      } else {
-        return NextResponse.json({ error: 'Wallet already connected to another account' }, { status: 400 })
-      }
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
     // Create new wallet
     const wallet = await prisma.wallet.create({
       data: {
-        address: address.toLowerCase(),
+        address,
         userId: user.id,
-        isPrimary: false // Will be set to true if it's the first wallet
+        isPrimary: true, // First wallet is primary
       }
     })
 
-    // If this is the first wallet, make it primary
-    const walletCount = await prisma.wallet.count({
-      where: { userId: user.id }
-    })
+    console.log('Wallet created successfully:', wallet)
+    return NextResponse.json({ message: 'Wallet saved successfully', wallet })
+  } catch (error) {
+    console.error('Error saving wallet:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
+  }
+}
 
-    if (walletCount === 1) {
-      await prisma.wallet.update({
-        where: { id: wallet.id },
-        data: { isPrimary: true }
-      })
-      wallet.isPrimary = true
+export async function GET(request: NextRequest) {
+  try {
+    const { userId } = await auth()
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    return NextResponse.json(wallet)
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Get user's wallets
+    const wallets = await prisma.wallet.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return NextResponse.json({ wallets })
   } catch (error) {
-    console.error('Error adding wallet:', error)
+    console.error('Error fetching wallets:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }

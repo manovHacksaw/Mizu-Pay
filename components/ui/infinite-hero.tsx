@@ -1,8 +1,10 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useUser } from '@clerk/nextjs'
 
 interface HeroProps {
   eyebrow?: string
@@ -19,6 +21,12 @@ export default function InfiniteHero({
   ctaLabel = "Get Started",
   ctaHref = "/sign-up",
 }: HeroProps) {
+  const [mounted, setMounted] = useState(false)
+  const { user, isLoaded } = useUser()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <section
@@ -71,31 +79,44 @@ export default function InfiniteHero({
           </h1>
 
       {/* Subtitle */}
-      <p
+          <p
         className="animate-fade-in mb-12 -translate-y-4 text-balance 
         text-lg tracking-tight text-white/70 
         opacity-0 md:text-xl"
-      >
+          >
         {subtitle}
-      </p>
+          </p>
 
       {/* CTA */}
       <div className="flex justify-center">
-        <div className="flex flex-row items-center justify-center gap-4">
-          <Button
-            asChild
-            variant="outline"
-            className="mt-[-20px] w-fit md:w-32 z-20 font-geist tracking-tighter text-center text-lg border-white/20 text-white hover:bg-white/10"
-          >
-            <Link href="/sign-in">Sign In</Link>
-          </Button>
+            {!mounted ? (
+              <div className="group relative px-6 py-3 text-sm font-medium tracking-wide text-white/50">
+                Loading...
+              </div>
+            ) : isLoaded && user ? (
           <Button
             asChild
             className="mt-[-20px] w-fit md:w-52 z-20 font-geist tracking-tighter text-center text-lg bg-white text-black hover:bg-white/90"
           >
-            <Link href={ctaHref}>{ctaLabel}</Link>
+            <Link href="/dashboard">Go to Dashboard</Link>
           </Button>
-        </div>
+        ) : (
+          <div className="flex flex-row items-center justify-center gap-4">
+            <Button
+              asChild
+              variant="outline"
+              className="mt-[-20px] w-fit md:w-32 z-20 font-geist tracking-tighter text-center text-lg border-white/20 text-white hover:bg-white/10"
+            >
+              <Link href="/sign-in">Sign In</Link>
+            </Button>
+            <Button
+              asChild
+              className="mt-[-20px] w-fit md:w-52 z-20 font-geist tracking-tighter text-center text-lg bg-white text-black hover:bg-white/90"
+            >
+              <Link href={ctaHref}>{ctaLabel}</Link>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Bottom Fade */}

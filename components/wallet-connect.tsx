@@ -1,8 +1,8 @@
 'use client'
 
-import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi'
+import { useAccount, useSignMessage } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { SiweMessage } from 'siwe'
 
 interface WalletConnectProps {
@@ -14,9 +14,18 @@ export default function WalletConnect({ onWalletConnected }: WalletConnectProps)
   const { signMessageAsync } = useSignMessage()
   const [isSigning, setIsSigning] = useState(false)
   const [error, setError] = useState('')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return <div>Loading...</div>
+  }
 
   const handleSignIn = async () => {
-    if (!address || !user) return
+    if (!address) return
 
     setIsSigning(true)
     setError('')

@@ -1,11 +1,18 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X } from "lucide-react"
 import Link from "next/link"
+import { useUser } from '@clerk/nextjs'
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const { user, isLoaded } = useUser()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const toggleMenu = () => setIsOpen(!isOpen)
 
@@ -60,18 +67,33 @@ const Navbar = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
         >
-          <Link
-            href="#"
-            className="inline-flex items-center justify-center px-4 py-2 text-sm text-gray-700 hover:text-gray-900 transition-colors font-medium"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="#"
-            className="inline-flex items-center justify-center px-5 py-2 text-sm text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
-          >
-            Get Started
-          </Link>
+          {!mounted ? (
+            <div className="inline-flex items-center justify-center px-5 py-2 text-sm text-gray-400">
+              Loading...
+            </div>
+          ) : isLoaded && user ? (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center px-5 py-2 text-sm text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/sign-in"
+                className="inline-flex items-center justify-center px-4 py-2 text-sm text-gray-700 hover:text-gray-900 transition-colors font-medium"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/sign-up"
+                className="inline-flex items-center justify-center px-5 py-2 text-sm text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
+              >
+                Get Started
+              </Link>
+            </>
+          )}
         </motion.div>
 
         {/* Mobile Menu Button */}
@@ -122,20 +144,36 @@ const Navbar = () => {
                 exit={{ opacity: 0, y: 20 }}
                 className="pt-6 space-y-3"
               >
-                <Link
-                  href="#"
-                  className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 transition-all"
-                  onClick={toggleMenu}
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="#"
-                  className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
-                  onClick={toggleMenu}
-                >
-                  Get Started
-                </Link>
+                {!mounted ? (
+                  <div className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-gray-400">
+                    Loading...
+                  </div>
+                ) : isLoaded && user ? (
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
+                    onClick={toggleMenu}
+                  >
+                    Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href="/sign-in"
+                      className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 transition-all"
+                      onClick={toggleMenu}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/sign-up"
+                      className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
+                      onClick={toggleMenu}
+                    >
+                      Get Started
+                    </Link>
+                  </>
+                )}
               </motion.div>
             </div>
           </motion.div>
