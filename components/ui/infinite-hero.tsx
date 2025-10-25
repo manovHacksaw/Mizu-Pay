@@ -4,8 +4,10 @@ import { useGSAP } from "@gsap/react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { gsap } from "gsap"
 import { SplitText } from "gsap/SplitText"
-import { useMemo, useRef } from "react"
+import { useMemo, useRef, useState, useEffect } from "react"
 import * as THREE from "three"
+import Link from "next/link"
+import { useUser } from "@clerk/nextjs"
 
 gsap.registerPlugin(SplitText)
 
@@ -171,7 +173,12 @@ function ShaderBackground({
         f = float(nbStep) / float(STEP);
         
         f *= .9;
+        
+        // Create blue gradient with glowing effect
         vec3 col = vec3(f);
+        col = mix(vec3(0.0, 0.1, 0.3), vec3(0.2, 0.6, 1.0), col);
+        col += vec3(0.1, 0.3, 0.8) * f * f * 0.5; // Blue glow
+        col = pow(col, vec3(0.8)); // Enhance contrast
                 
         fragColor = vec4(col,1.0);
     }
@@ -209,6 +216,12 @@ export default function InfiniteHero() {
   const h1Ref = useRef<HTMLHeadingElement>(null)
   const pRef = useRef<HTMLParagraphElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
+  const [mounted, setMounted] = useState(false)
+  const { user, isLoaded } = useUser()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useGSAP(
     () => {
@@ -278,30 +291,44 @@ export default function InfiniteHero() {
             ref={h1Ref}
             className="mx-auto max-w-2xl lg:max-w-4xl text-[clamp(2.25rem,6vw,4rem)] font-extralight leading-[0.95] tracking-tight"
           >
-            The road dissolves in light, the horizon remains unseen.
+            Seamless payments meet sustainable impact.
           </h1>
           <p
             ref={pRef}
             className="mx-auto mt-4 max-w-2xl md:text-balance text-sm/6 md:text-base/7 font-light tracking-tight text-white/70"
           >
-            Minimal structures fade into a vast horizon where presence and absence merge. A quiet tension invites the
-            eye to wander without end.
+            Experience the future of payments with Mizu Pay. Connect your wallets, make payments, and contribute to regenerative finance - all in one platform.
           </p>
 
           <div ref={ctaRef} className="mt-8 flex flex-row items-center justify-center gap-4">
-            <button
-              type="button"
-              className="group relative overflow-hidden border border-white/30 bg-gradient-to-r from-white/20 to-white/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:shadow-white/10 cursor-pointer"
-            >
-              Learn more
-            </button>
+            {!mounted ? (
+              <div className="group relative px-6 py-3 text-sm font-medium tracking-wide text-white/50">
+                Loading...
+              </div>
+            ) : isLoaded && user ? (
+              <Link
+                href="/dashboard"
+                className="group relative overflow-hidden border border-white/30 bg-gradient-to-r from-white/20 to-white/10 px-6 py-3 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:shadow-white/10 cursor-pointer"
+              >
+                Go to Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  className="group relative px-4 py-2 text-sm font-medium tracking-wide text-white/90 transition-[filter,color] duration-500 hover:drop-shadow-[0_0_6px_rgba(255,255,255,0.6)] hover:text-white cursor-pointer"
+                >
+                  Sign In
+                </Link>
 
-            <button
-              type="button"
-              className="group relative px-4 py-2 text-sm font-medium tracking-wide text-white/90 transition-[filter,color] duration-500 hover:drop-shadow-[0_0_6px_rgba(255,255,255,0.6)] hover:text-white cursor-pointer"
-            >
-              View portfolio
-            </button>
+                <Link
+                  href="/sign-up"
+                  className="group relative overflow-hidden border border-white/30 bg-gradient-to-r from-white/20 to-white/10 px-6 py-3 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:shadow-white/10 cursor-pointer"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
