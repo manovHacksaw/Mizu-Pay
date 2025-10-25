@@ -59,7 +59,7 @@ function DashboardContent() {
       setSignature(sig)
       
       // Save wallet to database after successful signing
-      await saveWalletToDatabase(address, sig)
+      await saveWalletToDatabase(address, sig, message)
     } catch (err: any) {
       console.error('Signing error:', err)
       
@@ -76,9 +76,9 @@ function DashboardContent() {
     }
   }
 
-  const saveWalletToDatabase = async (walletAddress: string, signature: string) => {
+  const saveWalletToDatabase = async (walletAddress: string, signature: string, message: string) => {
     try {
-      console.log('Saving wallet to database:', { address: walletAddress, signature })
+      console.log('Saving wallet to database:', { address: walletAddress, signature, message })
       
       const response = await fetch('/api/wallets', {
         method: 'POST',
@@ -88,6 +88,7 @@ function DashboardContent() {
         body: JSON.stringify({
           address: walletAddress,
           signature: signature,
+          message: message,
         }),
       })
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/database'
 import { SiweMessage } from 'siwe'
+import { verifySiweMessage } from '@/lib/wallet-verification'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,9 +25,16 @@ export async function POST(request: NextRequest) {
 
     // Verify the SIWE message
     console.log('Verifying SIWE message...')
-    const siweMessage = new SiweMessage(message)
     
     try {
+      // First verify using our custom function
+      const isValidSiwe = await verifySiweMessage(message, signature, address)
+      if (!isValidSiwe) {
+        return NextResponse.json({ error: 'Invalid SIWE message or signature' }, { status: 400 })
+      }
+      
+      // Also verify using the SIWE library for additional validation
+      const siweMessage = new SiweMessage(message)
       const result = await siweMessage.verify({ signature })
       console.log('SIWE verification result:', result)
     } catch (error) {

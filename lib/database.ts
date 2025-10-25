@@ -41,11 +41,8 @@ export async function syncWeb3AuthUser(userInfo: any, walletAddress?: string) {
           }
         })
       } else if (existingWallet.userId !== user.id) {
-        // Update wallet ownership if it belongs to different user
-        await prisma.wallet.update({
-          where: { address: walletAddress },
-          data: { userId: user.id }
-        })
+        // Wallet belongs to different user - this should not be allowed
+        throw new Error('Wallet is already connected to another account')
       }
     }
 

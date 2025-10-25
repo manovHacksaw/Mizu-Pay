@@ -7,10 +7,9 @@ import {
 } from '@rainbow-me/rainbowkit'
 import { WagmiProvider } from 'wagmi'
 import {
-  mainnet,
   celo,
-  celoAlfajores,
 } from 'wagmi/chains'
+import { defineChain } from 'viem'
 import {
   QueryClientProvider,
   QueryClient,
@@ -18,14 +17,37 @@ import {
 import { http } from 'viem'
 import { useState, useEffect } from 'react'
 
+// CELO Sepolia testnet configuration
+const celoSepolia = defineChain({
+  id: 11142220, // Correct CELO Sepolia Chain ID
+  name: 'CELO Sepolia Testnet',
+  network: 'celo-sepolia',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'CELO',
+    symbol: 'CELO',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.ankr.com/celo_sepolia'],
+    },
+    public: {
+      http: ['https://rpc.ankr.com/celo_sepolia'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'CeloScan', url: 'https://sepolia.celoscan.io' },
+  },
+  testnet: true,
+})
+
 const config = getDefaultConfig({
   appName: 'Mizu Pay',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
-  chains: [celo, celoAlfajores, mainnet],
+  chains: [celoSepolia, celo], // Only CELO Sepolia and CELO mainnet
   transports: {
+    [celoSepolia.id]: http('https://rpc.ankr.com/celo_sepolia'),
     [celo.id]: http('https://celo-json-rpc.stakely.io'),
-    [celoAlfajores.id]: http('https://alfajores-forno.celo-testnet.org'),
-    [mainnet.id]: http(),
   },
 })
 

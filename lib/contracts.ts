@@ -1,7 +1,20 @@
-// Contract addresses on Celo Alfajores testnet
+// Contract addresses on CELO Sepolia testnet
 export const CONTRACT_ADDRESSES = {
-  MOCK_CUSD: '0x61d11C622Bd98A71aD9361833379A2066Ad29CCa',
-  MIZU_PAY: '0x6aE731EbaC64f1E9c6A721eA2775028762830CF7',
+  MOCK_CUSD: '0x61d11C622Bd98A71aD9361833379A2066Ad29CCa', // cUSD token on CELO Sepolia
+  MIZU_PAY: '0x6aE731EbaC64f1E9c6A721eA2775028762830CF7', // MizuPay contract on CELO Sepolia
+} as const
+
+// CELO Sepolia testnet configuration
+export const CELO_SEPOLIA_CONFIG = {
+  chainId: 11142220, // Correct CELO Sepolia Chain ID
+  name: 'CELO Sepolia Testnet',
+  rpcUrl: 'https://rpc.ankr.com/celo_sepolia',
+  blockExplorer: 'https://sepolia.celoscan.io',
+  nativeCurrency: {
+    name: 'CELO',
+    symbol: 'CELO',
+    decimals: 18,
+  },
 } as const
 
 // Contract ABIs

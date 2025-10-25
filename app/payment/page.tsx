@@ -1,15 +1,17 @@
 'use client'
 
 import { useUser } from '@clerk/nextjs'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useChainId, useBalance, useReadContract } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useState, useEffect } from 'react'
 import { parseEther, formatEther } from 'viem'
-import { CONTRACT_ADDRESSES, MIZU_PAY_ABI, MOCK_CUSD_ABI } from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, MIZU_PAY_ABI, MOCK_CUSD_ABI, CELO_SEPOLIA_CONFIG } from '@/lib/contracts'
+import { convertINRToUSD, formatCurrency } from '@/lib/currency-converter'
 
 export default function PaymentPage() {
   const { user, isLoaded } = useUser()
   const { address, isConnected } = useAccount()
+  const chainId = useChainId()
   const { writeContract, data: hash, isPending, error } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
@@ -32,6 +34,34 @@ export default function PaymentPage() {
   const [paymentStatus, setPaymentStatus] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isFromExtension, setIsFromExtension] = useState(false)
+  const [convertedAmount, setConvertedAmount] = useState<number | null>(null)
+  const [originalAmount, setOriginalAmount] = useState<number | null>(null)
+  const [isConverting, setIsConverting] = useState(false)
+  
+  // Balance hooks
+  const { data: celoBalance } = useBalance({
+    address: address,
+  })
+  
+  const { data: cusdBalance, error: cusdError, isLoading: cusdLoading } = useReadContract({
+    address: CONTRACT_ADDRESSES.MOCK_CUSD,
+    abi: MOCK_CUSD_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+  })
+  
+  // Debug cUSD balance
+  useEffect(() => {
+    if (address) {
+      console.log('cUSD Balance Debug:', {
+        address,
+        cusdBalance,
+        cusdError,
+        cusdLoading,
+        contractAddress: CONTRACT_ADDRESSES.MOCK_CUSD
+      })
+    }
+  }, [address, cusdBalance, cusdError, cusdLoading])
 
   // Generate session ID on component mount and parse URL parameters
   useEffect(() => {
@@ -59,7 +89,76 @@ export default function PaymentPage() {
       if (store || amount || originalUrl) {
         setIsFromExtension(true)
         
-        // Auto-fill form with extension data
+        // Handle currency conversion if needed
+        const handleCurrencyConversion = async () => {
+          // Check if this is likely an Indian payment that was incorrectly labeled as USD
+          const isIndianPayment = originalUrl && (
+            originalUrl.includes('flipkart.com') ||
+            originalUrl.includes('amazon.in') ||
+            originalUrl.includes('myntra.com') ||
+            originalUrl.includes('nykaa.com') ||
+            originalUrl.includes('swiggy.com') ||
+            originalUrl.includes('zomato.com') ||
+            originalUrl.includes('.in/')
+          )
+          
+          // Additional check: if amount looks like it could be INR converted to USD
+          const amountNum = parseFloat(amount)
+          const looksLikeConvertedInr = amountNum > 0 && amountNum < 1000 && (
+            // Common Indian price ranges that would be converted to small USD amounts
+            (amountNum >= 0.5 && amountNum <= 50) || // ₹50-₹4000 range
+            originalUrl?.includes('flipkart.com') // Flipkart is always INR
+          )
+          
+          if (amount && currency && currency.toUpperCase() === 'USD' && country === 'US' && (isIndianPayment || looksLikeConvertedInr)) {
+            setIsConverting(true)
+            try {
+              // This is likely an Indian payment that was incorrectly converted to USD
+              // We need to reverse the conversion to get the original INR amount
+              console.log('Detected Indian payment with USD amount:', amount)
+              
+              // Estimate the original INR amount (assuming it was converted at ~83 INR/USD)
+              const estimatedInrAmount = parseFloat(amount) * 83.33
+              const usdConverted = await convertINRToUSD(estimatedInrAmount)
+              
+              setOriginalAmount(estimatedInrAmount)
+              setConvertedAmount(usdConverted)
+              
+              // Update form with properly converted amount
+              setFormData(prev => ({
+                ...prev,
+                amount: usdConverted.toString(),
+                currency: 'USD',
+                country: 'US',
+                store: store || prev.store,
+                brand: product_name || prev.brand,
+                items: items || prev.items,
+                cartHash: cartHash || prev.cartHash,
+                originalUrl: originalUrl || prev.originalUrl,
+              }))
+              
+              setPaymentStatus(`Detected Indian payment: ₹${estimatedInrAmount.toFixed(2)} → $${usdConverted.toFixed(2)} using real-time rates`)
+              setTimeout(() => setPaymentStatus(''), 8000)
+            } catch (error) {
+              console.error('Currency conversion error:', error)
+              setErrorMessage('Failed to convert currency. Using original amount.')
+              // Fallback to original amount
+              setFormData(prev => ({
+                ...prev,
+                amount: amount || prev.amount,
+                currency: currency || prev.currency,
+                country: country || prev.country,
+                store: store || prev.store,
+                brand: product_name || prev.brand,
+                items: items || prev.items,
+                cartHash: cartHash || prev.cartHash,
+                originalUrl: originalUrl || prev.originalUrl,
+              }))
+            } finally {
+              setIsConverting(false)
+            }
+          } else {
+            // Regular payment or non-Indian payment
         setFormData(prev => ({
           ...prev,
           amount: amount || prev.amount,
@@ -71,6 +170,10 @@ export default function PaymentPage() {
           cartHash: cartHash || prev.cartHash,
           originalUrl: originalUrl || prev.originalUrl,
         }))
+          }
+        }
+        
+        handleCurrencyConversion()
         
         // Set token based on currency conversion if available
         if (cusdAmount && celoAmount) {
@@ -83,8 +186,10 @@ export default function PaymentPage() {
         }
         
         // Show notification with extracted data
+        if (!isConverting) {
         setPaymentStatus(`Payment details loaded from ${store || 'browser extension'}`)
         setTimeout(() => setPaymentStatus(''), 5000)
+        }
       }
     }
   }, [])
@@ -108,39 +213,43 @@ export default function PaymentPage() {
       return
     }
 
+    // Check if user has sufficient balance
+    const paymentAmount = parseFloat(formData.amount)
+    if (formData.token === 'CELO') {
+      const celoBalanceNum = celoBalance ? parseFloat(celoBalance.formatted) : 0
+      if (celoBalanceNum < paymentAmount) {
+        setErrorMessage(`Insufficient CELO balance. You have ${celoBalanceNum.toFixed(4)} CELO but need ${paymentAmount} CELO`)
+        return
+      }
+    } else if (formData.token === 'CUSD') {
+      const cusdBalanceNum = cusdBalance ? parseFloat(formatEther(cusdBalance)) : 0
+      if (cusdBalanceNum < paymentAmount) {
+        setErrorMessage(`Insufficient cUSD balance. You have ${cusdBalanceNum.toFixed(2)} cUSD but need ${paymentAmount} cUSD`)
+        return
+      }
+    }
+
     setIsProcessing(true)
     setErrorMessage('')
     setPaymentStatus('Processing payment...')
 
     try {
-      // First, save payment to database
-      const paymentData = {
-        sessionId,
-        amount: parseFloat(formData.amount),
-        token: formData.token,
-        store: formData.store || null,
-        brand: formData.brand || null,
-        giftCardCode: formData.giftCardCode || null,
-        status: 'PENDING'
+      // Check if we're on the correct network first
+      if (chainId !== CELO_SEPOLIA_CONFIG.chainId) {
+        throw new Error(`Please switch to CELO Sepolia testnet (Chain ID: ${CELO_SEPOLIA_CONFIG.chainId}). Current chain: ${chainId}`)
       }
 
-      const response = await fetch('/api/payments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(paymentData),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save payment to database')
-      }
-
-      const savedPayment = await response.json()
-      console.log('Payment saved to database:', savedPayment)
-
-      // Now process the smart contract payment
+      // Process the smart contract payment FIRST
       const amount = parseEther(formData.amount)
+      
+      console.log('Processing payment:', {
+        token: formData.token,
+        amount: formData.amount,
+        amountWei: amount.toString(),
+        contractAddress: CONTRACT_ADDRESSES.MIZU_PAY,
+        sessionId,
+        chainId
+      })
       
       if (formData.token === 'CUSD') {
         // For CUSD payments, we need to approve and then call payWithCUSD
@@ -188,25 +297,85 @@ export default function PaymentPage() {
     }
   }
 
-  // Update payment status when transaction is confirmed
+    // Save payment to database and send email when transaction is confirmed
   useEffect(() => {
     if (isSuccess && hash) {
       setPaymentStatus('Payment successful!')
       
-      // Update payment status in database
-      fetch('/api/payments/update-status', {
+        // Save payment to database with transaction hash
+        const savePaymentToDatabase = async () => {
+          try {
+            const paymentData = {
+              sessionId,
+              amount: parseFloat(formData.amount),
+              token: formData.token,
+              store: formData.store || null,
+              brand: formData.brand || null,
+              giftCardCode: formData.giftCardCode || null,
+              status: 'COMPLETED',
+              txHash: hash
+            }
+
+            const response = await fetch('/api/payments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
+              body: JSON.stringify(paymentData),
+            })
+
+            if (!response.ok) {
+              console.error('Failed to save payment to database')
+            } else {
+              console.log('Payment saved to database successfully')
+            }
+          } catch (error) {
+            console.error('Error saving payment to database:', error)
+          }
+        }
+
+        // Send confirmation email
+        const sendConfirmationEmail = async () => {
+          try {
+            console.log('📧 Sending payment confirmation email...')
+            
+            const emailData = {
+              userEmail: user?.emailAddresses[0]?.emailAddress || 'customer@example.com',
+              userName: user?.firstName || user?.emailAddresses[0]?.emailAddress || 'Valued Customer',
+              amount: parseFloat(formData.amount),
+              token: formData.token,
+              store: formData.store || 'N/A',
+              product: formData.brand || 'N/A',
           sessionId,
-          status: 'COMPLETED',
           txHash: hash
-        }),
-      }).catch(console.error)
-    }
-  }, [isSuccess, hash, sessionId])
+            }
+
+            const emailResponse = await fetch('/api/send-email', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(emailData),
+            })
+
+            if (emailResponse.ok) {
+              console.log('✅ Payment confirmation email sent successfully')
+              setPaymentStatus('Payment successful! Confirmation email sent.')
+            } else {
+              console.error('❌ Failed to send confirmation email')
+              setPaymentStatus('Payment successful! (Email notification failed)')
+            }
+          } catch (error) {
+            console.error('❌ Error sending confirmation email:', error)
+            setPaymentStatus('Payment successful! (Email notification failed)')
+          }
+        }
+
+        // Execute both operations
+        savePaymentToDatabase()
+        sendConfirmationEmail()
+      }
+    }, [isSuccess, hash, sessionId, formData, user])
 
   if (!isLoaded) {
     return (
@@ -265,6 +434,20 @@ export default function PaymentPage() {
         <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-white">Payment Details</h2>
+            <div className="flex items-center space-x-3">
+              {/* Network Status */}
+              {isConnected && (
+                <div className={`flex items-center px-3 py-1 rounded-full text-sm ${
+                  chainId === CELO_SEPOLIA_CONFIG.chainId 
+                    ? 'bg-green-500/20 text-green-400' 
+                    : 'bg-yellow-500/20 text-yellow-400'
+                }`}>
+                  <span className="mr-2">🌐</span>
+                  {chainId === CELO_SEPOLIA_CONFIG.chainId 
+                    ? 'CELO Sepolia' 
+                    : `Chain ID: ${chainId}`}
+                </div>
+              )}
             {isFromExtension && (
               <div className="flex items-center bg-cyan-500/20 text-cyan-400 px-3 py-1 rounded-full text-sm">
                 <span className="mr-2">🔗</span>
@@ -272,6 +455,51 @@ export default function PaymentPage() {
               </div>
             )}
           </div>
+          </div>
+          
+          {/* Wallet Balance Display */}
+          {isConnected && address && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="text-blue-300 font-semibold">💰 Wallet Balances</div>
+                  <div className="text-sm text-gray-300">
+                    {address.slice(0, 6)}...{address.slice(-4)}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-6">
+                  {/* CELO Balance */}
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-white">
+                      {celoBalance ? parseFloat(celoBalance.formatted).toFixed(4) : '0.0000'}
+                    </div>
+                    <div className="text-xs text-blue-300">CELO</div>
+                  </div>
+                  
+                  {/* cUSD Balance */}
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-white">
+                      {cusdLoading ? (
+                        <div className="animate-pulse">Loading...</div>
+                      ) : cusdError ? (
+                        <div className="text-red-400">Error</div>
+                      ) : cusdBalance ? (
+                        parseFloat(formatEther(cusdBalance)).toFixed(2)
+                      ) : (
+                        '0.00'
+                      )}
+                    </div>
+                    <div className="text-xs text-purple-300">cUSD</div>
+                    {cusdError && (
+                      <div className="text-xs text-red-400 mt-1">
+                        {cusdError.message}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Payment Form */}
@@ -290,6 +518,44 @@ export default function PaymentPage() {
                   min="0"
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
+                
+                {/* Currency Conversion Display */}
+                {isConverting && (
+                  <div className="mt-2 p-3 bg-blue-500/20 border border-blue-400/30 rounded-lg">
+                    <div className="flex items-center text-blue-300">
+                      <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Converting currency using real-time exchange rates...
+                    </div>
+                  </div>
+                )}
+                
+                {originalAmount && convertedAmount && !isConverting && (
+                  <div className="mt-2 p-3 bg-green-500/20 border border-green-400/30 rounded-lg">
+                    <div className="text-green-300 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span>Original: {formatCurrency(originalAmount, 'INR')}</span>
+                        <span>→</span>
+                        <span>Converted: {formatCurrency(convertedAmount, 'USD')}</span>
+                      </div>
+                      <div className="text-xs text-green-400 mt-1">
+                        Using CoinGecko real-time exchange rates
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Debug Information */}
+                {isFromExtension && (
+                  <div className="mt-2 p-2 bg-gray-500/20 border border-gray-400/30 rounded text-xs text-gray-300">
+                    <div className="font-semibold mb-1">Debug Info:</div>
+                    <div>URL: {formData.originalUrl?.substring(0, 50)}...</div>
+                    <div>Amount: {formData.amount} | Currency: {formData.currency} | Country: {formData.country}</div>
+                    <div>Store: {formData.store} | Product: {formData.brand}</div>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -490,6 +756,46 @@ export default function PaymentPage() {
                   </div>
                 )}
               </div>
+
+              {/* Balance Status */}
+              {isConnected && formData.amount && (
+                <div className="p-3 bg-gray-500/20 border border-gray-400/30 rounded-lg">
+                  <div className="text-sm text-gray-300 mb-2">Payment Status:</div>
+                  {(() => {
+                    const paymentAmount = parseFloat(formData.amount)
+                    if (formData.token === 'CELO') {
+                      const celoBalanceNum = celoBalance ? parseFloat(celoBalance.formatted) : 0
+                      const hasEnough = celoBalanceNum >= paymentAmount
+                      return (
+                        <div className={`flex items-center ${hasEnough ? 'text-green-400' : 'text-red-400'}`}>
+                          <span className="mr-2">{hasEnough ? '✅' : '❌'}</span>
+                          <span>
+                            {hasEnough 
+                              ? `Sufficient CELO balance (${celoBalanceNum.toFixed(4)} CELO)`
+                              : `Insufficient CELO balance (${celoBalanceNum.toFixed(4)} / ${paymentAmount} CELO)`
+                            }
+                          </span>
+                        </div>
+                      )
+                    } else if (formData.token === 'CUSD') {
+                      const cusdBalanceNum = cusdBalance ? parseFloat(formatEther(cusdBalance)) : 0
+                      const hasEnough = cusdBalanceNum >= paymentAmount
+                      return (
+                        <div className={`flex items-center ${hasEnough ? 'text-green-400' : 'text-red-400'}`}>
+                          <span className="mr-2">{hasEnough ? '✅' : '❌'}</span>
+                          <span>
+                            {hasEnough 
+                              ? `Sufficient cUSD balance (${cusdBalanceNum.toFixed(2)} cUSD)`
+                              : `Insufficient cUSD balance (${cusdBalanceNum.toFixed(2)} / ${paymentAmount} cUSD)`
+                            }
+                          </span>
+                        </div>
+                      )
+                    }
+                    return null
+                  })()}
+                </div>
+              )}
 
               {/* Payment Button */}
               <button

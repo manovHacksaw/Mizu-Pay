@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { auth } from '@clerk/nextjs/server'
+import { verifyWalletOwnership } from '@/lib/wallet-verification'
 
 const prisma = new PrismaClient()
 
@@ -15,11 +16,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { address, signature } = await request.json()
+    const { address, signature, message } = await request.json()
     console.log('Wallet data:', { address, signature, userId })
 
-    if (!address) {
-      return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 })
+    if (!address || !signature) {
+      return NextResponse.json({ error: 'Wallet address and signature are required' }, { status: 400 })
+    }
+
+    // Verify wallet ownership using signature
+    const messageToVerify = message || `Connect wallet to Mizu-Pay: ${address}`
+    const isValidSignature = await verifyWalletOwnership(address, messageToVerify, signature)
+    
+    if (!isValidSignature) {
+      return NextResponse.json({ error: 'Invalid signature. Please sign the message with your wallet.' }, { status: 400 })
     }
 
     // Check if wallet already exists
@@ -29,7 +38,13 @@ export async function POST(request: NextRequest) {
 
     if (existingWallet) {
       console.log('Wallet already exists:', existingWallet)
-      return NextResponse.json({ message: 'Wallet already exists', wallet: existingWallet })
+      
+      // Check if wallet belongs to current user
+      if (existingWallet.userId === user.id) {
+        return NextResponse.json({ message: 'Wallet already connected to your account', wallet: existingWallet })
+      } else {
+        return NextResponse.json({ error: 'Wallet is already connected to another account' }, { status: 400 })
+      }
     }
 
     // Get user from database

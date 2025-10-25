@@ -41,17 +41,23 @@ const CHECKOUT_CONFIG = {
     
     // Product description selectors
     product: [
-      // Add new, more specific selectors for cart pages
-      '[class*="product-brand"]', 
-      '[class*="item-title"]',
+      // Myntra-specific selectors
+      '[class*="pdp-product-name"]',
       '[class*="product-name"]',
+      '[class*="item-title"]',
+      '[class*="product-brand"]',
+      'h1[class*="pdp"]',
+      'h1[class*="product"]',
+      
+      // Generic e-commerce selectors
       'a[href*="/product/"]', // Links to product pages
-
-      // Original selectors
       '[data-testid*="product"]', '[data-testid*="item"]',
       '.product-name', '.item-name', '.product-title',
       '[class*="product"]', '[class*="item"]',
-      '.cart-item', '.order-item'
+      '.cart-item', '.order-item',
+      
+      // Page title fallback
+      'title'
     ],
     
     // Currency selectors
@@ -226,6 +232,7 @@ async function extractCheckoutData() {
       store: extractStoreName(),
       amount: extractAmount(),
       currency: currency, // Use the pre-fetched currency
+      country: extractCountry(currency), // Add country detection
       product_name: extractProductName(),
       url: window.location.href,
       timestamp: Date.now()
@@ -328,8 +335,21 @@ function extractAmount() {
 
 // Extract currency
 function extractCurrency() {
-  // STRATEGY 1: Search the whole page text for a symbol.
-  // This is much more reliable on pages like Myntra/Flipkart.
+  // STRATEGY 1: Check domain-based currency detection first
+  const hostname = window.location.hostname.toLowerCase();
+  
+  // Indian e-commerce sites
+  if (hostname.includes('myntra.com') || 
+      hostname.includes('flipkart.com') || 
+      hostname.includes('amazon.in') ||
+      hostname.includes('nykaa.com') ||
+      hostname.includes('swiggy.com') ||
+      hostname.includes('zomato.com') ||
+      hostname.includes('.in/')) {
+    return 'INR';
+  }
+  
+  // STRATEGY 2: Search the whole page text for currency symbols
   const bodyText = document.body.textContent || '';
 
   // Prioritize INR symbols for your region
@@ -344,32 +364,103 @@ function extractCurrency() {
     return getCurrencyFromSymbol(match[0]);
   }
 
-  // STRATEGY 2: Fallback to checking specific "amount" elements
+  // STRATEGY 3: Fallback to checking specific "amount" elements
   for (const selector of CHECKOUT_CONFIG.selectors.amount) {
     const elements = document.querySelectorAll(selector);
     for (const element of elements) {
       const text = element.textContent?.trim() || '';
-      const currency = extractCurrencyFromText(text); // Uses the regex helpers
+      const currency = extractCurrencyFromText(text);
       if (currency) {
         return currency;
       }
     }
   }
   
-  // STRATEGY 3: Default fallback
+  // STRATEGY 4: Default fallback based on domain
+  if (hostname.includes('.in') || hostname.includes('myntra') || hostname.includes('flipkart')) {
+    return 'INR';
+  }
+  
   return 'USD'; // Default fallback
+}
+
+// Extract country based on currency and domain
+function extractCountry(currency) {
+  const hostname = window.location.hostname.toLowerCase();
+  
+  // Currency-based country detection
+  if (currency === 'INR') {
+    return 'IN'; // India
+  } else if (currency === 'USD') {
+    return 'US'; // United States
+  } else if (currency === 'EUR') {
+    return 'DE'; // Germany (or other EU country)
+  } else if (currency === 'GBP') {
+    return 'GB'; // United Kingdom
+  } else if (currency === 'JPY') {
+    return 'JP'; // Japan
+  }
+  
+  // Domain-based country detection
+  if (hostname.includes('.in') || hostname.includes('myntra') || hostname.includes('flipkart')) {
+    return 'IN';
+  } else if (hostname.includes('.com')) {
+    return 'US';
+  } else if (hostname.includes('.de')) {
+    return 'DE';
+  } else if (hostname.includes('.co.uk')) {
+    return 'GB';
+  }
+  
+  // Default fallback
+  return 'US';
 }
 
 // Extract product name
 function extractProductName() {
+  // STRATEGY 1: Try to get product name from page title (most reliable for product pages)
+  const title = document.title;
+  if (title && !title.toLowerCase().includes('checkout') && 
+      !title.toLowerCase().includes('cart') && 
+      !title.toLowerCase().includes('bag')) {
+    // Clean up the title - remove store name and common suffixes
+    let productName = title
+      .replace(/ - .*$/, '') // Remove everything after " - "
+      .replace(/ \| .*$/, '') // Remove everything after " | "
+      .replace(/ on .*$/, '') // Remove " on StoreName"
+      .trim();
+    
+    if (productName && productName.length > 5 && productName.length < 150) {
+      return productName;
+    }
+  }
+  
+  // STRATEGY 2: Look for specific product selectors
   for (const selector of CHECKOUT_CONFIG.selectors.product) {
     const elements = document.querySelectorAll(selector);
     for (const element of elements) {
       const text = element.textContent?.trim();
-      if (text && text.length > 0 && text.length < 200) {
+      if (text && text.length > 5 && text.length < 200) {
         return text;
       }
     }
+  }
+  
+  // STRATEGY 3: Look for h1 tags (often contain product names)
+  const h1Elements = document.querySelectorAll('h1');
+  for (const h1 of h1Elements) {
+    const text = h1.textContent?.trim();
+    if (text && text.length > 5 && text.length < 200 && 
+        !text.toLowerCase().includes('checkout') &&
+        !text.toLowerCase().includes('cart')) {
+      return text;
+    }
+  }
+  
+  // STRATEGY 4: Look for meta tags
+  const ogTitle = document.querySelector('meta[property="og:title"]')?.content;
+  if (ogTitle && ogTitle.length > 5 && ogTitle.length < 200) {
+    return ogTitle;
   }
   
   return 'Purchase';
