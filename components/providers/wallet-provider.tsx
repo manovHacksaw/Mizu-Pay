@@ -39,7 +39,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   if (!mounted) {
-    return <>{children}</>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
+        <div className="text-white text-xl">Loading wallet provider...</div>
+      </div>
+    )
   }
 
   return (

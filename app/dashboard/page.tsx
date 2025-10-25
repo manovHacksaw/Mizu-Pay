@@ -4,6 +4,8 @@ import { useUser } from '@clerk/nextjs'
 import { useAccount, useSignMessage } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useState, useEffect } from 'react'
+import PaymentTesterSimple from '@/components/payment-tester-simple'
+import Link from 'next/link'
 
 function DashboardContent() {
   const { user, isLoaded } = useUser()
@@ -256,6 +258,26 @@ function DashboardContent() {
           </div>
         </div>
 
+        {/* Payment Actions */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Make a Payment</h3>
+            <p className="text-gray-300 mb-4">Process payments using CUSD or CELO tokens</p>
+            <Link 
+              href="/payment"
+              className="inline-flex items-center bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200"
+            >
+              Go to Payment Page
+            </Link>
+          </div>
+          
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Payment Tester</h3>
+            <p className="text-gray-300 mb-4">Test payment functionality</p>
+            <PaymentTesterSimple />
+          </div>
+        </div>
+
         {/* Stats Grid */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
@@ -280,19 +302,5 @@ function DashboardContent() {
 }
 
 export default function Dashboard() {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
-    )
-  }
-
   return <DashboardContent />
 }

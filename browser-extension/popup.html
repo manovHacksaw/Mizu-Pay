@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mizu Pay - Pay with CELO</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">💎</div>
+        <div class="logo-text">Mizu Pay</div>
+      </div>
+      <div class="status-indicator" id="statusIndicator">
+        <div class="status-dot"></div>
+        <span id="statusText">Ready</span>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <!-- Checkout Detection Status -->
+      <div class="section" id="checkoutSection" style="display: none;">
+        <h3>Checkout Detected!</h3>
+        <div class="checkout-info">
+          <div class="info-item">
+            <span class="label">Store:</span>
+            <span class="value" id="storeName">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Amount:</span>
+            <span class="value" id="amount">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Currency:</span>
+            <span class="value" id="currency">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Country:</span>
+            <span class="value" id="country">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">CELO Equivalent:</span>
+            <span class="value" id="celoAmount">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">cUSD Equivalent:</span>
+            <span class="value" id="cusdAmount">-</span>
+          </div>
+        </div>
+        <button id="payWithCeloBtn" class="pay-button">
+          <span class="button-icon">💎</span>
+          Pay with CELO
+        </button>
+      </div>
+
+      <!-- No Checkout Detected -->
+      <div class="section" id="noCheckoutSection">
+        <div class="no-checkout">
+          <div class="no-checkout-icon">🛒</div>
+          <h3>No Checkout Detected</h3>
+          <p>Navigate to a checkout or payment page to use Mizu Pay</p>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="section settings-section">
+        <h3>Settings</h3>
+        <div class="setting-item">
+          <label class="switch">
+            <input type="checkbox" id="extensionEnabled">
+            <span class="slider"></span>
+          </label>
+          <span class="setting-label">Enable Extension</span>
+        </div>
+        <div class="setting-item">
+          <label class="switch">
+            <input type="checkbox" id="showFloatingButton">
+            <span class="slider"></span>
+          </label>
+          <span class="setting-label">Show Floating Button</span>
+        </div>
+        <div class="setting-item">
+          <label for="dappUrl">DApp URL:</label>
+          <input type="text" id="dappUrl" placeholder="http://localhost:3000/payment">
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="section">
+        <h3>Quick Actions</h3>
+        <div class="action-buttons">
+          <button id="openDApp" class="action-button">
+            <span class="button-icon">🌐</span>
+            Open DApp
+          </button>
+          <button id="testDetection" class="action-button">
+            <span class="button-icon">🔍</span>
+            Test Detection
+          </button>
+          <button id="refreshRates" class="action-button">
+            <span class="button-icon">🔄</span>
+            Refresh Rates
+          </button>
+        </div>
+      </div>
+
+      <!-- Supported Sites -->
+      <div class="section">
+        <h3>Supported Sites</h3>
+        <div class="supported-sites">
+          <div class="site-tag">Amazon</div>
+          <div class="site-tag">Flipkart</div>
+          <div class="site-tag">Myntra</div>
+          <div class="site-tag">Nykaa</div>
+          <div class="site-tag">eBay</div>
+          <div class="site-tag">Etsy</div>
+          <div class="site-tag">Shopify</div>
+          <div class="site-tag">+ More</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-links">
+        <a href="#" id="helpLink">Help</a>
+        <a href="#" id="settingsLink">Settings</a>
+      </div>
+      <div class="version">v2.0.0</div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
