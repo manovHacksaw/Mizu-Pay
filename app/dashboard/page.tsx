@@ -13,10 +13,11 @@ import { Card, CardContent } from '@/components/ui/card'
 
 // Skeleton Loader Component
 const SkeletonCard = () => (
- <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
+ <Card className="p-6 rounded-2xl bg-black/5backdrop-blur-xl border border-gray-800/50 shadow-2xl">
   <CardContent className="p-0">
    <div className="flex items-center justify-between mb-4">
     <div className="h-5 bg-white/20 rounded w-32 animate-pulse"></div>
+    
     <div className="h-5 w-5 bg-white/20 rounded animate-pulse"></div>
    </div>
    <div className="mb-2">
@@ -28,14 +29,14 @@ const SkeletonCard = () => (
 )
 
 const SkeletonMainCard = () => (
- <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
+ <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl">
   <CardContent className="p-0">
    <div className="flex items-center justify-between mb-6">
     <div className="h-6 bg-white/20 rounded w-40 animate-pulse"></div>
     <div className="h-5 w-5 bg-white/20 rounded animate-pulse"></div>
    </div>
    <div className="space-y-4">
-    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+    <div className="bg-white/10 rounded-lg p-4 border border-blue-500/20">
      <div className="h-4 bg-white/20 rounded w-24 mb-2 animate-pulse"></div>
      <div className="h-4 bg-white/20 rounded w-32 animate-pulse"></div>
     </div>
@@ -109,10 +110,10 @@ function DashboardContent() {
  }, [])
 
  useEffect(() => {
-  if (user && mounted) {
-   fetchSavedWallets()
+ if (user && mounted) {
+ fetchSavedWallets()
    fetchPayments()
-  }
+ }
  }, [user, mounted])
 
  // Fetch real transactions when component mounts
@@ -208,7 +209,7 @@ function DashboardContent() {
    console.error('Error fetching real transactions:', error)
   } finally {
    setLoadingEnvioTransactions(false)
-  }
+ }
  }
 
  const handleSignMessage = async () => {
@@ -354,7 +355,7 @@ function DashboardContent() {
  <h1 className="text-[clamp(2.25rem,6vw,4rem)] font-extralight leading-[0.95] tracking-tight text-white mb-4">
  Welcome back, {user.firstName || user.emailAddresses[0]?.emailAddress}!
  </h1>
- <p className="text-lg tracking-tight text-white/70 md:text-xl max-w-2xl">
+ <p className="text-lg tracking-tight text-blue-400 md:text-xl max-w-2xl">
  Manage your payments and wallet connections with fluid, regenerative finance.
  </p>
  </div>
@@ -383,19 +384,19 @@ function DashboardContent() {
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 0.4, ease: "easeOut" }}
  >
- <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="p-6 rounded-2x bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-lg font-semibold text-white tracking-tight">Total Payments</h3>
- <Clock className="w-5 h-5 text-white/70" />
+ <Clock className="w-5 h-5 text-blue-400" />
  </div>
  <div className="mb-2">
  <span className="text-4xl font-bold text-white tracking-tight">
  <AnimatedNumber value={payments.length} />
  </span>
- <span className="ml-1 text-white/70">payments</span>
+ <span className="ml-1 text-blue-400">payments</span>
  </div>
- <p className="text-white/70 text-sm tracking-tight">
+ <p className="text-blue-400 text-sm tracking-tight">
   {loadingPayments ? 'Loading...' : 'Database payments'}
  </p>
  </CardContent>
@@ -408,19 +409,19 @@ function DashboardContent() {
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 0.4, ease: "easeOut" }}
  >
- <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-lg font-semibold text-white tracking-tight">Blockchain Transactions</h3>
- <TrendingUp className="w-5 h-5 text-white/70" />
+ <TrendingUp className="w-5 h-5 text-blue-400" />
  </div>
  <div className="mb-2">
  <span className="text-4xl font-bold text-white tracking-tight">
  <AnimatedNumber value={envioTransactions.length} />
  </span>
- <span className="ml-1 text-white/70">transactions</span>
+ <span className="ml-1 text-blue-400">transactions</span>
  </div>
- <p className="text-white/70 text-sm tracking-tight">
+ <p className="text-blue-400 text-sm tracking-tight">
   {loadingEnvioTransactions ? 'Loading...' : 'From Envio indexer'}
  </p>
  </CardContent>
@@ -433,19 +434,19 @@ function DashboardContent() {
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 0.4, ease: "easeOut" }}
  >
- <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-lg font-semibold text-white tracking-tight">Total Volume</h3>
- <CreditCard className="w-5 h-5 text-white/70" />
+ <CreditCard className="w-5 h-5 text-blue-400" />
  </div>
  <div className="mb-2">
  <span className="text-4xl font-bold text-white tracking-tight">
  <AnimatedNumber value={totalVolume} />
  </span>
- <span className="ml-1 text-white/70">CUSD</span>
+ <span className="ml-1 text-blue-400">CUSD</span>
  </div>
- <p className="text-white/70 text-sm tracking-tight">
+ <p className="text-blue-400 text-sm tracking-tight">
   {loadingEnvioTransactions ? 'Loading...' : 'From blockchain'}
  </p>
  </CardContent>
@@ -458,19 +459,19 @@ function DashboardContent() {
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 0.4, ease: "easeOut" }}
  >
- <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-lg font-semibold text-white tracking-tight">ReFi Impact</h3>
- <TrendingUp className="w-5 h-5 text-white/70" />
+ <TrendingUp className="w-5 h-5 text-blue-400" />
  </div>
  <div className="mb-2">
  <span className="text-4xl font-bold text-white tracking-tight">
  <AnimatedNumber value={refiImpact} />
  </span>
- <span className="ml-1 text-white/70">CUSD</span>
+ <span className="ml-1 text-blue-400">CUSD</span>
  </div>
- <p className="text-white/70 text-sm tracking-tight">
+ <p className="text-blue-400 text-sm tracking-tight">
   {loadingEnvioTransactions ? 'Loading...' : '0.75% of total volume'}
  </p>
  </CardContent>
@@ -498,17 +499,17 @@ function DashboardContent() {
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 0.4, ease: "easeOut" }}
  >
- <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-6">
  <h2 className="text-xl font-semibold text-white">Wallet Connection</h2>
- <Wallet className="w-5 h-5 text-white/70" />
+ <Wallet className="w-5 h-5 text-blue-400" />
  </div>
  <div className="space-y-4">
  {isConnected ? (
  <div className="space-y-4">
- <div className="bg-white/5 rounded-lg p-4 border border-white/10">
- <p className="text-sm text-white/70 mb-1">Connected Wallet</p>
+ <div className="bg-white/10 rounded-lg p-4 border border-blue-500/20">
+ <p className="text-sm text-blue-400 mb-1">Connected Wallet</p>
  <p className="font-mono text-sm text-white">{address}</p>
  </div>
 
@@ -526,20 +527,20 @@ function DashboardContent() {
  <Button
   onClick={handleSignMessage}
   disabled={isSigning}
-  className="w-full group relative overflow-hidden border border-white/30 bg-gradient-to-r from-white/20 to-white/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:shadow-white/10 disabled:opacity-50"
+  className="w-full group relative overflow-hidden border border-gray-700/60 bg-gradient-to-r from-blue-500/20 to-blue-600/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-blue-400/60 hover:bg-blue-500/30 hover:shadow-lg hover:shadow-blue-500/30 disabled:opacity-50"
  >
   {isSigning ? 'Signing...' : 'Sign Message to Verify Ownership'}
  </Button>
 
  {signature && (
- <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+ <div className="bg-black/5 border border-gray-800/50 rounded-lg p-4">
  <p className="text-white text-sm mb-2">Message signed successfully!</p>
- <p className="text-white/70 font-mono text-xs break-all">{signature}</p>
+ <p className="text-blue-400 font-mono text-xs break-all">{signature}</p>
  </div>
  )}
 
  {error && (
- <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+ <div className="bg-black/5 border border-gray-800/50 rounded-lg p-4">
  <p className="text-white text-sm">{error}</p>
  </div>
  )}
@@ -548,7 +549,7 @@ function DashboardContent() {
  </div>
  ) : (
  <div className="text-center">
- <p className="text-white/70 mb-4">Connect your wallet to get started</p>
+ <p className="text-blue-400 mb-4">Connect your wallet to get started</p>
           <WalletConnect />
  </div>
  )}
@@ -564,23 +565,23 @@ function DashboardContent() {
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 0.4, ease: "easeOut" }}
  >
- <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-6">
  <h2 className="text-xl font-semibold text-white">Account Information</h2>
- <Users className="w-5 h-5 text-white/70" />
+ <Users className="w-5 h-5 text-blue-400" />
  </div>
  <div className="space-y-4">
- <div className="bg-white/5 rounded-lg p-4 border border-white/10">
- <p className="text-sm text-white/70 mb-1">Name</p>
+ <div className="bg-white/10 rounded-lg p-4 border border-blue-500/20">
+ <p className="text-sm text-blue-400 mb-1">Name</p>
  <p className="font-medium text-white">{user.fullName || 'Not provided'}</p>
  </div>
- <div className="bg-white/5 rounded-lg p-4 border border-white/10">
- <p className="text-sm text-white/70 mb-1">Email</p>
+ <div className="bg-white/10 rounded-lg p-4 border border-blue-500/20">
+ <p className="text-sm text-blue-400 mb-1">Email</p>
  <p className="font-medium text-white">{user.emailAddresses[0]?.emailAddress}</p>
  </div>
- <div className="bg-white/5 rounded-lg p-4 border border-white/10">
- <p className="text-sm text-white/70 mb-1">User ID</p>
+ <div className="bg-white/10 rounded-lg p-4 border border-blue-500/20">
+ <p className="text-sm text-blue-400 mb-1">User ID</p>
  <p className="font-mono text-sm text-white">{user.id}</p>
  </div>
  </div>
@@ -595,20 +596,20 @@ function DashboardContent() {
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 0.4, ease: "easeOut" }}
  >
- <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-6">
  <h2 className="text-xl font-semibold text-white">Your Saved Wallets</h2>
- <CreditCard className="w-5 h-5 text-white/70" />
+ <CreditCard className="w-5 h-5 text-blue-400" />
  </div>
  {loadingWallets ? (
- <div className="text-center text-white/70">Loading wallets...</div>
+ <div className="text-center text-blue-400">Loading wallets...</div>
  ) : savedWallets.length > 0 ? (
  <div className="space-y-3">
  {savedWallets.map((wallet, index) => (
  <motion.div 
  key={wallet.id} 
- className="bg-white/5 rounded-lg p-4 border border-white/10"
+ className="bg-white/10 rounded-lg p-4 border border-blue-500/20"
  initial={{ opacity: 0, scale: 0.9 }}
  animate={{ opacity: 1, scale: 1 }}
  transition={{ duration: 0.3 }}
@@ -616,7 +617,7 @@ function DashboardContent() {
  <div className="flex items-center justify-between">
  <div>
  <p className="font-mono text-sm text-white">{wallet.address}</p>
- <p className="text-white/70 text-xs">
+ <p className="text-blue-400 text-xs">
  {wallet.isPrimary ? 'Primary Wallet' : 'Secondary Wallet'} • 
  Added {new Date(wallet.createdAt).toLocaleDateString()}
  </p>
@@ -631,7 +632,7 @@ function DashboardContent() {
  ))}
  </div>
  ) : (
- <div className="text-center text-white/70">
+ <div className="text-center text-blue-400">
  <p>No wallets saved yet</p>
  <p className="text-sm mt-1">Connect and sign a message to save your wallet</p>
  </div>
@@ -647,33 +648,33 @@ function DashboardContent() {
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 0.4, ease: "easeOut" }}
  >
- <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-6">
  <h2 className="text-xl font-semibold text-white">Recent Transactions</h2>
- <TrendingUp className="w-5 h-5 text-white/70" />
+ <TrendingUp className="w-5 h-5 text-blue-400" />
  </div>
  <div className="space-y-4">
- <p className="text-white/70">Your latest blockchain activity</p>
+ <p className="text-blue-400">Your latest blockchain activity</p>
  <div className="space-y-3">
  {loadingEnvioTransactions ? (
   <div className="space-y-3">
-   <div className="bg-white/5 rounded-lg p-4 border border-white/10 animate-pulse">
+   <div className="bg-white/10 rounded-lg p-4 border border-blue-500/20 animate-pulse">
     <div className="h-4 bg-white/20 rounded w-3/4 mb-2"></div>
     <div className="h-3 bg-white/20 rounded w-1/2"></div>
    </div>
-   <div className="bg-white/5 rounded-lg p-4 border border-white/10 animate-pulse">
+   <div className="bg-white/10 rounded-lg p-4 border border-blue-500/20 animate-pulse">
     <div className="h-4 bg-white/20 rounded w-2/3 mb-2"></div>
     <div className="h-3 bg-white/20 rounded w-1/3"></div>
    </div>
   </div>
  ) : envioTransactions.length > 0 ? (
   envioTransactions.slice(0, 3).map((tx, index) => (
-   <div key={tx.id || index} className="bg-white/5 rounded-lg p-4 border border-white/10">
+   <div key={tx.id || index} className="bg-white/10 rounded-lg p-4 border border-blue-500/20">
     <div className="flex items-center justify-between">
      <div>
       <p className="text-white font-medium">{formatNumber(formatBigInt(tx.amount))} {tx.token}</p>
-      <p className="text-white/70 text-sm">
+      <p className="text-blue-400 text-sm">
        {tx.status === 'CONFIRMED' ? '✅ Confirmed' : '⏳ Pending'}
       </p>
       <p className="text-white/50 text-xs">
@@ -684,7 +685,7 @@ function DashboardContent() {
       <p className="text-white/50 text-xs font-mono">
        {tx.txHash?.slice(0, 8)}...{tx.txHash?.slice(-8)}
       </p>
-      <p className="text-white/70 text-sm">
+      <p className="text-blue-400 text-sm">
        Block #{tx.blockNumber}
       </p>
      </div>
@@ -692,24 +693,24 @@ function DashboardContent() {
    </div>
   ))
  ) : (
-  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-   <div className="flex items-center justify-between">
-    <div>
-     <p className="text-white font-medium">No transactions yet</p>
-     <p className="text-white/70 text-sm">Connect your wallet to see blockchain activity</p>
-    </div>
-    <div className="text-white/50 text-sm">
-     --
-    </div>
-   </div>
-  </div>
+  <div className="bg-white/10 rounded-lg p-4 border border-blue-500/20">
+ <div className="flex items-center justify-between">
+ <div>
+ <p className="text-white font-medium">No transactions yet</p>
+     <p className="text-blue-400 text-sm">Connect your wallet to see blockchain activity</p>
+ </div>
+ <div className="text-white/50 text-sm">
+ --
+ </div>
+ </div>
+ </div>
  )}
  {envioTransactions.length > 3 && (
   <div className="text-center py-2">
    <p className="text-white/50 text-sm">
     Showing 3 of {envioTransactions.length} transactions
    </p>
-  </div>
+ </div>
  )}
  </div>
  </div>
@@ -728,7 +729,7 @@ function DashboardContent() {
  transition={{ duration: 0.4, ease: "easeOut" }}
  className="mt-8"
  >
- <Card className="p-6 rounded-2xl bg-gradient-to-r from-green-500/10 to-blue-500/10 backdrop-blur-xl border border-green-500/20 shadow-2xl">
+ <Card className="p-6 rounded-2xl bg-black/5 backdrop-blur-xl border border-green-500/20 shadow-2xl">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-6">
  <h2 className="text-xl font-semibold text-white">🌱 ReFi Impact</h2>
@@ -739,25 +740,25 @@ function DashboardContent() {
    <div className="text-3xl font-bold text-white mb-2">
     <AnimatedNumber value={refiImpact} />
    </div>
-   <p className="text-white/70 text-sm">CUSD Contributed</p>
+   <p className="text-blue-400 text-sm">CUSD Contributed</p>
    <p className="text-green-400 text-xs">0.75% of total volume</p>
   </div>
   <div className="text-center">
    <div className="text-3xl font-bold text-white mb-2">
     <AnimatedNumber value={totalVolume} />
    </div>
-   <p className="text-white/70 text-sm">Total Volume</p>
+   <p className="text-blue-400 text-sm">Total Volume</p>
    <p className="text-white/50 text-xs">From all transactions</p>
   </div>
   <div className="text-center">
    <div className="text-3xl font-bold text-white mb-2">
     0.75%
    </div>
-   <p className="text-white/70 text-sm">ReFi Rate</p>
+   <p className="text-blue-400 text-sm">ReFi Rate</p>
    <p className="text-green-400 text-xs">Automatically allocated</p>
   </div>
  </div>
- <div className="mt-6 p-4 rounded-lg bg-white/5 border border-white/10">
+ <div className="mt-6 p-4 rounded-lg bg-black/5 border border-gray-800/50">
   <p className="text-white/80 text-sm text-center">
    Every transaction contributes to regenerative finance initiatives, 
    supporting sustainable blockchain development and environmental projects.
@@ -775,17 +776,17 @@ function DashboardContent() {
  transition={{ duration: 0.4, ease: "easeOut" }}
  className="mt-8"
  >
- <div className="flex items-center justify-between p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <div className="flex items-center justify-between p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <div className="flex items-center gap-3">
- <div className="p-2 rounded-full bg-white/5">
+ <div className="p-2 rounded-full bg-black/5">
  <Zap className="w-5 h-5 text-white" />
  </div>
  <div>
  <p className="text-sm font-medium text-white">Make a Payment</p>
- <p className="text-xs text-white/70">Process payments using CUSD or CELO tokens</p>
+ <p className="text-xs text-blue-400">Process payments using CUSD or CELO tokens</p>
  </div>
  </div>
- <Button asChild className="group relative overflow-hidden border border-white/30 bg-gradient-to-r from-white/20 to-white/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:shadow-white/10">
+ <Button asChild className="group relative overflow-hidden border border-gray-700/60 bg-gradient-to-r from-blue-500/20 to-blue-600/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-blue-400/60 hover:bg-blue-500/30 hover:shadow-lg hover:shadow-blue-500/30">
  <Link href="/payment">
  Go to Payment Page
  <ArrowRight className="w-4 h-4 ml-2" />

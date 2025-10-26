@@ -89,6 +89,9 @@
     border-color: hsl(var(--border));
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+  html {
+    font-family: var(--font-ubuntu), system-ui, sans-serif;
   }
 }

@@ -56,7 +56,7 @@ export default function WalletConnect() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={openChainModal}
-                    className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md transition-colors"
+                    className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md transition-colors text-black"
                     type="button"
                   >
                     {chain.hasIcon && (

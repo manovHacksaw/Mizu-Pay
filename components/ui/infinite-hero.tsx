@@ -301,7 +301,7 @@ export default function InfiniteHero() {
                 <div className="text-center">
                     <h1
                         ref={h1Ref}
-                        className="mx-auto max-w-2xl lg:max-w-4xl text-[clamp(2.25rem,6vw,4rem)] font-extralight leading-[0.95] tracking-tight"
+                        className="mx-auto max-w-2xl lg:max-w-5xl text-[clamp(2.25rem,6vw,4rem)] font-extralight leading-[0.95] tracking-tight"
                     >
                         Fluid Payments for a Regenerative Future.
                     </h1>

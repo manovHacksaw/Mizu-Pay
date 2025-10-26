@@ -10,6 +10,46 @@ import { Search, Filter, RefreshCw, ExternalLink, User, DollarSign, Clock } from
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
+// Skeleton Loader Components
+const SkeletonCard = () => (
+    <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl">
+        <CardContent className="p-0">
+            <div className="flex items-center justify-between mb-4">
+                <div className="h-5 bg-white/20 rounded w-32 animate-pulse"></div>
+                <div className="h-5 w-5 bg-white/20 rounded animate-pulse"></div>
+            </div>
+            <div className="mb-2">
+                <div className="h-8 bg-white/20 rounded w-24 animate-pulse"></div>
+            </div>
+            <div className="h-4 bg-white/20 rounded w-20 animate-pulse"></div>
+        </CardContent>
+    </Card>
+)
+
+const SkeletonTransactionCard = () => (
+    <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl">
+        <CardContent className="p-0">
+            <div className="flex items-center justify-between">
+                <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-2">
+                        <div className="h-6 bg-white/20 rounded w-16 animate-pulse"></div>
+                        <div className="h-4 bg-white/20 rounded w-24 animate-pulse"></div>
+                        <div className="h-4 bg-white/20 rounded w-20 animate-pulse"></div>
+                        <div className="h-4 bg-white/20 rounded w-32 animate-pulse"></div>
+                    </div>
+                    <div className="flex items-center gap-6 text-sm">
+                        <div className="h-4 bg-white/20 rounded w-20 animate-pulse"></div>
+                        <div className="h-4 bg-white/20 rounded w-16 animate-pulse"></div>
+                        <div className="h-4 bg-white/20 rounded w-24 animate-pulse"></div>
+                    </div>
+                    <div className="mt-2 h-3 bg-white/20 rounded w-40 animate-pulse"></div>
+                </div>
+                <div className="h-8 bg-white/20 rounded w-24 animate-pulse"></div>
+            </div>
+        </CardContent>
+    </Card>
+)
+
 interface IndexedPayment {
  id: string
  payer: string
@@ -54,47 +94,33 @@ export default function TransactionsPage() {
 
  useEffect(() => {
  fetchTransactions()
- // Set up polling for real-time updates
- const interval = setInterval(fetchTransactions, 30000) // Poll every 30 seconds
- return () => clearInterval(interval)
  }, [])
 
  const fetchTransactions = async () => {
- try {
  setLoading(true)
  
- // Fetch payments from Envio indexer
+ // Simple fetch without complex processing
  const paymentsResponse = await fetch('/api/transactions/payments')
+ const withdrawalsResponse = await fetch('/api/transactions/withdrawals')
+ const statsResponse = await fetch('/api/transactions/stats')
+
  if (paymentsResponse.ok) {
  const paymentsData = await paymentsResponse.json()
  setPayments(paymentsData.payments || [])
  }
 
- // Fetch withdrawals from Envio indexer
- const withdrawalsResponse = await fetch('/api/transactions/withdrawals')
  if (withdrawalsResponse.ok) {
  const withdrawalsData = await withdrawalsResponse.json()
  setWithdrawals(withdrawalsData.withdrawals || [])
  }
 
- // Fetch global stats from Envio indexer
- const statsResponse = await fetch('/api/transactions/stats')
  if (statsResponse.ok) {
  const statsData = await statsResponse.json()
  setStats(statsData.stats)
  }
  
- // Update last update time
  setLastUpdate(new Date())
- } catch (error) {
- console.error('Error fetching transactions:', error)
- // If API fails, show empty state
- setPayments([])
- setWithdrawals([])
- setStats(null)
- } finally {
  setLoading(false)
- }
  }
 
  const formatAddress = (address: string) => {
@@ -182,20 +208,81 @@ export default function TransactionsPage() {
  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
  };
 
- const hoverTransition = { type: "spring", stiffness: 300, damping: 15 };
+    const hoverTransition = { type: "spring" as const, stiffness: 300, damping: 15 };
 
  if (loading) {
  return (
  <div className="min-h-screen bg-black text-white relative overflow-hidden">
+                {/* Animated Background */}
  <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black">
  <div className="absolute inset-0 [background:radial-gradient(120%_80%_at_50%_50%,_transparent_40%,_black_100%)]" />
  </div>
- <div className="flex items-center justify-center relative z-10">
- <div className="text-center">
- <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white/70 mx-auto mb-4"></div>
- <div className="text-white text-xl">Loading transactions...</div>
+
+                {/* Header - Glass Morphism Navbar */}
+                <motion.div
+                    className="flex justify-center w-full py-6 px-4 fixed top-0 left-0 right-0 z-40"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <div className="flex items-center justify-between px-6 py-3 rounded-full w-full max-w-7xl relative z-10">
+                        <div className="flex items-center">
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Welcome Section */}
+                <motion.div
+                    className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-24 relative z-10"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <div className="text-left mb-12">
+                        <h1 className="text-[clamp(2.25rem,6vw,4rem)] font-extralight leading-[0.95] tracking-tight text-white mb-4">
+                            Blockchain Transactions
+                        </h1>
+                        <p className="text-lg tracking-tight text-blue-400 md:text-xl max-w-2xl">
+                            Real-time indexed transactions from MizuPay contract with live monitoring and analytics.
+                        </p>
+                    </div>
+                </motion.div>
+
+                {/* Main Content */}
+                <motion.div
+                    className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12"
+                    initial="hidden"
+                    animate="visible"
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                    {/* Stats Cards Skeleton */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <SkeletonCard />
+                        <SkeletonCard />
+                        <SkeletonCard />
+                    </div>
+
+                    {/* Filters Skeleton */}
+                    <div className="flex flex-col md:flex-row gap-4 mb-6">
+                        <div className="flex-1">
+                            <div className="h-10 bg-white/20 rounded-lg animate-pulse"></div>
+                        </div>
+                        <div className="h-10 bg-white/20 rounded-lg w-48 animate-pulse"></div>
+                        <div className="h-10 bg-white/20 rounded-lg w-32 animate-pulse"></div>
+                        <div className="h-10 bg-white/20 rounded-lg w-10 animate-pulse"></div>
+                        <div className="h-10 bg-white/20 rounded-lg w-20 animate-pulse"></div>
+                    </div>
+
+                    {/* Transactions List Skeleton */}
+                    <div className="space-y-6">
+                        <div className="space-y-4">
+                            <div className="h-8 bg-white/20 rounded w-48 animate-pulse mb-4"></div>
+                            {[...Array(3)].map((_, index) => (
+                                <SkeletonTransactionCard key={index} />
+                            ))}
  </div>
  </div>
+                </motion.div>
  </div>
  )
  }
@@ -231,7 +318,7 @@ export default function TransactionsPage() {
  <h1 className="text-[clamp(2.25rem,6vw,4rem)] font-extralight leading-[0.95] tracking-tight text-white mb-4">
  Blockchain Transactions
  </h1>
- <p className="text-lg tracking-tight text-white/70 md:text-xl max-w-2xl">
+                    <p className="text-lg tracking-tight text-blue-400 md:text-xl max-w-2xl">
  Real-time indexed transactions from MizuPay contract with live monitoring and analytics.
  </p>
  </div>
@@ -257,6 +344,9 @@ export default function TransactionsPage() {
  Last updated: {lastUpdate.toLocaleTimeString()}
  </span>
  </div>
+                        <div className="mt-2 text-xs text-green-400/80">
+                            Powered by Envio Indexer • Live blockchain data
+                        </div>
  </motion.div>
  )}
 
@@ -268,16 +358,16 @@ export default function TransactionsPage() {
  whileHover={{ scale: 1.05, y: -5 }}
  transition={hoverTransition}
  >
- <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+                            <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-lg font-semibold text-white tracking-tight">Total Payments</h3>
- <DollarSign className="w-5 h-5 text-white/70" />
+                                        <DollarSign className="w-5 h-5 text-blue-400" />
  </div>
  <div className="mb-2">
  <span className="text-4xl font-bold text-white tracking-tight">{stats.totalPayments}</span>
  </div>
- <p className="text-white/70 text-sm tracking-tight">All time payments</p>
+                                    <p className="text-blue-400 text-sm tracking-tight">All time payments • Envio indexed</p>
  </CardContent>
  </Card>
  </motion.div>
@@ -287,18 +377,18 @@ export default function TransactionsPage() {
  whileHover={{ scale: 1.05, y: -5 }}
  transition={hoverTransition}
  >
- <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+                            <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-lg font-semibold text-white tracking-tight">Total Volume</h3>
- <DollarSign className="w-5 h-5 text-white/70" />
+                                        <DollarSign className="w-5 h-5 text-blue-400" />
  </div>
  <div className="mb-2">
  <span className="text-4xl font-bold text-white tracking-tight">
  {formatBigIntAmount(stats.totalVolume, 2)} cUSD
  </span>
  </div>
- <p className="text-white/70 text-sm tracking-tight">Total transaction volume</p>
+                                    <p className="text-blue-400 text-sm tracking-tight">Total transaction volume • Envio indexed</p>
  </CardContent>
  </Card>
  </motion.div>
@@ -308,16 +398,16 @@ export default function TransactionsPage() {
  whileHover={{ scale: 1.05, y: -5 }}
  transition={hoverTransition}
  >
- <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+                            <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-lg font-semibold text-white tracking-tight">Unique Users</h3>
- <User className="w-5 h-5 text-white/70" />
+                                        <User className="w-5 h-5 text-blue-400" />
  </div>
  <div className="mb-2">
  <span className="text-4xl font-bold text-white tracking-tight">{stats.uniqueUsers}</span>
  </div>
- <p className="text-white/70 text-sm tracking-tight">Unique wallet addresses</p>
+                                    <p className="text-blue-400 text-sm tracking-tight">Unique wallet addresses • Envio indexed</p>
  </CardContent>
  </Card>
  </motion.div>
@@ -331,18 +421,18 @@ export default function TransactionsPage() {
  >
  <div className="flex-1">
  <div className="relative">
- <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 h-4 w-4" />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400/60 h-4 w-4" />
  <Input
  placeholder="Search by address, session ID, or transaction hash..."
  value={searchTerm}
  onChange={(e) => setSearchTerm(e.target.value)}
- className="pl-10 bg-white/5 border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all duration-300"
+                                className="pl-10 bg-white/10 border-blue-500/20 text-white placeholder-blue-400/60 focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/40 transition-all duration-300"
  />
  </div>
  </div>
  
  <Select value={filterType} onValueChange={(value: any) => setFilterType(value)}>
- <SelectTrigger className="w-48 bg-white/5 border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all duration-300">
+                        <SelectTrigger className="w-48 bg-white/10 border-blue-500/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/40 transition-all duration-300">
  <SelectValue />
  </SelectTrigger>
  <SelectContent>
@@ -365,14 +455,14 @@ export default function TransactionsPage() {
  <Button
  variant="outline"
  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
- className="group relative overflow-hidden border border-white/30 bg-gradient-to-r from-white/20 to-white/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:shadow-white/10"
+                        className="group relative overflow-hidden border border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-blue-600/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-blue-400/50 hover:bg-blue-500/30 hover:shadow-lg hover:shadow-blue-500/30"
  >
  {sortOrder === 'asc' ? '↑' : '↓'}
  </Button>
 
  <Button
  onClick={fetchTransactions}
- className="group relative overflow-hidden border border-white/30 bg-gradient-to-r from-white/20 to-white/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:shadow-white/10"
+                        className="group relative overflow-hidden border border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-blue-600/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-blue-400/50 hover:bg-blue-500/30 hover:shadow-lg hover:shadow-blue-500/30"
  >
  <RefreshCw className="h-4 w-4 mr-2" />
  Refresh
@@ -385,15 +475,16 @@ export default function TransactionsPage() {
  {(filterType === 'all' || filterType === 'payments') && (
  <motion.div variants={itemVariants}>
  <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
- <DollarSign className="h-6 w-6 mr-2 text-white/70" />
+                                <DollarSign className="h-6 w-6 mr-2 text-blue-400" />
  Payments ({sortedPayments.length})
+                                <span className="ml-2 text-sm text-blue-400/80 font-normal">• Envio indexed</span>
  </h2>
  
  {sortedPayments.length === 0 ? (
- <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
+                                <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl">
  <CardContent className="p-0">
  <div className="text-center">
- <p className="text-white/70">No payments found</p>
+                                            <p className="text-blue-400">No payments found</p>
  </div>
  </CardContent>
  </Card>
@@ -406,7 +497,7 @@ export default function TransactionsPage() {
  whileHover={{ scale: 1.02, y: -2 }}
  transition={hoverTransition}
  >
- <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+                                            <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between">
  <div className="flex-1">
@@ -415,31 +506,31 @@ export default function TransactionsPage() {
  Payment
  </Badge>
  <div className="flex items-center gap-2">
- <span className="text-sm text-white/70">From:</span>
+                                                                    <span className="text-sm text-blue-400">From:</span>
  <span className="text-sm text-white font-mono">{formatAddress(payment.payer)}</span>
  </div>
  <div className="flex items-center gap-2">
- <span className="text-sm text-white/70">Store:</span>
- <span className="text-sm text-white font-medium">{payment.store || 'Unknown Store'}</span>
+                                                                    <span className="text-sm text-blue-400">Store:</span>
+                                                                    <span className="text-sm text-white font-medium">MizuPay Store</span>
  </div>
  <div className="flex items-center gap-2">
- <span className="text-sm text-white/70">Session:</span>
+                                                                    <span className="text-sm text-blue-400">Session:</span>
  <span className="text-xs text-white font-mono bg-white/5 px-2 py-1 rounded">{payment.sessionId}</span>
  </div>
  </div>
  
  <div className="flex items-center gap-6 text-sm">
  <div>
- <span className="text-white/70">Amount: </span>
+                                                                    <span className="text-blue-400">Amount: </span>
  <span className="text-white font-semibold">
  {formatAmount(payment.amount, payment.currency)}
  </span>
  </div>
  <div>
- <span className="text-white/70">Block: </span>
+                                                                    <span className="text-blue-400">Block: </span>
  <span className="text-white">{payment.blockNumber}</span>
  </div>
- <div className="flex items-center text-white/70">
+                                                                <div className="flex items-center text-blue-400">
  <Clock className="h-4 w-4 mr-1" />
  {formatTimestamp(payment.timestamp)}
  </div>
@@ -453,7 +544,7 @@ export default function TransactionsPage() {
  variant="outline"
  size="sm"
  onClick={() => window.open(getExplorerUrl(payment.transactionHash), '_blank')}
- className="group relative overflow-hidden border border-white/30 bg-gradient-to-r from-white/20 to-white/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:shadow-white/10"
+                                                            className="group relative overflow-hidden border border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-blue-600/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-blue-400/50 hover:bg-blue-500/30 hover:shadow-lg hover:shadow-blue-500/30"
  >
  <ExternalLink className="h-4 w-4 mr-2" />
  View on Explorer
@@ -472,15 +563,16 @@ export default function TransactionsPage() {
  {(filterType === 'all' || filterType === 'withdrawals') && (
  <motion.div variants={itemVariants}>
  <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
- <DollarSign className="h-6 w-6 mr-2 text-white/70" />
+                                <DollarSign className="h-6 w-6 mr-2 text-blue-400" />
  Withdrawals ({sortedWithdrawals.length})
+                                <span className="ml-2 text-sm text-blue-400/80 font-normal">• Envio indexed</span>
  </h2>
  
  {sortedWithdrawals.length === 0 ? (
- <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
+                                <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl">
  <CardContent className="p-0">
  <div className="text-center">
- <p className="text-white/70">No withdrawals found</p>
+                                            <p className="text-blue-400">No withdrawals found</p>
  </div>
  </CardContent>
  </Card>
@@ -493,7 +585,7 @@ export default function TransactionsPage() {
  whileHover={{ scale: 1.02, y: -2 }}
  transition={hoverTransition}
  >
- <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+                                            <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between">
  <div className="flex-1">
@@ -501,23 +593,23 @@ export default function TransactionsPage() {
  <Badge variant="secondary" className="bg-red-900/30 text-red-400 border-red-500/30">
  Withdrawal
  </Badge>
- <span className="text-sm text-white/70">
+                                                                <span className="text-sm text-blue-400">
  To: {formatAddress(withdrawal.to)}
  </span>
  </div>
  
  <div className="flex items-center gap-6 text-sm">
  <div>
- <span className="text-white/70">Amount: </span>
+                                                                    <span className="text-blue-400">Amount: </span>
  <span className="text-white font-semibold">
  {formatAmount(withdrawal.amount, withdrawal.currency)}
  </span>
  </div>
  <div>
- <span className="text-white/70">Block: </span>
+                                                                    <span className="text-blue-400">Block: </span>
  <span className="text-white">{withdrawal.blockNumber}</span>
  </div>
- <div className="flex items-center text-white/70">
+                                                                <div className="flex items-center text-blue-400">
  <Clock className="h-4 w-4 mr-1" />
  {formatTimestamp(withdrawal.timestamp)}
  </div>
@@ -528,7 +620,7 @@ export default function TransactionsPage() {
  variant="outline"
  size="sm"
  onClick={() => window.open(getExplorerUrl(withdrawal.transactionHash), '_blank')}
- className="group relative overflow-hidden border border-white/30 bg-gradient-to-r from-white/20 to-white/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-white/50 hover:bg-white/20 hover:shadow-lg hover:shadow-white/10"
+                                                            className="group relative overflow-hidden border border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-blue-600/10 px-4 py-2 text-sm rounded-lg font-medium tracking-wide text-white backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-blue-400/50 hover:bg-blue-500/30 hover:shadow-lg hover:shadow-blue-500/30"
  >
  <ExternalLink className="h-4 w-4 mr-2" />
  View on Explorer

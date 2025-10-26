@@ -11,12 +11,11 @@ const config: Config = {
   	extend: {
   		fontFamily: {
   			sans: [
-  				'var(--font-geist-sans)',
+  				'var(--font-ubuntu)',
   				'system-ui',
   				'sans-serif'
   			],
   			mono: [
-  				'var(--font-geist-mono)',
   				'monospace'
   			]
   		},

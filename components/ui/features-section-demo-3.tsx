@@ -16,14 +16,14 @@ export default function FeaturesSectionDemo() {
         "Each payment on Mizu Pay contributes to measurable climate impact. Users can view exactly how their transactions support regenerative finance pools and local sustainability projects — fully on-chain and transparent.",
       skeleton: <SkeletonOne />,
       className:
-        "col-span-1 lg:col-span-4 border-b lg:border-r dark:border-neutral-800",
+        "col-span-1 lg:col-span-4 border-b lg:border-r border-white/10",
     },
     {
       title: "Regeneration in Every Payment",
       description:
         "1% of every transaction goes directly into Celo-aligned ReFi initiatives. From carbon offsetting to ecosystem restoration, every swipe fuels regeneration across the planet.",
       skeleton: <SkeletonTwo />,
-      className: "border-b col-span-1 lg:col-span-2 dark:border-neutral-800",
+      className: "border-b col-span-1 lg:col-span-2 border-white/10",
     },
     {
       title: "Empowering Climate-Positive Communities",
@@ -31,31 +31,31 @@ export default function FeaturesSectionDemo() {
         "We're building more than a payment layer — we're nurturing a community of conscious consumers who believe that finance can heal, not harm.",
       skeleton: <SkeletonThree />,
       className:
-        "col-span-1 lg:col-span-3 lg:border-r  dark:border-neutral-800",
+        "col-span-1 lg:col-span-3 lg:border-r border-white/10",
     },
     {
       title: "Built on Celo, Powered by Purpose",
       description:
         "Mizu Pay runs on Celo's carbon-negative blockchain — mobile-first, planet-focused, and regenerative by design. Together, we're redefining the future of sustainable payments.",
       skeleton: <SkeletonFour />,
-      className: "col-span-1 lg:col-span-3 border-b lg:border-none",
+      className: "col-span-1 lg:col-span-3 border-b lg:border-none border-white/10",
     },
   ];
   return (
-    <div className="relative z-20 py-10 lg:py-40 max-w-7xl mx-auto">
+    <div id="features" className="relative z-20 py-10 lg:py-40 max-w-7xl mx-auto bg-black">
       <div className="px-8">
-        <h3 className="text-4xl lg:text-5xl lg:leading-tight max-w-5xl mx-auto text-center tracking-tight font-medium text-black dark:text-white">
-        Supporting Celo’s Sustainability Vision
+        <h3 className="text-4xl lg:text-5xl lg:leading-tight max-w-5xl mx-auto text-center tracking-tight font-medium text-white">
+        Supporting Celo's Sustainability Vision
         </h3>
 
-        <p className="text-sm lg:text-base  max-w-2xl  my-4 mx-auto text-neutral-500 text-center font-normal dark:text-neutral-300">
+        <p className="text-sm lg:text-base  max-w-2xl  my-4 mx-auto text-white/70 text-center font-normal">
           From Image generation to video generation, Everything AI has APIs for
           literally everything. It can even create this website copy for you.
         </p>
       </div>
 
       <div className="relative ">
-        <div className="grid grid-cols-1 lg:grid-cols-6 mt-12 xl:border rounded-md dark:border-neutral-800">
+        <div className="grid grid-cols-1 lg:grid-cols-6 mt-12 xl:border rounded-md border-white/10">
           {features.map((feature) => (
             <FeatureCard key={feature.title} className={feature.className}>
               <FeatureTitle>{feature.title}</FeatureTitle>
@@ -85,7 +85,7 @@ const FeatureCard = ({
 
 const FeatureTitle = ({ children }: { children?: React.ReactNode }) => {
   return (
-    <p className=" max-w-5xl mx-auto text-left tracking-tight text-black dark:text-white text-xl md:text-2xl md:leading-snug">
+    <p className=" max-w-5xl mx-auto text-left tracking-tight text-white text-xl md:text-2xl md:leading-snug">
       {children}
     </p>
   );
@@ -96,7 +96,7 @@ const FeatureDescription = ({ children }: { children?: React.ReactNode }) => {
     <p
       className={cn(
         "text-sm md:text-base  max-w-4xl text-left mx-auto",
-        "text-neutral-500 text-center font-normal dark:text-neutral-300",
+        "text-white/70 font-normal",
         "text-left max-w-sm mx-0 md:text-sm my-2"
       )}
     >
@@ -108,7 +108,7 @@ const FeatureDescription = ({ children }: { children?: React.ReactNode }) => {
 export const SkeletonOne = () => {
   return (
     <div className="relative flex py-8 px-2 gap-10 h-full">
-      <div className="w-full  p-5  mx-auto bg-white dark:bg-neutral-900 shadow-2xl group h-full">
+      <div className="w-full  p-5  mx-auto bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl group h-full rounded-lg">
         <div className="flex flex-1 w-full h-full flex-col space-y-2  ">
           {/* TODO */}
           <img
@@ -121,8 +121,8 @@ export const SkeletonOne = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-0 z-40 inset-x-0 h-60 bg-gradient-to-t from-white dark:from-black via-white dark:via-black to-transparent w-full pointer-events-none" />
-      <div className="absolute top-0 z-40 inset-x-0 h-60 bg-gradient-to-b from-white dark:from-black via-transparent to-transparent w-full pointer-events-none" />
+      <div className="absolute bottom-0 z-40 inset-x-0 h-60 bg-gradient-to-t from-black via-black to-transparent w-full pointer-events-none" />
+      <div className="absolute top-0 z-40 inset-x-0 h-60 bg-gradient-to-b from-black via-transparent to-transparent w-full pointer-events-none" />
     </div>
   );
 };
@@ -185,7 +185,7 @@ export const SkeletonTwo = () => {
             }}
             whileHover="whileHover"
             whileTap="whileTap"
-            className="rounded-xl -mr-4 mt-4 p-1 bg-white dark:bg-neutral-800 dark:border-neutral-700 border border-neutral-100 shrink-0 overflow-hidden"
+            className="rounded-xl -mr-4 mt-4 p-1 bg-white/5 backdrop-blur-xl border border-white/10 shrink-0 overflow-hidden"
           >
             <img
               src={image}
@@ -207,7 +207,7 @@ export const SkeletonTwo = () => {
             variants={imageVariants}
             whileHover="whileHover"
             whileTap="whileTap"
-            className="rounded-xl -mr-4 mt-4 p-1 bg-white dark:bg-neutral-800 dark:border-neutral-700 border border-neutral-100 shrink-0 overflow-hidden"
+            className="rounded-xl -mr-4 mt-4 p-1 bg-white/5 backdrop-blur-xl border border-white/10 shrink-0 overflow-hidden"
           >
             <img
               src={image}
@@ -220,8 +220,8 @@ export const SkeletonTwo = () => {
         ))}
       </div>
 
-      <div className="absolute left-0 z-[100] inset-y-0 w-20 bg-gradient-to-r from-white dark:from-black to-transparent  h-full pointer-events-none" />
-      <div className="absolute right-0 z-[100] inset-y-0 w-20 bg-gradient-to-l from-white dark:from-black  to-transparent h-full pointer-events-none" />
+      <div className="absolute left-0 z-[100] inset-y-0 w-20 bg-gradient-to-r from-black to-transparent  h-full pointer-events-none" />
+      <div className="absolute right-0 z-[100] inset-y-0 w-20 bg-gradient-to-l from-black  to-transparent h-full pointer-events-none" />
     </div>
   );
 };
@@ -239,6 +239,7 @@ export const Globe = ({ className }: { className?: string }) => {
 
   useEffect(() => {
     let phi = 0;
+    let animationId: number;
 
     if (!canvasRef.current) return;
 
@@ -252,23 +253,43 @@ export const Globe = ({ className }: { className?: string }) => {
       diffuse: 1.2,
       mapSamples: 16000,
       mapBrightness: 6,
-      baseColor: [0.3, 0.3, 0.3],
+      baseColor: [0.1, 0.1, 0.1],
       markerColor: [0.1, 0.8, 1],
       glowColor: [1, 1, 1],
+      glowCoefficient: 0.3,
+      glowPower: 2,
       markers: [
         // longitude latitude
         { location: [37.7595, -122.4367], size: 0.03 },
         { location: [40.7128, -74.006], size: 0.1 },
+        { location: [51.5074, -0.1278], size: 0.05 },
+        { location: [35.6762, 139.6503], size: 0.04 },
+        { location: [-33.8688, 151.2093], size: 0.03 },
       ],
       onRender: (state) => {
         // Called on every animation frame.
         // `state` will be an empty object, return updated params.
         state.phi = phi;
         phi += 0.01;
+        
+        // Ensure continuous animation
+        animationId = requestAnimationFrame(() => {
+          // This ensures the animation continues
+        });
       },
     });
 
+    // Start the animation loop
+    const animate = () => {
+      phi += 0.01;
+      animationId = requestAnimationFrame(animate);
+    };
+    animationId = requestAnimationFrame(animate);
+
     return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
       globe.destroy();
     };
   }, []);
@@ -281,3 +302,4 @@ export const Globe = ({ className }: { className?: string }) => {
     />
   );
 };
+

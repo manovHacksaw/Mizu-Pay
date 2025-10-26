@@ -1,25 +1,31 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Ubuntu } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
 import { Provider } from '@/components/Provider';
 import UserSync from '@/components/user-sync';
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const ubuntu = Ubuntu({
+  variable: "--font-ubuntu",
   subsets: ["latin"],
   display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
+  weight: ["300", "400", "500", "700"],
 });
 
 export const metadata: Metadata = {
   title: "Mizu Pay - Web3 Payment Platform",
   description: "Secure Web3 payments with Google OAuth and multi-wallet support",
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/mizu-pay-logo.png', sizes: '32x32', type: 'image/png' },
+      { url: '/mizu-pay-logo.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/mizu-pay-logo.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
@@ -31,7 +37,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${ubuntu.variable} font-sans antialiased`}
         >
           <Provider>
             <UserSync />

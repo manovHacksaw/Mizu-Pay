@@ -21,7 +21,7 @@ const Navbar = () => {
       <div className="flex items-center justify-between px-3 py-1.5 bg-white/10 backdrop-blur-xl rounded-full w-full max-w-3xl relative z-10 shadow-2xl ">
         <div className="flex items-center">
           <img 
-            src="/mizu-logo.png" 
+            src="./mizu-logo.png" 
             alt="Mizu Pay Logo" 
             className="h-12 w-auto object-contain drop-shadow-lg hover:scale-105 transition-transform duration-200"
             onError={(e) => {

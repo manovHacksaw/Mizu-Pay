@@ -4,7 +4,7 @@ interface FeatureSectionProps {
   subheading: string
   headline: string
   description: string
-  ctaText: string
+  ctaText?: string
   videoPlaceholder: string
   isVideoLeft?: boolean
   accentColor?: "green" | "blue" | "yellow"
@@ -28,17 +28,19 @@ export function FeatureSection({
   return (
     <section className="min-h-screen bg-black py-20 px-8 md:px-16 lg:px-24">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-48 items-center">
           {/* Text Content */}
           <div className={isVideoLeft ? "lg:order-2" : "lg:order-1"}>
             <p className="text-sm font-semibold text-green-400 uppercase tracking-widest mb-4">{subheading}</p>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-8 leading-tight">{headline}</h2>
             <p className="text-lg text-gray-400 leading-relaxed mb-8 max-w-lg">{description}</p>
-            <button
-              className={`px-8 py-3 bg-gradient-to-r ${accentClasses[accentColor]} text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-${accentColor}-500/50`}
-            >
-              {ctaText}
-            </button>
+            {ctaText && (
+              <button
+                className={`px-8 py-3 bg-gradient-to-r ${accentClasses[accentColor]} text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-${accentColor}-500/50`}
+              >
+                {ctaText}
+              </button>
+            )}
           </div>
 
           {/* Video Placeholder */}
