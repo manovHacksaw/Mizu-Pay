@@ -125,9 +125,10 @@ The application will be available at `http://localhost:3000`.
 ### Celo Sepolia Testnet
 
 | Contract | Address | Description |
-|----------|---------|-------------|
-| **MizuPay** | [`0x6aE731EbaC64f1E9c6A721eA2775028762830CF7]((https://sepolia.celoscan.io/address/0x6aE731EbaC64f1E9c6A721eA2775028762830CF7))` | Main payment processing contract |
-| **Mock cUSD** | `[0x61d11C622Bd98A71aD9361833379A2066Ad29CCa](https://sepolia.celoscan.io/address/0x61d11C622Bd98A71aD9361833379A2066Ad29CCa)` | cUSD token contract for testing |
+|-----------|----------|-------------|
+| **MizuPay** | [0x6aE731EbaC64f1E9c6A721eA2775028762830CF7](https://sepolia.celoscan.io/address/0x6aE731EbaC64f1E9c6A721eA2775028762830CF7) | Main payment processing contract |
+| **Mock cUSD** | [0x61d11C622Bd98A71aD9361833379A2066Ad29CCa](https://sepolia.celoscan.io/address/0x61d11C622Bd98A71aD9361833379A2066Ad29CCa) | cUSD token contract for testing |
+
 
 ### Network Configuration
 - **Chain ID**: 11142220
