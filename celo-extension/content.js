@@ -1678,40 +1678,40 @@ function showGuidanceModal() {
     if (currency === "INR") {
       amountInfo = `
         <div style="
-          background: rgba(255, 215, 0, 0.1);
-          border: 1px solid rgba(255, 215, 0, 0.3);
+          background: #f8f9fa;
+          border: 1px solid #e9ecef;
           border-radius: 8px;
           padding: 12px;
           margin-bottom: 16px;
         ">
-          <div style="color: #FFD700; font-weight: 600; margin-bottom: 4px;">Payment Amount</div>
-          <div style="color: white; font-size: 18px; font-weight: bold;">₹${amount.toLocaleString('en-IN')} (INR)</div>
+          <div style="color: #6c757d; font-weight: 600; margin-bottom: 4px;">Payment Amount</div>
+          <div style="color: #333333; font-size: 18px; font-weight: bold;">₹${amount.toLocaleString('en-IN')} (INR)</div>
         </div>
       `
     } else if (currency === "USD") {
       amountInfo = `
         <div style="
-          background: rgba(255, 215, 0, 0.1);
-          border: 1px solid rgba(255, 215, 0, 0.3);
+          background: #f8f9fa;
+          border: 1px solid #e9ecef;
           border-radius: 8px;
           padding: 12px;
           margin-bottom: 16px;
         ">
-          <div style="color: #FFD700; font-weight: 600; margin-bottom: 4px;">Payment Amount</div>
-          <div style="color: white; font-size: 18px; font-weight: bold;">$${amount.toFixed(2)} (USD)</div>
+          <div style="color: #6c757d; font-weight: 600; margin-bottom: 4px;">Payment Amount</div>
+          <div style="color: #333333; font-size: 18px; font-weight: bold;">$${amount.toFixed(2)} (USD)</div>
         </div>
       `
     } else {
       amountInfo = `
         <div style="
-          background: rgba(255, 215, 0, 0.1);
-          border: 1px solid rgba(255, 215, 0, 0.3);
+          background: #f8f9fa;
+          border: 1px solid #e9ecef;
           border-radius: 8px;
           padding: 12px;
           margin-bottom: 16px;
         ">
-          <div style="color: #FFD700; font-weight: 600; margin-bottom: 4px;">Payment Amount</div>
-          <div style="color: white; font-size: 18px; font-weight: bold;">${amount.toFixed(2)} ${currency}</div>
+          <div style="color: #6c757d; font-weight: 600; margin-bottom: 4px;">Payment Amount</div>
+          <div style="color: #333333; font-size: 18px; font-weight: bold;">${amount.toFixed(2)} ${currency}</div>
         </div>
       `
     }
@@ -1737,13 +1737,13 @@ function showGuidanceModal() {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     ">
       <div style="
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        border-radius: 20px;
+        background: #ffffff;
+        border-radius: 8px;
         padding: 32px;
         max-width: 480px;
         width: 100%;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border: 1px solid #e9ecef;
         position: relative;
         animation: modalSlideIn 0.3s ease-out;
       ">
@@ -1752,19 +1752,19 @@ function showGuidanceModal() {
           position: absolute;
           top: 16px;
           right: 16px;
-          background: rgba(255, 255, 255, 0.1);
-          border: none;
-          border-radius: 50%;
+          background: #f8f9fa;
+          border: 1px solid #e9ecef;
+          border-radius: 6px;
           width: 32px;
           height: 32px;
-          color: white;
+          color: #6c757d;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 18px;
           transition: all 0.2s ease;
-        " onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+        " onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
           ×
         </button>
 
@@ -1773,45 +1773,29 @@ function showGuidanceModal() {
           <div style="
             width: 64px;
             height: 64px;
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            border-radius: 50%;
+            background: #FFD700;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 16px;
-            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3);
-            position: relative;
+            color: #1a1a1a;
+            font-weight: bold;
+            font-size: 24px;
+            animation: celoPulse 2s ease-in-out infinite;
           ">
-            <div style="
-              position: absolute;
-              width: 32px;
-              height: 32px;
-              background: #1a1a1a;
-              border-radius: 6px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #FFD700;
-              font-weight: bold;
-              font-size: 20px;
-            ">
-              C
-            </div>
+            C
           </div>
           <h2 style="
-            color: white;
+            color: #333333;
             margin: 0;
             font-size: 24px;
             font-weight: 600;
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
           ">
             Pay with Celo/cUSD
           </h2>
           <p style="
-            color: rgba(255, 255, 255, 0.7);
+            color: #6c757d;
             margin: 8px 0 0;
             font-size: 16px;
           ">
@@ -1824,18 +1808,18 @@ function showGuidanceModal() {
         
         <!-- Guidance content -->
         <div style="
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 12px;
+          background: #f8f9fa;
+          border-radius: 8px;
           padding: 20px;
           margin-bottom: 24px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid #e9ecef;
         ">
           <div style="display: flex; align-items: center; margin-bottom: 16px;">
             <div style="
               width: 24px;
               height: 24px;
-              background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-              border-radius: 50%;
+              background: #6c757d;
+              border-radius: 6px;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -1847,7 +1831,7 @@ function showGuidanceModal() {
               </svg>
             </div>
             <h3 style="
-              color: white;
+              color: #333333;
               margin: 0;
               font-size: 18px;
               font-weight: 600;
@@ -1857,7 +1841,7 @@ function showGuidanceModal() {
           </div>
           
           <ul style="
-            color: rgba(255, 255, 255, 0.8);
+            color: #6c757d;
             margin: 0;
             padding-left: 20px;
             line-height: 1.6;
@@ -1868,14 +1852,14 @@ function showGuidanceModal() {
           </ul>
           
           <div style="
-            background: rgba(255, 215, 0, 0.1);
-            border: 1px solid rgba(255, 215, 0, 0.3);
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
             border-radius: 8px;
             padding: 12px;
             margin-top: 16px;
           ">
             <p style="
-              color: #FFD700;
+              color: #6c757d;
               margin: 0;
               font-size: 14px;
               font-weight: 500;
@@ -1889,31 +1873,31 @@ function showGuidanceModal() {
         <div style="display: flex; gap: 12px;">
           <button id="celo-modal-cancel" style="
             flex: 1;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #6c757d;
             padding: 12px 24px;
-            border-radius: 10px;
+            border-radius: 6px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-          " onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+          " onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
             Cancel
           </button>
           <button id="celo-modal-proceed" style="
             flex: 2;
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            background: #28a745;
             border: none;
-            color: #1a1a1a;
+            color: white;
             padding: 12px 24px;
-            border-radius: 10px;
+            border-radius: 6px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
-          " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(255, 215, 0, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 215, 0, 0.3)'">
+            animation: buttonBounce 3s ease-in-out infinite;
+          " onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">
             Proceed to Payment
           </button>
         </div>
@@ -1929,6 +1913,26 @@ function showGuidanceModal() {
         to {
           opacity: 1;
           transform: scale(1) translateY(0);
+        }
+      }
+      
+      @keyframes celoPulse {
+        0%, 100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 0 0 8px rgba(255, 215, 0, 0.1);
+        }
+      }
+      
+      @keyframes buttonBounce {
+        0%, 100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-2px);
         }
       }
     </style>

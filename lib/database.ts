@@ -11,15 +11,16 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 // Web3Auth user sync functions
 export async function syncWeb3AuthUser(userInfo: any, walletAddress?: string) {
   try {
-    // Check if user exists by email
+    // Check if user exists by clerkId
     let user = await prisma.user.findUnique({
-      where: { email: userInfo.email }
+      where: { clerkId: userInfo.id }
     })
 
     if (!user) {
       // Create new user
       user = await prisma.user.create({
         data: {
+          clerkId: userInfo.id,
           email: userInfo.email,
           name: userInfo.name || userInfo.email.split('@')[0],
         }

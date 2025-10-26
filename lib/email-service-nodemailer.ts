@@ -15,7 +15,7 @@ interface PaymentEmailData {
 }
 
 // Create transporter using Gmail SMTP
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,
   secure: false, // true for 465, false for other ports
@@ -95,6 +95,6 @@ export async function sendPaymentConfirmationEmail(data: PaymentEmailData) {
     
   } catch (error) {
     console.error('❌ Email sending error:', error);
-    return { success: false, message: `Email error: ${error.message}` };
+    return { success: false, message: `Email error: ${error instanceof Error ? error.message : 'Unknown error'}` };
   }
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
-import { WalletConnectButton } from '@/components/ui/wallet-connect-button'
+import WalletConnect from '@/components/wallet-connect'
 
 export default function PaymentTesterSimple() {
   const { address, isConnected } = useAccount()
@@ -13,7 +13,7 @@ export default function PaymentTesterSimple() {
     return (
       <div className="text-center">
         <p className="text-gray-400 mb-4">Connect your wallet to test payments</p>
-        <WalletConnectButton />
+        <WalletConnect />
       </div>
     )
   }

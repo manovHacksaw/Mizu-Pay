@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
           amount: updatedPayment.amount,
           txHash,
         },
-      },
-    })
+      })
+    }
 
     console.log('Payment status updated:', updatedPayment)
 

@@ -17,34 +17,55 @@ const Navbar = () => {
   const toggleMenu = () => setIsOpen(!isOpen)
 
   return (
-    <div className="flex justify-center w-full py-6 px-4 fixed top-0 left-0 right-0 z-40">
-      <div className="flex items-center justify-between px-6 py-3 bg-white/10 backdrop-blur-xl rounded-full w-full max-w-3xl relative z-10 shadow-2xl ">
+    <div className="flex justify-center w-full py-2 px-4 fixed top-4 left-0 right-0 z-40">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-white/10 backdrop-blur-xl rounded-full w-full max-w-3xl relative z-10 shadow-2xl ">
         <div className="flex items-center">
-          <span className="font-bold text-white">Mizu Pay</span>
+          <img 
+            src="/mizu-logo.png" 
+            alt="Mizu Pay Logo" 
+            className="h-12 w-auto object-contain drop-shadow-lg hover:scale-105 transition-transform duration-200"
+            onError={(e) => {
+              console.error('Logo failed to load:', e);
+              e.currentTarget.style.display = 'none';
+              // Show fallback text
+              const fallback = document.createElement('span');
+              fallback.textContent = 'Mizu Pay';
+              fallback.className = 'font-bold text-white text-xl';
+              e.currentTarget.parentNode?.appendChild(fallback);
+            }}
+            onLoad={() => console.log('Logo loaded successfully')}
+          />
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
-          {["Features", "How It Works", "Impact", "Docs"].map((item) => (
-            <motion.div
-              key={item}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              whileHover={{ scale: 1.05 }}
-            >
-              <a href="#" className="text-sm text-white hover:text-gray-200 transition-colors font-medium">
-                {item}
-              </a>
-            </motion.div>
-          ))}
+        <nav className="hidden md:flex items-center space-x-6">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             whileHover={{ scale: 1.05 }}
           >
-            <Link href="/transactions" className="text-sm text-white hover:text-gray-200 transition-colors font-medium">
+            <a href="#features" className="text-sm text-white hover:text-gray-200 transition-colors font-medium">
+              Features
+            </a>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            whileHover={{ scale: 1.05 }}
+          >
+            <a href="#how-it-works" className="text-sm text-white hover:text-gray-200 transition-colors font-medium">
+              How It Works
+            </a>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            whileHover={{ scale: 1.05 }}
+          >
+            <Link href="/transactions" className="text-base text-white hover:text-gray-200 transition-colors font-medium">
               Transactions
             </Link>
           </motion.div>
@@ -58,7 +79,7 @@ const Navbar = () => {
           transition={{ duration: 0.3, delay: 0.2 }}
         >
           {!mounted ? (
-            <div className="inline-flex items-center justify-center px-5 py-2 text-sm text-gray-400">
+            <div className="inline-flex items-center justify-center px-4 py-1.5 text-xs text-gray-400">
               Loading...
             </div>
           ) : isLoaded && user ? (
@@ -72,13 +93,13 @@ const Navbar = () => {
             <>
               <Link
                 href="/sign-in"
-                className="inline-flex items-center justify-center px-4 py-2 text-sm text-white hover:text-gray-200 transition-colors font-medium"
+                className="inline-flex items-center justify-center px-3 py-1.5 text-xs text-white hover:text-gray-200 transition-colors font-medium"
               >
                 Sign In
               </Link>
               <Link
                 href="/sign-up"
-                className="inline-flex items-center justify-center px-5 py-2 text-sm text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
+                className="inline-flex items-center justify-center px-4 py-1.5 text-xs text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
               >
                 Get Started
               </Link>
@@ -113,19 +134,26 @@ const Navbar = () => {
               <X className="h-6 w-6 text-gray-900" />
             </motion.button>
             <div className="flex flex-col space-y-6">
-              {["Features", "How It Works", "Impact", "Docs"].map((item, i) => (
-                <motion.div
-                  key={item}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 + 0.1 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
-                  <a href="#" className="text-base text-gray-900 font-medium" onClick={toggleMenu}>
-                    {item}
-                  </a>
-                </motion.div>
-              ))}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                exit={{ opacity: 0, x: 20 }}
+              >
+                <a href="#features" className="text-lg text-gray-900 font-medium" onClick={toggleMenu}>
+                  Features
+                </a>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                exit={{ opacity: 0, x: 20 }}
+              >
+                <a href="#how-it-works" className="text-lg text-gray-900 font-medium" onClick={toggleMenu}>
+                  How It Works
+                </a>
+              </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -141,7 +169,7 @@ const Navbar = () => {
                 ) : isLoaded && user ? (
                   <Link
                     href="/dashboard"
-                    className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
+                    className="inline-flex items-center justify-center w-full px-6 py-4 text-lg text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
                     onClick={toggleMenu}
                   >
                     Dashboard

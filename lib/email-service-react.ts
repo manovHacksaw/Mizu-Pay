@@ -25,7 +25,7 @@ export const PaymentEmailTemplate: React.FC<PaymentEmailTemplateProps> = ({
   product,
   txHash,
   sessionId,
-}) => (
+}): React.JSX.Element => (
   <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
     <div style={{ 
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 

@@ -25,10 +25,10 @@
   z-index: 2147483647 !important;
   margin: 0 !important;
   padding: 12px 16px !important;
-  background: #35d07f !important;
+  background: #6c757d !important;
   color: white !important;
-  border: 2px solid #2ecc71 !important;
-  border-radius: 8px !important;
+  border: 1px solid #5a6268 !important;
+  border-radius: 6px !important;
   cursor: pointer !important;
   font-family: Arial, sans-serif !important;
   font-size: 14px !important;
@@ -60,10 +60,13 @@
     right: 10px !important;
     max-width: 150px !important;
     padding: 8px 12px !important;
+    background: #6c757d !important;
+    border: 1px solid #5a6268 !important;
   }
 
   #celo-pay-floating-icon div {
     font-size: 12px !important;
+    color: white !important;
   }
 
   #celo-pay-floating-icon img {

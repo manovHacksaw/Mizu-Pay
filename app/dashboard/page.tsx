@@ -2,7 +2,7 @@
 
 import { useUser } from '@clerk/nextjs'
 import { useAccount, useSignMessage } from 'wagmi'
-import { WalletConnectButton } from '@/components/ui/wallet-connect-button'
+import WalletConnect from '@/components/wallet-connect'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
@@ -73,6 +73,31 @@ function DashboardContent() {
  const [loadingWallets, setLoadingWallets] = useState(false)
  const [isLoading, setIsLoading] = useState(true)
  const [isWalletVerified, setIsWalletVerified] = useState(false)
+ const [payments, setPayments] = useState<any[]>([])
+ const [loadingPayments, setLoadingPayments] = useState(false)
+ const [envioTransactions, setEnvioTransactions] = useState<any[]>([])
+ const [loadingEnvioTransactions, setLoadingEnvioTransactions] = useState(false)
+ 
+ // Utility function to format big integers (wei to readable format)
+ const formatBigInt = (value: string | number, decimals: number = 18): number => {
+  const numValue = typeof value === 'string' ? parseFloat(value) : value
+  return numValue / Math.pow(10, decimals)
+ }
+
+ // Utility function to format numbers with commas and decimal places
+ const formatNumber = (value: number, decimals: number = 2): string => {
+  return value.toLocaleString('en-US', {
+   minimumFractionDigits: decimals,
+   maximumFractionDigits: decimals
+  })
+ }
+
+ // Calculate ReFi impact (0.75% of total volume) with proper formatting
+ const totalVolume = envioTransactions.reduce((sum, tx) => {
+  const amount = formatBigInt(tx.amount || 0)
+  return sum + amount
+ }, 0)
+ const refiImpact = totalVolume * 0.0075 // 0.75%
 
  useEffect(() => {
  setMounted(true)
@@ -84,10 +109,18 @@ function DashboardContent() {
  }, [])
 
  useEffect(() => {
- if (user && mounted) {
- fetchSavedWallets()
- }
+  if (user && mounted) {
+   fetchSavedWallets()
+   fetchPayments()
+  }
  }, [user, mounted])
+
+ // Fetch real transactions when component mounts
+ useEffect(() => {
+  if (mounted) {
+   fetchEnvioTransactions()
+  }
+ }, [mounted])
 
  // Check if current wallet is already verified
  useEffect(() => {
@@ -117,6 +150,65 @@ function DashboardContent() {
  } finally {
  setLoadingWallets(false)
  }
+ }
+
+ const fetchPayments = async () => {
+  try {
+   setLoadingPayments(true)
+   console.log('🔍 Fetching payments for user:', user?.id)
+   const response = await fetch('/api/payments')
+   console.log('📊 Payments API response status:', response.status)
+   
+   if (response.ok) {
+    const data = await response.json()
+    console.log('✅ Payments data received:', data)
+    setPayments(data.payments || [])
+    console.log('💳 Payments count:', data.payments?.length || 0)
+   } else {
+    const errorText = await response.text()
+    console.error('❌ Failed to fetch payments:', response.status, errorText)
+   }
+  } catch (error) {
+   console.error('❌ Error fetching payments:', error)
+  } finally {
+   setLoadingPayments(false)
+  }
+ }
+
+ const fetchEnvioTransactions = async () => {
+  try {
+   setLoadingEnvioTransactions(true)
+   
+   // Fetch real transactions from the database
+   const response = await fetch('/api/transactions/payments?limit=10')
+   if (response.ok) {
+    const data = await response.json()
+    // Transform the real transaction data to match the expected format
+    const transformedTransactions = data.payments.map((tx: any) => ({
+     id: tx.id,
+     txHash: tx.transactionHash,
+     from: tx.payer,
+     to: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6', // Default to contract address
+     amount: tx.amount,
+     token: tx.currency,
+     status: 'CONFIRMED',
+     blockNumber: tx.blockNumber,
+     timestamp: new Date(tx.timestamp * 1000).toISOString(), // Convert timestamp
+     gasUsed: '21000',
+     gasPrice: '20000000000',
+     value: tx.amount
+    }))
+    
+    setEnvioTransactions(transformedTransactions)
+    console.log('Real transactions fetched:', transformedTransactions)
+   } else {
+    console.error('Failed to fetch real transactions')
+   }
+  } catch (error) {
+   console.error('Error fetching real transactions:', error)
+  } finally {
+   setLoadingEnvioTransactions(false)
+  }
  }
 
  const handleSignMessage = async () => {
@@ -200,21 +292,22 @@ function DashboardContent() {
  )
  }
 
- // Animation variants for Framer Motion
+ // Optimized animation variants - no staggering
  const containerVariants = {
  hidden: { opacity: 0, y: 20 },
  visible: {
  opacity: 1,
  y: 0,
  transition: {
- staggerChildren: 0.1,
+ duration: 0.6,
+ ease: "easeOut"
  },
  },
  };
 
  const itemVariants = {
  hidden: { opacity: 0, y: 15 },
- visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+ visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
  };
 
  const hoverTransition = { type: "spring", stiffness: 300, damping: 15 };
@@ -238,14 +331,14 @@ function DashboardContent() {
  
  </div>
 
- {/* Right Section - Connect Button */}
+ {/* Right Section - Rainbow Kit Connect Button */}
  <motion.div
  className="flex items-center gap-8 absolute right-6"
  initial={{ opacity: 0, x: 20 }}
  animate={{ opacity: 1, x: 0 }}
  transition={{ duration: 0.3, delay: 0.2 }}
  >
-          <WalletConnectButton />
+          <WalletConnect />
  </motion.div>
  </div>
  </motion.div>
@@ -267,16 +360,17 @@ function DashboardContent() {
  </div>
  </motion.div>
 
- {/* Stats Grid - Moved to Top */}
+ {/* Optimized Stats Grid - Loads everything simultaneously */}
  <motion.div 
  className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12"
- variants={containerVariants}
  initial="hidden"
  animate="visible"
+ transition={{ duration: 0.6, ease: "easeOut" }}
  >
- <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
  {isLoading ? (
   <>
+   <SkeletonCard />
    <SkeletonCard />
    <SkeletonCard />
    <SkeletonCard />
@@ -284,9 +378,10 @@ function DashboardContent() {
  ) : (
   <>
  <motion.div 
- variants={itemVariants}
  whileHover={{ scale: 1.05, y: -5 }}
- transition={hoverTransition}
+ initial={{ opacity: 0, y: 15 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ duration: 0.4, ease: "easeOut" }}
  >
  <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
@@ -296,41 +391,72 @@ function DashboardContent() {
  </div>
  <div className="mb-2">
  <span className="text-4xl font-bold text-white tracking-tight">
- <AnimatedNumber value={0} />
+ <AnimatedNumber value={payments.length} />
  </span>
  <span className="ml-1 text-white/70">payments</span>
  </div>
- <p className="text-white/70 text-sm tracking-tight">All time</p>
+ <p className="text-white/70 text-sm tracking-tight">
+  {loadingPayments ? 'Loading...' : 'Database payments'}
+ </p>
  </CardContent>
  </Card>
  </motion.div>
 
  <motion.div 
- variants={itemVariants}
  whileHover={{ scale: 1.05, y: -5 }}
- transition={hoverTransition}
+ initial={{ opacity: 0, y: 15 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ duration: 0.4, ease: "easeOut" }}
  >
  <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
- <h3 className="text-lg font-semibold text-white tracking-tight">Connected Wallets</h3>
- <Wallet className="w-5 h-5 text-white/70" />
+ <h3 className="text-lg font-semibold text-white tracking-tight">Blockchain Transactions</h3>
+ <TrendingUp className="w-5 h-5 text-white/70" />
  </div>
  <div className="mb-2">
  <span className="text-4xl font-bold text-white tracking-tight">
- <AnimatedNumber value={isConnected ? 1 : 0} />
+ <AnimatedNumber value={envioTransactions.length} />
  </span>
- <span className="ml-1 text-white/70">wallets</span>
+ <span className="ml-1 text-white/70">transactions</span>
  </div>
- <p className="text-white/70 text-sm tracking-tight">Active wallets</p>
+ <p className="text-white/70 text-sm tracking-tight">
+  {loadingEnvioTransactions ? 'Loading...' : 'From Envio indexer'}
+ </p>
  </CardContent>
  </Card>
  </motion.div>
 
  <motion.div 
- variants={itemVariants}
  whileHover={{ scale: 1.05, y: -5 }}
- transition={hoverTransition}
+ initial={{ opacity: 0, y: 15 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ duration: 0.4, ease: "easeOut" }}
+ >
+ <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <CardContent className="p-0">
+ <div className="flex items-center justify-between mb-4">
+ <h3 className="text-lg font-semibold text-white tracking-tight">Total Volume</h3>
+ <CreditCard className="w-5 h-5 text-white/70" />
+ </div>
+ <div className="mb-2">
+ <span className="text-4xl font-bold text-white tracking-tight">
+ <AnimatedNumber value={totalVolume} />
+ </span>
+ <span className="ml-1 text-white/70">CUSD</span>
+ </div>
+ <p className="text-white/70 text-sm tracking-tight">
+  {loadingEnvioTransactions ? 'Loading...' : 'From blockchain'}
+ </p>
+ </CardContent>
+ </Card>
+ </motion.div>
+
+ <motion.div 
+ whileHover={{ scale: 1.05, y: -5 }}
+ initial={{ opacity: 0, y: 15 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ duration: 0.4, ease: "easeOut" }}
  >
  <Card className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
@@ -340,11 +466,13 @@ function DashboardContent() {
  </div>
  <div className="mb-2">
  <span className="text-4xl font-bold text-white tracking-tight">
- $<AnimatedNumber value={0} />
+ <AnimatedNumber value={refiImpact} />
  </span>
- <span className="ml-1 text-white/70">contributed</span>
+ <span className="ml-1 text-white/70">CUSD</span>
  </div>
- <p className="text-white/70 text-sm tracking-tight">Contributed</p>
+ <p className="text-white/70 text-sm tracking-tight">
+  {loadingEnvioTransactions ? 'Loading...' : '0.75% of total volume'}
+ </p>
  </CardContent>
  </Card>
  </motion.div>
@@ -352,7 +480,7 @@ function DashboardContent() {
  )}
  </div>
 
- {/* Main Content Cards */}
+ {/* Optimized Main Content Cards - Load simultaneously */}
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
  {isLoading ? (
   <>
@@ -365,9 +493,10 @@ function DashboardContent() {
   <>
  {/* Wallet Connection Card */}
  <motion.div 
- variants={itemVariants}
  whileHover={{ scale: 1.03, y: -5 }}
- transition={hoverTransition}
+ initial={{ opacity: 0, y: 15 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ duration: 0.4, ease: "easeOut" }}
  >
  <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
@@ -420,7 +549,7 @@ function DashboardContent() {
  ) : (
  <div className="text-center">
  <p className="text-white/70 mb-4">Connect your wallet to get started</p>
-          <WalletConnectButton />
+          <WalletConnect />
  </div>
  )}
  </div>
@@ -430,9 +559,10 @@ function DashboardContent() {
 
  {/* Account Information Card */}
  <motion.div 
- variants={itemVariants}
  whileHover={{ scale: 1.03, y: -5 }}
- transition={hoverTransition}
+ initial={{ opacity: 0, y: 15 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ duration: 0.4, ease: "easeOut" }}
  >
  <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
@@ -460,9 +590,10 @@ function DashboardContent() {
 
  {/* Your Saved Wallets Card */}
  <motion.div 
- variants={itemVariants}
  whileHover={{ scale: 1.03, y: -5 }}
- transition={hoverTransition}
+ initial={{ opacity: 0, y: 15 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ duration: 0.4, ease: "easeOut" }}
  >
  <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
@@ -480,7 +611,7 @@ function DashboardContent() {
  className="bg-white/5 rounded-lg p-4 border border-white/10"
  initial={{ opacity: 0, scale: 0.9 }}
  animate={{ opacity: 1, scale: 1 }}
- transition={{ duration: 0.3, delay: index * 0.1 }}
+ transition={{ duration: 0.3 }}
  >
  <div className="flex items-center justify-between">
  <div>
@@ -511,9 +642,10 @@ function DashboardContent() {
 
  {/* Recent Transactions Card */}
  <motion.div 
- variants={itemVariants}
  whileHover={{ scale: 1.03, y: -5 }}
- transition={hoverTransition}
+ initial={{ opacity: 0, y: 15 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ duration: 0.4, ease: "easeOut" }}
  >
  <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
  <CardContent className="p-0">
@@ -522,22 +654,63 @@ function DashboardContent() {
  <TrendingUp className="w-5 h-5 text-white/70" />
  </div>
  <div className="space-y-4">
- <p className="text-white/70">Your latest payment activity</p>
+ <p className="text-white/70">Your latest blockchain activity</p>
  <div className="space-y-3">
- <div className="bg-white/5 rounded-lg p-4 border border-white/10">
- <div className="flex items-center justify-between">
- <div>
- <p className="text-white font-medium">No transactions yet</p>
- <p className="text-white/70 text-sm">Complete your first payment to see activity here</p>
- </div>
- <div className="text-white/50 text-sm">
- --
- </div>
- </div>
- </div>
- <div className="text-center py-4">
- <p className="text-white/50 text-sm">Start making payments to see your transaction history</p>
- </div>
+ {loadingEnvioTransactions ? (
+  <div className="space-y-3">
+   <div className="bg-white/5 rounded-lg p-4 border border-white/10 animate-pulse">
+    <div className="h-4 bg-white/20 rounded w-3/4 mb-2"></div>
+    <div className="h-3 bg-white/20 rounded w-1/2"></div>
+   </div>
+   <div className="bg-white/5 rounded-lg p-4 border border-white/10 animate-pulse">
+    <div className="h-4 bg-white/20 rounded w-2/3 mb-2"></div>
+    <div className="h-3 bg-white/20 rounded w-1/3"></div>
+   </div>
+  </div>
+ ) : envioTransactions.length > 0 ? (
+  envioTransactions.slice(0, 3).map((tx, index) => (
+   <div key={tx.id || index} className="bg-white/5 rounded-lg p-4 border border-white/10">
+    <div className="flex items-center justify-between">
+     <div>
+      <p className="text-white font-medium">{formatNumber(formatBigInt(tx.amount))} {tx.token}</p>
+      <p className="text-white/70 text-sm">
+       {tx.status === 'CONFIRMED' ? '✅ Confirmed' : '⏳ Pending'}
+      </p>
+      <p className="text-white/50 text-xs">
+       {new Date(tx.timestamp).toLocaleString()}
+      </p>
+     </div>
+     <div className="text-right">
+      <p className="text-white/50 text-xs font-mono">
+       {tx.txHash?.slice(0, 8)}...{tx.txHash?.slice(-8)}
+      </p>
+      <p className="text-white/70 text-sm">
+       Block #{tx.blockNumber}
+      </p>
+     </div>
+    </div>
+   </div>
+  ))
+ ) : (
+  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+   <div className="flex items-center justify-between">
+    <div>
+     <p className="text-white font-medium">No transactions yet</p>
+     <p className="text-white/70 text-sm">Connect your wallet to see blockchain activity</p>
+    </div>
+    <div className="text-white/50 text-sm">
+     --
+    </div>
+   </div>
+  </div>
+ )}
+ {envioTransactions.length > 3 && (
+  <div className="text-center py-2">
+   <p className="text-white/50 text-sm">
+    Showing 3 of {envioTransactions.length} transactions
+   </p>
+  </div>
+ )}
  </div>
  </div>
  </CardContent>
@@ -547,11 +720,59 @@ function DashboardContent() {
  )}
  </div>
 
+ {/* ReFi Impact Section */}
+ <motion.div 
+ whileHover={{ scale: 1.02 }}
+ initial={{ opacity: 0, y: 15 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ duration: 0.4, ease: "easeOut" }}
+ className="mt-8"
+ >
+ <Card className="p-6 rounded-2xl bg-gradient-to-r from-green-500/10 to-blue-500/10 backdrop-blur-xl border border-green-500/20 shadow-2xl">
+ <CardContent className="p-0">
+ <div className="flex items-center justify-between mb-6">
+ <h2 className="text-xl font-semibold text-white">🌱 ReFi Impact</h2>
+ <TrendingUp className="w-5 h-5 text-green-400" />
+ </div>
+ <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div className="text-center">
+   <div className="text-3xl font-bold text-white mb-2">
+    <AnimatedNumber value={refiImpact} />
+   </div>
+   <p className="text-white/70 text-sm">CUSD Contributed</p>
+   <p className="text-green-400 text-xs">0.75% of total volume</p>
+  </div>
+  <div className="text-center">
+   <div className="text-3xl font-bold text-white mb-2">
+    <AnimatedNumber value={totalVolume} />
+   </div>
+   <p className="text-white/70 text-sm">Total Volume</p>
+   <p className="text-white/50 text-xs">From all transactions</p>
+  </div>
+  <div className="text-center">
+   <div className="text-3xl font-bold text-white mb-2">
+    0.75%
+   </div>
+   <p className="text-white/70 text-sm">ReFi Rate</p>
+   <p className="text-green-400 text-xs">Automatically allocated</p>
+  </div>
+ </div>
+ <div className="mt-6 p-4 rounded-lg bg-white/5 border border-white/10">
+  <p className="text-white/80 text-sm text-center">
+   Every transaction contributes to regenerative finance initiatives, 
+   supporting sustainable blockchain development and environmental projects.
+  </p>
+ </div>
+ </CardContent>
+ </Card>
+ </motion.div>
+
  {/* CTA Banner */}
  <motion.div 
- variants={itemVariants} 
  whileHover={{ scale: 1.02 }}
- transition={hoverTransition}
+ initial={{ opacity: 0, y: 15 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ duration: 0.4, ease: "easeOut" }}
  className="mt-8"
  >
  <div className="flex items-center justify-between p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
