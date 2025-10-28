@@ -46,8 +46,18 @@ export function HowItWorksSection() {
   const step = steps[currentStep]
 
   return (
-    <section className="min-h-screen bg-black py-20 px-8 md:px-16 lg:px-24">
+    <section className="min-h-screen bg-black pt-8 md:pt-12 lg:pt-14 pb-20 px-8 md:px-16 lg:px-24">
       <div className="max-w-7xl mx-auto">
+        {/* Section Header */}
+        <div className="text-center mb-20">
+          <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
+            How Mizu Pay Flows
+          </h2>
+          <p className="text-lg text-gray-400 leading-relaxed max-w-3xl mx-auto">
+            It's this simple: select your store, make your payment, and receive your digital gift card — instantly, sustainably, transparently.
+          </p>
+        </div>
+
         {/* Step Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
           {/* Text Content */}

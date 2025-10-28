@@ -26,8 +26,8 @@ export function FeatureSection({
   }
 
   return (
-    <section className="min-h-screen bg-black py-20 px-8 md:px-16 lg:px-24">
-      <div className="max-w-7xl mx-auto">
+    <section className="min-h-screen bg-black py-20 px-6 md:px-10 lg:px-14 w-full">
+      <div className="w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-48 items-center">
           {/* Text Content */}
           <div className={isVideoLeft ? "lg:order-2" : "lg:order-1"}>

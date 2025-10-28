@@ -67,7 +67,7 @@ function HoverFooter() {
   ];
 
   return (
-    <footer className="bg-[#0F0F11]/10 relative h-fit overflow-hidden w-full">
+    <footer className="bg-[#0F0F11] text-white relative h-fit overflow-hidden w-full">
       <div className="max-w-7xl mx-auto p-14 z-40 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8 lg:gap-16 pb-12">
           {/* Brand section */}
@@ -139,7 +139,7 @@ function HoverFooter() {
         {/* Footer bottom */}
         <div className="flex flex-col md:flex-row justify-between items-center text-sm space-y-4 md:space-y-0">
           {/* Social icons */}
-          <div className="flex space-x-6 text-gray-400">
+          <div className="flex space-x-6 text-white">
             {socialLinks.map(({ icon, label, href }) => (
               <a
                 key={label}

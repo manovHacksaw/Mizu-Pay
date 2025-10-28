@@ -135,8 +135,15 @@ export const FooterBackgroundGradient = () => {
     <div
       className="absolute inset-0 z-0"
       style={{
+        // Layered gradients to achieve a solid dark top fading into
+        // a deep blue-tinted bottom, similar to the provided reference.
         background:
-          "radial-gradient(125% 125% at 50% 10%, #0F0F1166 50%, #3ca2fa33 100%)",
+          [
+            // Subtle blue glow rising from the very bottom
+            "radial-gradient(80% 50% at 50% 120%, rgba(60,162,250,0.22) 0%, rgba(60,162,250,0.04) 55%, rgba(60,162,250,0) 70%)",
+            // Vertical darkening towards the bottom with a cool tint
+            "linear-gradient(to bottom, rgba(15,15,17,0) 0%, rgba(12,18,26,0.65) 65%, rgba(10,25,41,0.9) 100%)"
+          ].join(", "),
       }}
     />
   );
