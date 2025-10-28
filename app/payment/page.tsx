@@ -20,6 +20,7 @@ import {
   ConversionRatesSkeleton,
   PaymentButtonSkeleton 
 } from '@/components/ui/payment-skeletons'
+import { ShaderBackground } from '@/components/ui/infinite-hero'
 
 export default function PaymentPage() {
  const { user, isLoaded } = useUser()
@@ -907,8 +908,13 @@ export default function PaymentPage() {
  // Loading state
  if (!isLoaded || isPageLoading) {
  return (
- <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-hidden">
- <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-900 to-slate-900" />
+ <div className="min-h-screen bg-black text-white relative overflow-hidden">
+ {/* Animated Background */}
+ <div className="absolute inset-0">
+  <ShaderBackground className="h-full w-full" />
+ </div>
+ <div className="absolute inset-0 bg-black/60">
+ </div>
  
  {/* Header Skeleton */}
  <div className="flex justify-center w-full py-6 px-4 fixed top-0 left-0 right-0 z-40">
@@ -948,8 +954,13 @@ export default function PaymentPage() {
 
  if (!user) {
  return (
- <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-hidden">
- <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-900 to-slate-900" />
+ <div className="min-h-screen bg-black text-white relative overflow-hidden">
+ {/* Animated Background */}
+ <div className="absolute inset-0">
+  <ShaderBackground className="h-full w-full" />
+ </div>
+ <div className="absolute inset-0 bg-black/60">
+ </div>
  
  <div className="flex items-center justify-center min-h-screen relative z-10">
   <motion.div 
@@ -998,9 +1009,13 @@ export default function PaymentPage() {
  const hoverTransition = { type: "spring" as const, stiffness: 300, damping: 15 };
 
  return (
- <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-hidden">
- {/* Professional Background */}
- <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-900 to-slate-900" />
+ <div className="min-h-screen bg-black text-white relative overflow-hidden">
+ {/* Animated Background */}
+ <div className="absolute inset-0">
+  <ShaderBackground className="h-full w-full" />
+ </div>
+ <div className="absolute inset-0 bg-black/60">
+ </div>
  
  {/* Session Expired Overlay */}
  {sessionExpired && (
@@ -1082,17 +1097,7 @@ export default function PaymentPage() {
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.5 }}
  >
- <div className="flex items-center justify-between px-6 py-4 rounded-2xl w-full max-w-7xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
-  <div className="flex items-center space-x-4">
-   <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-    <span className="text-lg font-bold text-white">M</span>
-   </div>
-   <div>
-    <h1 className="text-lg font-semibold text-white">Mizu Pay</h1>
-    <p className="text-xs text-white/70">Secure Payment Session</p>
-   </div>
-  </div>
-
+ <div className="flex items-center justify-end px-6 py-4 w-full">
   <div className="flex items-center space-x-6">
    <SessionTimer 
     duration={10} 
@@ -1118,7 +1123,7 @@ export default function PaymentPage() {
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.5 }}
  >
- <div className="text-center mb-12">
+<div className="text-left mb-12">
   <motion.div
    className="inline-flex items-center space-x-2 bg-blue-600/20 text-blue-400 px-4 py-2 rounded-full text-sm font-medium mb-6"
    initial={{ opacity: 0, scale: 0.9 }}
@@ -1129,12 +1134,12 @@ export default function PaymentPage() {
    <span>Secure Payment Session Active</span>
   </motion.div>
   
-  <h1 className="text-4xl font-bold text-white mb-4">
-   Complete Your Payment
-  </h1>
-  <p className="text-lg text-white/70 max-w-2xl mx-auto">
-   Process your secure blockchain payment using CUSD or CELO tokens with real-time conversion rates.
-  </p>
+ <h1 className="text-6xl md:text-8xl font-bold text-white mb-4 leading-tight">
+  Complete Your Payment
+ </h1>
+ <p className="text-base/7 md:text-xl/8 font-light tracking-tight text-white/80 max-w-3xl">
+  Process your secure blockchain payment using CUSD or CELO tokens with real-time conversion rates.
+ </p>
  </div>
  </motion.div>
 
@@ -1156,7 +1161,7 @@ export default function PaymentPage() {
   whileHover={{ scale: 1.02, y: -2 }}
   transition={hoverTransition}
  >
- <Card className="h-full p-8 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="h-full p-8 overflow-hidden rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl hover:bg-black/30 hover:border-white/20 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-8">
  <div className="flex items-center space-x-3">
@@ -1331,7 +1336,7 @@ export default function PaymentPage() {
   whileHover={{ scale: 1.02, y: -2 }}
   transition={hoverTransition}
  >
- <Card className="h-full p-8 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="h-full p-8 overflow-hidden rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl hover:bg-black/30 hover:border-white/20 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-8">
  <div className="flex items-center space-x-3">
@@ -1413,7 +1418,7 @@ export default function PaymentPage() {
  whileHover={{ scale: 1.03, y: -5 }}
  transition={hoverTransition}
  >
- <Card className="h-full p-6 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="h-full p-6 overflow-hidden rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl hover:bg-black/30 hover:border-white/20 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-6">
  <h3 className="text-xl font-semibold text-white">Store Information</h3>
@@ -1438,12 +1443,154 @@ export default function PaymentPage() {
  </pre>
  </div>
  )}
- </div>
- </CardContent>
- </Card>
- </motion.div>
- )}
- </div>
+</div>
+</CardContent>
+</Card>
+</motion.div>
+)}
+
+{/* Gift Card Selection (moved to left column) */}
+{(availableGiftCards.length > 0 || isLoadingGiftCards || (formData.store && formData.amount)) && (
+<motion.div 
+  variants={itemVariants}
+  whileHover={{ scale: 1.02, y: -2 }}
+  transition={hoverTransition}
+>
+<Card className="h-full p-8 overflow-hidden rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl hover:bg-black/30 hover:border-white/20 transition-all duration-500">
+  <CardContent className="p-0">
+    <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center space-x-3">
+        <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+          <span className="text-sm font-bold text-white">🎁</span>
+        </div>
+        <h3 className="text-2xl font-semibold text-white">Available Gift Cards</h3>
+      </div>
+      {isLoadingGiftCards && (
+        <div className="flex items-center space-x-2 text-purple-400">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400"></div>
+          <span className="text-sm">Loading...</span>
+        </div>
+      )}
+    </div>
+    
+    <div className="space-y-4">
+      <p className="text-white/70 text-sm">
+        {formData.store && formData.amount ? (
+          `Gift cards for your ${formData.store} purchase of ${formData.amount} ${formData.currency}:`
+        ) : (
+          'Choose your preferred gift card. You\'ll receive the nearest greater value card.'
+        )}
+      </p>
+      
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-white/70 text-sm">
+          {isLoadingGiftCards ? (
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400"></div>
+              <span>Loading gift cards...</span>
+            </div>
+          ) : (
+            `Available Gift Cards: ${availableGiftCards.length}`
+          )}
+        </div>
+        <button
+          onClick={fetchAvailableGiftCards}
+          disabled={isLoadingGiftCards}
+          className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-xs rounded-lg transition-colors"
+        >
+          {isLoadingGiftCards ? 'Loading...' : 'Refresh'}
+        </button>
+      </div>
+      
+      {availableGiftCards.length === 0 && !isLoadingGiftCards ? (
+        <div className="text-center py-8">
+          <div className="w-16 h-16 bg-orange-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">⚠️</span>
+          </div>
+          <h4 className="text-white font-semibold mb-2">No Gift Cards Available</h4>
+          <p className="text-white/70 text-sm">
+            No gift cards are currently available for this store and amount. Please try a different amount or contact support.
+          </p>
+        </div>
+      ) : availableGiftCards.length > 0 && availableGiftCards[0].id === 'auto-select' ? (
+        <div className="text-center py-8">
+          <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">🎁</span>
+          </div>
+          <h4 className="text-white font-semibold mb-2">Gift Card Auto-Selected</h4>
+          <p className="text-white/70 text-sm">
+            A suitable gift card will be automatically selected for you after payment confirmation.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="relative">
+            <label className="block text-white font-semibold mb-2">
+              Select Gift Card
+            </label>
+            <select
+              value={selectedGiftCard?.id || ''}
+              onChange={(e) => {
+                const selectedId = e.target.value
+                const selected = availableGiftCards.find(card => card.id === selectedId)
+                setSelectedGiftCard(selected || null)
+              }}
+              className="w-full p-4 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+            >
+              <option value="" disabled className="bg-gray-800 text-white">
+                Choose a gift card...
+              </option>
+              {availableGiftCards.map((giftCard, index) => (
+                <option 
+                  key={index} 
+                  value={giftCard.id}
+                  className="bg-gray-800 text-white"
+                >
+                  {giftCard.name} - {giftCard.amount} {giftCard.currency} ({giftCard.provider})
+                  {giftCard.amount > parseFloat(formData.amount || '0') && 
+                    ` (+${giftCard.amount - parseFloat(formData.amount || '0')} bonus)`
+                  }
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+      
+      {selectedGiftCard && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/30"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-sm font-bold text-white">🎁</span>
+              </div>
+              <div>
+                <h4 className="text-white font-semibold">{selectedGiftCard.name}</h4>
+                <p className="text-white/70 text-sm">{selectedGiftCard.provider} • {selectedGiftCard.currency}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-white font-bold text-lg">{selectedGiftCard.amount} {selectedGiftCard.currency}</p>
+              {selectedGiftCard.amount > parseFloat(formData.amount || '0') && (
+                <p className="text-green-400 text-sm">
+                  +{selectedGiftCard.amount - parseFloat(formData.amount || '0')} bonus value
+                </p>
+              )}
+              <p className="text-white/70 text-xs">You'll receive this card</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  </CardContent>
+</Card>
+</motion.div>
+)}
+</div>
 
  {/* Payment Summary - Right Column */}
  <div className="space-y-6">
@@ -1455,7 +1602,7 @@ export default function PaymentPage() {
  whileHover={{ scale: 1.03, y: -5 }}
  transition={hoverTransition}
  >
- <Card className="h-full p-6 overflow-hidden rounded-2xl bg-purple-900/30 border border-purple-500/30 shadow-2xl hover:bg-purple-900/40 transition-all duration-500">
+ <Card className="h-full p-6 overflow-hidden rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl hover:bg-black/30 hover:border-white/20 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-6">
  <h3 className="text-xl font-semibold text-white">Conversion Rates</h3>
@@ -1490,7 +1637,7 @@ export default function PaymentPage() {
   whileHover={{ scale: 1.02, y: -2 }}
   transition={hoverTransition}
  >
- <Card className="h-full p-8 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="h-full p-8 overflow-hidden rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl hover:bg-black/30 hover:border-white/20 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-8">
  <div className="flex items-center space-x-3">
@@ -1543,147 +1690,6 @@ export default function PaymentPage() {
  </motion.div>
 
 
- {/* Gift Card Selection */}
- {(availableGiftCards.length > 0 || isLoadingGiftCards || (formData.store && formData.amount)) && (
- <motion.div 
-   variants={itemVariants}
-   whileHover={{ scale: 1.02, y: -2 }}
-   transition={hoverTransition}
- >
- <Card className="h-full p-8 overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/30 to-blue-900/30 border border-purple-500/30 shadow-2xl">
-   <CardContent className="p-0">
-     <div className="flex items-center justify-between mb-8">
-       <div className="flex items-center space-x-3">
-         <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-           <span className="text-sm font-bold text-white">🎁</span>
-         </div>
-         <h3 className="text-2xl font-semibold text-white">Available Gift Cards</h3>
-       </div>
-       {isLoadingGiftCards && (
-         <div className="flex items-center space-x-2 text-purple-400">
-           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400"></div>
-           <span className="text-sm">Loading...</span>
-         </div>
-       )}
-     </div>
-     
-     <div className="space-y-4">
-       <p className="text-white/70 text-sm">
-         {formData.store && formData.amount ? (
-           `Gift cards for your ${formData.store} purchase of ${formData.amount} ${formData.currency}:`
-         ) : (
-           'Choose your preferred gift card. You\'ll receive the nearest greater value card.'
-         )}
-       </p>
-       
-       <div className="flex items-center justify-between mb-4">
-         <div className="text-white/70 text-sm">
-           {isLoadingGiftCards ? (
-             <div className="flex items-center space-x-2">
-               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400"></div>
-               <span>Loading gift cards...</span>
-             </div>
-           ) : (
-             `Available Gift Cards: ${availableGiftCards.length}`
-           )}
-         </div>
-         <button
-           onClick={fetchAvailableGiftCards}
-           disabled={isLoadingGiftCards}
-           className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-xs rounded-lg transition-colors"
-         >
-           {isLoadingGiftCards ? 'Loading...' : 'Refresh'}
-         </button>
-       </div>
-       
-       {availableGiftCards.length === 0 && !isLoadingGiftCards ? (
-         <div className="text-center py-8">
-           <div className="w-16 h-16 bg-orange-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-             <span className="text-2xl">⚠️</span>
-           </div>
-           <h4 className="text-white font-semibold mb-2">No Gift Cards Available</h4>
-           <p className="text-white/70 text-sm">
-             No gift cards are currently available for this store and amount. Please try a different amount or contact support.
-           </p>
-         </div>
-       ) : availableGiftCards.length > 0 && availableGiftCards[0].id === 'auto-select' ? (
-         <div className="text-center py-8">
-           <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-             <span className="text-2xl">🎁</span>
-           </div>
-           <h4 className="text-white font-semibold mb-2">Gift Card Auto-Selected</h4>
-           <p className="text-white/70 text-sm">
-             A suitable gift card will be automatically selected for you after payment confirmation.
-           </p>
-         </div>
-       ) : (
-         <div className="space-y-4">
-           <div className="relative">
-             <label className="block text-white font-semibold mb-2">
-               Select Gift Card
-             </label>
-             <select
-               value={selectedGiftCard?.id || ''}
-               onChange={(e) => {
-                 const selectedId = e.target.value
-                 const selected = availableGiftCards.find(card => card.id === selectedId)
-                 setSelectedGiftCard(selected || null)
-               }}
-               className="w-full p-4 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
-             >
-               <option value="" disabled className="bg-gray-800 text-white">
-                 Choose a gift card...
-               </option>
-               {availableGiftCards.map((giftCard, index) => (
-                 <option 
-                   key={index} 
-                   value={giftCard.id}
-                   className="bg-gray-800 text-white"
-                 >
-                   {giftCard.name} - {giftCard.amount} {giftCard.currency} ({giftCard.provider})
-                   {giftCard.amount > parseFloat(formData.amount || '0') && 
-                     ` (+${giftCard.amount - parseFloat(formData.amount || '0')} bonus)`
-                   }
-                 </option>
-               ))}
-             </select>
-           </div>
-         </div>
-       )}
-       
-       {selectedGiftCard && (
-         <motion.div 
-           initial={{ opacity: 0, y: 10 }}
-           animate={{ opacity: 1, y: 0 }}
-           className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg p-4 border border-purple-500/30"
-         >
-           <div className="flex items-center justify-between">
-             <div className="flex items-center space-x-3">
-               <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                 <span className="text-sm font-bold text-white">🎁</span>
-               </div>
-               <div>
-                 <h4 className="text-white font-semibold">{selectedGiftCard.name}</h4>
-                 <p className="text-white/70 text-sm">{selectedGiftCard.provider} • {selectedGiftCard.currency}</p>
-               </div>
-             </div>
-             <div className="text-right">
-               <p className="text-white font-bold text-lg">{selectedGiftCard.amount} {selectedGiftCard.currency}</p>
-               {selectedGiftCard.amount > parseFloat(formData.amount || '0') && (
-                 <p className="text-green-400 text-sm">
-                   +{selectedGiftCard.amount - parseFloat(formData.amount || '0')} bonus value
-                 </p>
-               )}
-               <p className="text-white/70 text-xs">You'll receive this card</p>
-             </div>
-           </div>
-         </motion.div>
-       )}
-     </div>
-   </CardContent>
- </Card>
- </motion.div>
- )}
 
  {/* Professional Payment Button */}
  <motion.div 
@@ -1691,7 +1697,7 @@ export default function PaymentPage() {
   whileHover={{ scale: 1.02, y: -2 }}
   transition={hoverTransition}
  >
- <Card className="h-full p-8 overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all duration-500">
+ <Card className="h-full p-8 overflow-hidden rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl hover:bg-black/30 hover:border-white/20 transition-all duration-500">
  <CardContent className="p-0">
  {!isConnected ? (
  <div className="text-center">
@@ -1715,7 +1721,7 @@ export default function PaymentPage() {
  <Button
   onClick={handlePayment}
    disabled={!isConnected || isProcessing || isPending || isConfirming || sessionExpired || !selectedGiftCard}
-  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 disabled:opacity-50"
+  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-4 rounded-xl font-semibold text-sm sm:text-base transition-all duration-300 disabled:opacity-50 min-h-[60px]"
  >
  {isProcessing || isPending || isConfirming ? (
  <div className="flex items-center justify-center">
@@ -1727,17 +1733,19 @@ export default function PaymentPage() {
  ) : !selectedGiftCard ? (
    'Select a Gift Card First'
  ) : (
- <div className="flex items-center justify-center">
+ <div className="flex items-center justify-center flex-wrap gap-1">
  {formData.token === 'CUSD' ? (
- <div className="w-6 h-6 bg-green-600 rounded-lg flex items-center justify-center mr-3">
+ <div className="w-6 h-6 bg-green-600 rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
  <span className="text-sm font-bold text-white">$</span>
  </div>
  ) : (
- <div className="w-6 h-6 bg-yellow-600 rounded-lg flex items-center justify-center mr-3">
+ <div className="w-6 h-6 bg-yellow-600 rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
  <span className="text-sm font-bold text-white">C</span>
  </div>
  )}
-   Pay {selectedGiftCard.amount} {selectedGiftCard.currency} → Get {selectedGiftCard.name}
+ <span className="text-center leading-tight">
+  Pay {selectedGiftCard.amount} {selectedGiftCard.currency} → Get {selectedGiftCard.name}
+ </span>
  </div>
  )}
  </Button>
