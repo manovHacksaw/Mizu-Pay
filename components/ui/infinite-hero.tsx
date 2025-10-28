@@ -219,6 +219,8 @@ function ShaderBackground({
     );
 }
 
+export { ShaderBackground };
+
 export default function InfiniteHero() {
     const rootRef = useRef<HTMLDivElement>(null);
     const bgRef = useRef<HTMLDivElement>(null);
