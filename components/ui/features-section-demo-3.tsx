@@ -42,31 +42,28 @@ export default function FeaturesSectionDemo() {
     },
   ];
   return (
-  <div id="features" className="relative z-20 py-10 lg:py-40 w-full bg-black overflow-hidden">
-      {/* Blue Spotlight Line at Edge */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-60"></div>
-      
+  <div id="features" className="relative z-20 pt-10 lg:pt-40 pb-0 w-full bg-black overflow-hidden">
       {/* Downward Spotlight Gradients */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Left spotlight */}
         <div 
-          className="absolute top-0 left-0 w-96 h-96 opacity-20"
+          className="absolute top-0 left-0 w-96 h-96 opacity-35"
           style={{
-            background: "radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.3) 0%, rgba(30, 58, 138, 0.1) 40%, transparent 70%)"
+            background: "radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.5) 0%, rgba(30, 58, 138, 0.2) 40%, transparent 70%)"
           }}
         />
         {/* Center spotlight */}
         <div 
-          className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[600px] h-[400px] opacity-25"
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[800px] h-[500px] opacity-40"
           style={{
-            background: "radial-gradient(ellipse at center top, rgba(59, 130, 246, 0.4) 0%, rgba(30, 58, 138, 0.2) 30%, rgba(15, 23, 42, 0.1) 60%, transparent 100%)"
+            background: "radial-gradient(ellipse at center top, rgba(59, 130, 246, 0.6) 0%, rgba(30, 58, 138, 0.3) 30%, rgba(15, 23, 42, 0.15) 60%, transparent 100%)"
           }}
         />
         {/* Right spotlight */}
         <div 
-          className="absolute top-0 right-0 w-96 h-96 opacity-20"
+          className="absolute top-0 right-0 w-96 h-96 opacity-35"
           style={{
-            background: "radial-gradient(ellipse at top right, rgba(59, 130, 246, 0.3) 0%, rgba(30, 58, 138, 0.1) 40%, transparent 70%)"
+            background: "radial-gradient(ellipse at top right, rgba(59, 130, 246, 0.5) 0%, rgba(30, 58, 138, 0.2) 40%, transparent 70%)"
           }}
         />
       </div>

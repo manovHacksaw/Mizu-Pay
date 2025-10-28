@@ -46,10 +46,20 @@ export function HowItWorksSection() {
   const step = steps[currentStep]
 
   return (
-    <section className="min-h-screen bg-black pt-8 md:pt-12 lg:pt-14 pb-20 px-8 md:px-16 lg:px-24">
-      <div className="max-w-7xl mx-auto">
+    <section className="min-h-screen bg-black pt-0 pb-20 px-8 md:px-16 lg:px-24 relative">
+      {/* Blue Spotlight Focus on Heading */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div 
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[1000px] h-[500px] opacity-60"
+          style={{
+            background: "radial-gradient(ellipse at center top, rgba(59, 130, 246, 0.8) 0%, rgba(30, 58, 138, 0.5) 30%, rgba(15, 23, 42, 0.2) 60%, transparent 100%)"
+          }}
+        />
+      </div>
+      
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-20">
+        <div className="text-center mb-20 pt-16 md:pt-20 lg:pt-24">
           <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
             How Mizu Pay Flows
           </h2>
@@ -59,10 +69,18 @@ export function HowItWorksSection() {
         </div>
 
         {/* Step Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16 mt-8 md:mt-12 lg:mt-16">
           {/* Text Content */}
           <div className={`${step.isVideoLeft ? "lg:order-2" : "lg:order-1"}`}>
-            <h1 className="text-8xl md:text-9xl font-bold text-white mb-4 leading-tight">{step.headline1}</h1>
+            <h1 className="text-8xl md:text-9xl font-bold text-white mb-4 leading-tight">
+              {step.headline1 === "Shop Anywhere." ? (
+                <>
+                  Shop <span className="text-yellow-400">Anywhere</span>.
+                </>
+              ) : (
+                step.headline1
+              )}
+            </h1>
             <h2 className="text-3xl md:text-4xl font-semibold text-gray-300 mb-12">{step.headline2}</h2>
             <p className="text-lg text-gray-400 leading-relaxed max-w-md">{step.description}</p>
           </div>
@@ -79,27 +97,6 @@ export function HowItWorksSection() {
           </div>
         </div>
 
-        {/* Pagination and Navigation */}
-        <div className="flex items-center justify-between mt-20">
-          <div className="text-gray-400 text-lg font-mono">[ {step.number} / 03 ]</div>
-
-          <div className="flex gap-4">
-            <button
-              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-              disabled={currentStep === 0}
-              className="px-6 py-2 border border-gray-600 text-gray-300 rounded-lg hover:border-green-500 hover:text-green-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setCurrentStep(Math.min(2, currentStep + 1))}
-              disabled={currentStep === 2}
-              className="px-6 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Next
-            </button>
-          </div>
-        </div>
       </div>
     </section>
   )

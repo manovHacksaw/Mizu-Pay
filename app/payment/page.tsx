@@ -1140,7 +1140,7 @@ export default function PaymentPage() {
  <p className="text-base/7 md:text-xl/8 font-light tracking-tight text-white/80 max-w-3xl">
   Process your secure blockchain payment using CUSD or CELO tokens with real-time conversion rates.
  </p>
- </div>
+ </div> 
  </motion.div>
 
  {/* Professional Main Content */}
