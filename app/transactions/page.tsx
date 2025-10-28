@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Filter, RefreshCw, ExternalLink, User, DollarSign, Clock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { ShaderBackground } from '@/components/ui/infinite-hero'
 
 // Skeleton Loader Components
 const SkeletonCard = () => (
-    <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl">
+    <Card className="p-6 rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl">
         <CardContent className="p-0">
             <div className="flex items-center justify-between mb-4">
                 <div className="h-5 bg-white/20 rounded w-32 animate-pulse"></div>
@@ -27,7 +28,7 @@ const SkeletonCard = () => (
 )
 
 const SkeletonTransactionCard = () => (
-    <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl">
+    <Card className="p-6 rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl">
         <CardContent className="p-0">
             <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -214,8 +215,11 @@ export default function TransactionsPage() {
  return (
  <div className="min-h-screen bg-black text-white relative overflow-hidden">
                 {/* Animated Background */}
- <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black">
- <div className="absolute inset-0 [background:radial-gradient(120%_80%_at_50%_50%,_transparent_40%,_black_100%)]" />
+ <div className="absolute inset-0">
+  <ShaderBackground className="h-full w-full" />
+ </div>
+ <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-gray-900/60 to-black/80">
+  <div className="absolute inset-0 [background:radial-gradient(120%_80%_at_50%_50%,_transparent_40%,_black_100%)]" />
  </div>
 
                 {/* Header - Glass Morphism Navbar */}
@@ -239,10 +243,10 @@ export default function TransactionsPage() {
                     transition={{ duration: 0.5 }}
                 >
                     <div className="text-left mb-12">
-                        <h1 className="text-[clamp(2.25rem,6vw,4rem)] font-extralight leading-[0.95] tracking-tight text-white mb-4">
+                        <h1 className="text-6xl md:text-8xl font-bold text-white mb-4 leading-tight">
                             Blockchain Transactions
                         </h1>
-                        <p className="text-lg tracking-tight text-blue-400 md:text-xl max-w-2xl">
+                        <p className="text-base/7 md:text-xl/8 font-light tracking-tight text-white/80 max-w-3xl">
                             Real-time indexed transactions from MizuPay contract with live monitoring and analytics.
                         </p>
                     </div>
@@ -290,8 +294,11 @@ export default function TransactionsPage() {
  return (
  <div className="min-h-screen bg-black text-white relative overflow-hidden">
  {/* Animated Background */}
- <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black">
- <div className="absolute inset-0 [background:radial-gradient(120%_80%_at_50%_50%,_transparent_40%,_black_100%)]" />
+ <div className="absolute inset-0">
+  <ShaderBackground className="h-full w-full" />
+ </div>
+ <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-gray-900/60 to-black/80">
+  <div className="absolute inset-0 [background:radial-gradient(120%_80%_at_50%_50%,_transparent_40%,_black_100%)]" />
  </div>
 
  {/* Header - Glass Morphism Navbar */}
@@ -315,10 +322,10 @@ export default function TransactionsPage() {
  transition={{ duration: 0.5 }}
  >
  <div className="text-left mb-12">
- <h1 className="text-[clamp(2.25rem,6vw,4rem)] font-extralight leading-[0.95] tracking-tight text-white mb-4">
+ <h1 className="text-6xl md:text-8xl font-bold text-white mb-4 leading-tight">
  Blockchain Transactions
  </h1>
-                    <p className="text-lg tracking-tight text-blue-400 md:text-xl max-w-2xl">
+                    <p className="text-base/7 md:text-xl/8 font-light tracking-tight text-white/80 max-w-3xl">
  Real-time indexed transactions from MizuPay contract with live monitoring and analytics.
  </p>
  </div>
@@ -358,7 +365,7 @@ export default function TransactionsPage() {
  whileHover={{ scale: 1.05, y: -5 }}
  transition={hoverTransition}
  >
-                            <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
+                            <Card className="p-6 rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl hover:bg-black/30 hover:border-white/20 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-lg font-semibold text-white tracking-tight">Total Payments</h3>
@@ -377,7 +384,7 @@ export default function TransactionsPage() {
  whileHover={{ scale: 1.05, y: -5 }}
  transition={hoverTransition}
  >
-                            <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
+                            <Card className="p-6 rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl hover:bg-black/30 hover:border-white/20 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-lg font-semibold text-white tracking-tight">Total Volume</h3>
@@ -398,7 +405,7 @@ export default function TransactionsPage() {
  whileHover={{ scale: 1.05, y: -5 }}
  transition={hoverTransition}
  >
-                            <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
+                            <Card className="p-6 rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl hover:bg-black/30 hover:border-white/20 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-lg font-semibold text-white tracking-tight">Unique Users</h3>
@@ -481,7 +488,7 @@ export default function TransactionsPage() {
  </h2>
  
  {sortedPayments.length === 0 ? (
-                                <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl">
+                                <Card className="p-6 rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl">
  <CardContent className="p-0">
  <div className="text-center">
                                             <p className="text-blue-400">No payments found</p>
@@ -497,7 +504,7 @@ export default function TransactionsPage() {
  whileHover={{ scale: 1.02, y: -2 }}
  transition={hoverTransition}
  >
-                                            <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
+                                            <Card className="p-6 rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl hover:bg-black/30 hover:border-white/20 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between">
  <div className="flex-1">
@@ -569,7 +576,7 @@ export default function TransactionsPage() {
  </h2>
  
  {sortedWithdrawals.length === 0 ? (
-                                <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl">
+                                <Card className="p-6 rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl">
  <CardContent className="p-0">
  <div className="text-center">
                                             <p className="text-blue-400">No withdrawals found</p>
@@ -585,7 +592,7 @@ export default function TransactionsPage() {
  whileHover={{ scale: 1.02, y: -2 }}
  transition={hoverTransition}
  >
-                                            <Card className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-blue-500/20 shadow-2xl hover:bg-blue-500/10 hover:border-blue-400/40 transition-all duration-500">
+                                            <Card className="p-6 rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/10 shadow-2xl hover:bg-black/30 hover:border-white/20 transition-all duration-500">
  <CardContent className="p-0">
  <div className="flex items-center justify-between">
  <div className="flex-1">
