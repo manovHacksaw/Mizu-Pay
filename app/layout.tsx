@@ -3,6 +3,7 @@ import { Ubuntu } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
 import { Provider } from '@/components/Provider';
 import UserSync from '@/components/user-sync';
+import GlobalLoader from '@/components/ui/global-loader';
 import "./globals.css";
 
 const ubuntu = Ubuntu({
@@ -40,6 +41,7 @@ export default function RootLayout({
           className={`${ubuntu.variable} font-sans antialiased`}
         >
           <Provider>
+            <GlobalLoader />
             <UserSync />
             {children}
           </Provider>
