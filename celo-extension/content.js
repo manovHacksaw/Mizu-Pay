@@ -1533,6 +1533,10 @@ function showFloatingIcon() {
   }
   
   floatingIcon = document.createElement("div")
+  // Resolve extension asset URL for the CELO logo
+  const floatingLogoUrl = (isExtensionContextValid() && window.chrome && window.chrome.runtime && window.chrome.runtime.getURL)
+    ? window.chrome.runtime.getURL('celo-logo-nobg.png')
+    : ''
   floatingIcon.id = "celo-pay-floating-icon"
   floatingIcon.innerHTML = `
     <div style="
@@ -1555,44 +1559,20 @@ function showFloatingIcon() {
       ">
         <div style="display: flex; align-items: center; flex-grow: 1; overflow: hidden;">
           <div style="
-            width: 40px; 
-            height: 40px; 
-            background: #FFD700;
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            color: #1a1a1a; 
-            font-weight: bold; 
-            font-size: 18px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             flex-shrink: 0;
-            position: relative;
-            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
           ">
-            <div style="
-              position: absolute;
-              width: 20px;
-              height: 20px;
-              background: #1a1a1a;
-              border-radius: 3px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-            "></div>
-            <div style="
-              position: absolute;
-              color: #FFD700;
-              font-size: 14px;
-              font-weight: 700;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              z-index: 2;
-            ">C</div>
-      </div>
+            <img src="${floatingLogoUrl}" alt="Celo" style="width: 100%; height: 100%; object-fit: contain; background: transparent;" />
+          </div>
           
           <div style="margin-left: 12px; overflow: hidden;">
             <div style="
@@ -1678,40 +1658,40 @@ function showGuidanceModal() {
     if (currency === "INR") {
       amountInfo = `
         <div style="
-          background: #f8f9fa;
-          border: 1px solid #e9ecef;
-          border-radius: 8px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 12px;
           padding: 12px;
           margin-bottom: 16px;
         ">
-          <div style="color: #6c757d; font-weight: 600; margin-bottom: 4px;">Payment Amount</div>
-          <div style="color: #333333; font-size: 18px; font-weight: bold;">₹${amount.toLocaleString('en-IN')} (INR)</div>
+          <div style="color: rgba(229,231,235,0.8); font-weight: 600; margin-bottom: 4px;">Payment Amount</div>
+          <div style="color: #FFFFFF; font-size: 18px; font-weight: bold;">₹${amount.toLocaleString('en-IN')} (INR)</div>
         </div>
       `
     } else if (currency === "USD") {
       amountInfo = `
         <div style="
-          background: #f8f9fa;
-          border: 1px solid #e9ecef;
-          border-radius: 8px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 12px;
           padding: 12px;
           margin-bottom: 16px;
         ">
-          <div style="color: #6c757d; font-weight: 600; margin-bottom: 4px;">Payment Amount</div>
-          <div style="color: #333333; font-size: 18px; font-weight: bold;">$${amount.toFixed(2)} (USD)</div>
+          <div style="color: rgba(229,231,235,0.8); font-weight: 600; margin-bottom: 4px;">Payment Amount</div>
+          <div style="color: #FFFFFF; font-size: 18px; font-weight: bold;">$${amount.toFixed(2)} (USD)</div>
         </div>
       `
     } else {
       amountInfo = `
         <div style="
-          background: #f8f9fa;
-          border: 1px solid #e9ecef;
-          border-radius: 8px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 12px;
           padding: 12px;
           margin-bottom: 16px;
         ">
-          <div style="color: #6c757d; font-weight: 600; margin-bottom: 4px;">Payment Amount</div>
-          <div style="color: #333333; font-size: 18px; font-weight: bold;">${amount.toFixed(2)} ${currency}</div>
+          <div style="color: rgba(229,231,235,0.8); font-weight: 600; margin-bottom: 4px;">Payment Amount</div>
+          <div style="color: #FFFFFF; font-size: 18px; font-weight: bold;">${amount.toFixed(2)} ${currency}</div>
         </div>
       `
     }
@@ -1720,6 +1700,11 @@ function showGuidanceModal() {
   // Create modal overlay
   const modal = document.createElement("div")
   modal.id = "celo-pay-guidance-modal"
+  // Resolve extension asset URL for the CELO logo
+  const modalLogoUrl = (isExtensionContextValid() && window.chrome && window.chrome.runtime && window.chrome.runtime.getURL)
+    ? window.chrome.runtime.getURL('celo-logo-nobg.png')
+    : ''
+
   modal.innerHTML = `
     <div style="
       position: fixed;
@@ -1737,13 +1722,15 @@ function showGuidanceModal() {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     ">
       <div style="
-        background: #ffffff;
-        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.55);
+        color: #FFFFFF;
+        border-radius: 16px;
         padding: 32px;
-        max-width: 480px;
+        max-width: 520px;
         width: 100%;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        border: 1px solid #e9ecef;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(12px);
         position: relative;
         animation: modalSlideIn 0.3s ease-out;
       ">
@@ -1752,19 +1739,19 @@ function showGuidanceModal() {
           position: absolute;
           top: 16px;
           right: 16px;
-          background: #f8f9fa;
-          border: 1px solid #e9ecef;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
           border-radius: 6px;
           width: 32px;
           height: 32px;
-          color: #6c757d;
+          color: #E5E7EB;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 18px;
           transition: all 0.2s ease;
-        " onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
+        " onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
           ×
         </button>
 
@@ -1773,21 +1760,20 @@ function showGuidanceModal() {
           <div style="
             width: 64px;
             height: 64px;
-            background: #FFD700;
-            border-radius: 8px;
+            border-radius: 50%;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 16px;
-            color: #1a1a1a;
-            font-weight: bold;
-            font-size: 24px;
             animation: celoPulse 2s ease-in-out infinite;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
           ">
-            C
+            <img src="${modalLogoUrl}" alt="Celo" style="width: 100%; height: 100%; object-fit: contain; background: transparent;" />
           </div>
           <h2 style="
-            color: #333333;
+            color: #FFFFFF;
             margin: 0;
             font-size: 24px;
             font-weight: 600;
@@ -1795,7 +1781,7 @@ function showGuidanceModal() {
             Pay with Celo/cUSD
           </h2>
           <p style="
-            color: #6c757d;
+            color: rgba(229, 231, 235, 0.75);
             margin: 8px 0 0;
             font-size: 16px;
           ">
@@ -1808,17 +1794,17 @@ function showGuidanceModal() {
         
         <!-- Guidance content -->
         <div style="
-          background: #f8f9fa;
-          border-radius: 8px;
+          background: rgba(255,255,255,0.06);
+          border-radius: 12px;
           padding: 20px;
           margin-bottom: 24px;
-          border: 1px solid #e9ecef;
+          border: 1px solid rgba(255,255,255,0.12);
         ">
           <div style="display: flex; align-items: center; margin-bottom: 16px;">
             <div style="
               width: 24px;
               height: 24px;
-              background: #6c757d;
+              background: rgba(148,163,184,0.6);
               border-radius: 6px;
               display: flex;
               align-items: center;
@@ -1831,7 +1817,7 @@ function showGuidanceModal() {
               </svg>
             </div>
             <h3 style="
-              color: #333333;
+              color: #FFFFFF;
               margin: 0;
               font-size: 18px;
               font-weight: 600;
@@ -1841,7 +1827,7 @@ function showGuidanceModal() {
           </div>
           
           <ul style="
-            color: #6c757d;
+            color: rgba(229, 231, 235, 0.75);
             margin: 0;
             padding-left: 20px;
             line-height: 1.6;
@@ -1852,14 +1838,14 @@ function showGuidanceModal() {
           </ul>
           
           <div style="
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
             padding: 12px;
             margin-top: 16px;
           ">
             <p style="
-              color: #6c757d;
+              color: rgba(229, 231, 235, 0.8);
               margin: 0;
               font-size: 14px;
               font-weight: 500;
@@ -1873,21 +1859,21 @@ function showGuidanceModal() {
         <div style="display: flex; gap: 12px;">
           <button id="celo-modal-cancel" style="
             flex: 1;
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            color: #6c757d;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.18);
+            color: rgba(229, 231, 235, 0.85);
             padding: 12px 24px;
             border-radius: 6px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-          " onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
+          " onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'">
             Cancel
           </button>
           <button id="celo-modal-proceed" style="
             flex: 2;
-            background: #28a745;
+            background: #16a34a;
             border: none;
             color: white;
             padding: 12px 24px;
@@ -1897,7 +1883,7 @@ function showGuidanceModal() {
             cursor: pointer;
             transition: all 0.2s ease;
             animation: buttonBounce 3s ease-in-out infinite;
-          " onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">
+          " onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
             Proceed to Payment
           </button>
         </div>

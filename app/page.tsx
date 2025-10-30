@@ -20,30 +20,30 @@ export default function Home() {
       
       {/* Content */}
       <div className="relative z-10">
-        <Navbar />
-        <InfiniteHero />
-        <FeaturesSectionDemo />
-        <HowItWorksSection />
+      <Navbar />
+      <InfiniteHero />
+      <FeaturesSectionDemo />
+      <HowItWorksSection />
 
-        <FeatureSection
-          subheading="Mizu Wallet"
-          headline="Secure cUSD & CELO Management"
-          description="We eliminate complexity with features like Gmail login and an easy-to-use, secure wallet setup. Store, manage, and spend your cUSD and CELO with confidence. The future of finance is accessible to everyone."
-          videoPlaceholder="/videos/wallet-demo.mp4"
-          isVideoLeft={true}
-          accentColor="green"
-        />
+      <FeatureSection
+        subheading="Mizu Wallet"
+        headline="Secure cUSD & CELO Management"
+        description="We eliminate complexity with features like Gmail login and an easy-to-use, secure wallet setup. Store, manage, and spend your cUSD and CELO with confidence. The future of finance is accessible to everyone."
+        videoPlaceholder="/videos/wallet-demo.mp4"
+        isVideoLeft={true}
+        accentColor="green"
+      />
 
-        <FeatureSection
-          subheading="The Bridge"
-          headline="Instant Order Fulfillment Engine"
-          description="Mizu Pay securely processes your crypto payment, and our backend instantly purchases a gift card (MVP) or uses API partners (Future) to fulfill your order. Your items are delivered instantly."
-          videoPlaceholder="/videos/fulfillment-demo.mp4"
-          isVideoLeft={false}
-          accentColor="blue"
-        />
+      <FeatureSection
+        subheading="The Bridge"
+        headline="Instant Order Fulfillment Engine"
+        description="Mizu Pay securely processes your crypto payment, and our backend instantly purchases a gift card (MVP) or uses API partners (Future) to fulfill your order. Your items are delivered instantly."
+        videoPlaceholder="/videos/fulfillment-demo.mp4"
+        isVideoLeft={false}
+        accentColor="blue"
+      />
 
-        <HoverFooter />
+      <HoverFooter />
       </div>
     </div>
   )
