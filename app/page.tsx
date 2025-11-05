@@ -2,6 +2,7 @@ import { ThemeInit } from "@/components/ThemeInit";
 import { PreLoader } from "@/components/PreLoader";
 import { Navbar } from "@/components/layout/Navbar";
 import { Hero } from "@/components/sections/Hero";
+import { FeatureClarity } from "@/components/sections/FeatureClarity";
 import { Waves } from "@/components/decorative/Waves";
 import { Watermark } from "@/components/decorative/Watermark";
 import { LightStreaks } from "@/components/decorative/LightStreaks";
@@ -18,6 +19,7 @@ export default function Home() {
         <Navbar />
         <Hero />
       </div>
+      <FeatureClarity />
     </>
   );
 }
