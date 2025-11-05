@@ -1,0 +1,95 @@
+'use client';
+
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+
+export function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // useEffect only runs on the client, so now we can safely show the UI
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Debug: Log theme changes
+  useEffect(() => {
+    if (mounted && theme) {
+      console.log('Current theme:', theme);
+      // Check if html element has the correct class
+      const htmlEl = document.documentElement;
+      console.log('HTML classes:', htmlEl.className);
+    }
+  }, [theme, mounted]);
+
+  if (!mounted) {
+    return (
+      <button
+        className="theme-toggle"
+        aria-label="Toggle theme"
+      >
+        <div className="w-4 h-4"></div>
+      </button>
+    );
+  }
+
+  // Use theme directly, default to 'light' if undefined
+  const currentTheme = theme || 'light';
+  const isDark = currentTheme === 'dark';
+
+  const handleToggle = () => {
+    const newTheme = isDark ? 'light' : 'dark';
+    console.log('Toggling theme from', currentTheme, 'to', newTheme);
+    // Force set the theme
+    setTheme(newTheme);
+    // Also manually update the HTML class as a fallback
+    const htmlEl = document.documentElement;
+    if (newTheme === 'dark') {
+      htmlEl.classList.add('dark');
+      htmlEl.classList.remove('light');
+    } else {
+      htmlEl.classList.remove('dark');
+      htmlEl.classList.add('light');
+    }
+  };
+
+  return (
+    <button
+      onClick={handleToggle}
+      className="theme-toggle"
+      aria-label="Toggle theme"
+      title={`Current: ${currentTheme}, Click to switch to ${isDark ? 'light' : 'dark'}`}
+    >
+      {isDark ? (
+        <svg
+          className="w-4 h-4 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+          />
+        </svg>
+      ) : (
+        <svg
+          className="w-4 h-4 text-[#0066ff]"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+          />
+        </svg>
+      )}
+    </button>
+  );
+}
+
