@@ -49,26 +49,33 @@ async function handleMizuPayClick(data, sender) {
     // Get extension settings
     const settings = await getSettings();
     
-    // Store checkout information
+    // Store complete checkout information (all details from content script)
     await chrome.storage.local.set({
         "currentCheckout": {
+            storeName: data.storeName,
             url: data.url,
+            totalAmount: data.totalAmount,
+            currency: data.currency,
             timestamp: data.timestamp,
             tabId: sender.tab?.id
         }
     });
     
-    // Open the extension popup
-    // Note: In Manifest V3, we can't directly open popup programmatically
-    // Alternative: Open a new tab with the dApp URL or show notification
-    if (settings.dappUrl) {
-        const dappUrl = `http://${settings.dappUrl}`;
-        chrome.tabs.create({ url: dappUrl });
+    // Try to open the extension popup programmatically
+    // Note: In Manifest V3, this only works in response to user action (which we have)
+    try {
+        await chrome.action.openPopup();
+        console.log("Popup opened successfully");
+    } catch (error) {
+        console.log("Could not open popup programmatically:", error);
+        // Fallback: Show notification or badge
+        chrome.action.setBadgeText({ text: "1" });
+        chrome.action.setBadgeBackgroundColor({ color: "#007bff" });
     }
     
     return {
         message: "Payment flow initiated",
-        dappUrl: settings.dappUrl
+        checkoutStored: true
     };
 }
 

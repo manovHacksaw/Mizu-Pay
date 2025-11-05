@@ -73,31 +73,60 @@ function hasGiftCardSupport() {
     });
     
     // Check for gift card related text in the page
+    // Expanded keywords to catch more patterns (including Myntra's "Have a Gift Card?")
     const giftCardKeywords = [
         'gift card',
         'giftcard',
+        'gift-card',
         'gift certificate',
         'gift voucher',
         'promo code',
+        'promocode',
         'voucher code',
-        'redeem gift card'
+        'redeem gift card',
+        'have a gift card',
+        'apply gift card',
+        'gift card code',
+        'enter gift card',
+        'use gift card',
+        'gift voucher',
+        'coupon code',
+        'discount code',
+        'apply coupon',
+        'apply voucher'
     ];
     
     // Get all text content from the page (lowercase for comparison)
     const pageText = document.body.innerText.toLowerCase();
+    const pageHTML = document.body.innerHTML.toLowerCase();
     
     // Check if any gift card keywords appear in the page text
     const hasGiftCardText = giftCardKeywords.some(keyword => 
-        pageText.includes(keyword)
+        pageText.includes(keyword) || pageHTML.includes(keyword)
     );
     
-    // Check for gift card related buttons/links
+    // Check for gift card related buttons/links with more comprehensive selectors
     const giftCardSelectors = [
         'button[id*="gift"]',
+        'button[id*="giftcard"]',
+        'button[id*="voucher"]',
+        'button[id*="promo"]',
+        'button[id*="coupon"]',
         'a[href*="gift"]',
+        'a[href*="voucher"]',
+        'a[href*="promo"]',
+        'a[href*="coupon"]',
         '.gift-card',
+        '.giftcard',
+        '.gift-card-button',
         '#gift-card',
-        '[data-testid*="gift"]'
+        '#giftcard',
+        '[data-testid*="gift"]',
+        '[data-testid*="voucher"]',
+        '[aria-label*="gift"]',
+        '[aria-label*="voucher"]',
+        '[title*="gift"]',
+        '[title*="voucher"]'
     ];
     
     const hasGiftCardElements = giftCardSelectors.some(selector => {
@@ -108,8 +137,29 @@ function hasGiftCardSupport() {
         }
     });
     
+    // Check for buttons/clickable elements that contain gift card text
+    // This catches cases like "APPLY GIFT CARD" button on Myntra
+    let hasGiftCardButtons = false;
+    try {
+        const buttons = document.querySelectorAll('button, a, [role="button"], [onclick], .btn, [class*="button"]');
+        for (const button of buttons) {
+            const buttonText = (button.textContent || button.innerText || '').toLowerCase();
+            const ariaLabel = (button.getAttribute('aria-label') || '').toLowerCase();
+            const title = (button.getAttribute('title') || '').toLowerCase();
+            const combinedText = buttonText + ' ' + ariaLabel + ' ' + title;
+            
+            // Check if button text contains gift card related keywords
+            if (giftCardKeywords.some(keyword => combinedText.includes(keyword))) {
+                hasGiftCardButtons = true;
+                break;
+            }
+        }
+    } catch (e) {
+        // Ignore errors
+    }
+    
     // Return true if any indicator of gift card support is found
-    return hasGiftCardInputs || hasGiftCardText || hasGiftCardElements;
+    return hasGiftCardInputs || hasGiftCardText || hasGiftCardElements || hasGiftCardButtons;
 }
 
 // Function to extract checkout details from the page
@@ -690,12 +740,22 @@ function injectMizuPayButton() {
 if (isCheckoutPage()) {
     console.log("✅ Checkout page detected!");
     
-    if (hasGiftCardSupport()) {
+    // Enhanced gift card detection with debug info
+    const giftCardSupport = hasGiftCardSupport();
+    
+    if (giftCardSupport) {
         console.log("✅ Gift card support detected!");
         // Inject the button when both conditions are met
         injectMizuPayButton();
     } else {
         console.log("❌ No gift card support found");
+        // Debug: Check what we found
+        const pageText = document.body.innerText.toLowerCase();
+        const giftCardKeywords = ['gift card', 'giftcard', 'have a gift card', 'apply gift card', 'voucher', 'promo code'];
+        const foundKeywords = giftCardKeywords.filter(keyword => pageText.includes(keyword));
+        if (foundKeywords.length > 0) {
+            console.log("⚠️ Found gift card keywords but detection failed:", foundKeywords);
+        }
     }
 } else {
     console.log("❌ Not a checkout page");
