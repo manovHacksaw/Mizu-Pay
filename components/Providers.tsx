@@ -14,7 +14,13 @@ export default function Providers({children}: {children: React.ReactNode}) {
           ethereum: {
             createOnLogin: 'all-users'
           }
-        }
+        },
+        // Enable Google login
+        loginMethods: ['email', 'google'],
+        appearance: {
+          theme: 'light',
+          accentColor: '#0A4DFF',
+        },
       }}
     >
       {children}

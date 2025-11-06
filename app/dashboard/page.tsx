@@ -17,7 +17,7 @@ export default function Dashboard() {
   const [showWalletChoice, setShowWalletChoice] = useState(true)
   const [selectedWalletAddress, setSelectedWalletAddress] = useState<string | null>(null)
 
-
+    console.log("User:", user)
   
 
   const handleLogout = async () => {

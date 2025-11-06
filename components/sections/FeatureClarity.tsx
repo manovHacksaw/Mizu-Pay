@@ -1,13 +1,22 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { usePathname } from "next/navigation"
 
 export function FeatureClarity() {
+  const pathname = usePathname()
+  const isLandingPage = pathname === "/"
   const sectionRef = useRef<HTMLDivElement | null>(null)
   const [isSectionVisible, setIsSectionVisible] = useState(false)
   const observerRef = useRef<IntersectionObserver | null>(null)
 
   useEffect(() => {
+    // Only run animations on landing page
+    if (!isLandingPage) {
+      setIsSectionVisible(true)
+      return
+    }
+
     if (!sectionRef.current) return
 
     const observer = new IntersectionObserver(
@@ -35,7 +44,7 @@ export function FeatureClarity() {
         observerRef.current.disconnect()
       }
     }
-  }, [])
+  }, [isLandingPage])
 
   const renderFirstCardVisual = (isAnimated: boolean, staggerDelay: number = 0) => (
     <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 mb-4 h-48 flex flex-col items-center justify-center overflow-hidden transition-shadow duration-500 ease-in-out hover:shadow-[0_0_25px_rgba(14,118,255,0.22)]">
@@ -230,7 +239,8 @@ export function FeatureClarity() {
         {/* Feature Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {features.map((feature, index) => {
-            const cardStaggerDelay = index * 0.9
+            // Only use stagger delays on landing page
+            const cardStaggerDelay = isLandingPage ? index * 0.9 : 0
             const isAnimated = isSectionVisible
 
             return (
@@ -241,7 +251,7 @@ export function FeatureClarity() {
                   opacity: isAnimated ? 1 : 0,
                   transform: isAnimated ? "translateY(0)" : "translateY(15px)",
                   transition: `opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)`,
-                  transitionDelay: isAnimated ? `${cardStaggerDelay}s` : "0s",
+                  transitionDelay: isAnimated && isLandingPage ? `${cardStaggerDelay}s` : "0s",
                 }}
               >
                 {/* Visual */}
@@ -255,7 +265,7 @@ export function FeatureClarity() {
                     opacity: isAnimated ? 1 : 0,
                     transform: isAnimated ? "translateY(0)" : "translateY(12px)",
                     transition: "opacity 0.4s ease-out, transform 0.4s ease-out",
-                    transitionDelay: isAnimated ? `${cardStaggerDelay + 0.8}s` : "0s",
+                    transitionDelay: isAnimated && isLandingPage ? `${cardStaggerDelay + 0.8}s` : "0s",
                   }}
                 >
                   {feature.title}
@@ -269,7 +279,7 @@ export function FeatureClarity() {
                     opacity: isAnimated ? 1 : 0,
                     transform: isAnimated ? "translateY(0)" : "translateY(16px)",
                     transition: "opacity 0.5s ease-out, transform 0.5s ease-out",
-                    transitionDelay: isAnimated ? `${cardStaggerDelay + 0.8 + 0.4 + 0.15}s` : "0s",
+                    transitionDelay: isAnimated && isLandingPage ? `${cardStaggerDelay + 0.8 + 0.4 + 0.15}s` : "0s",
                   }}
                 >
                   {feature.description}
