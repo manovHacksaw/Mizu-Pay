@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ui/ThemeProvider";
+import Providers from "@/components/Providers";
 
 const jakartaSans = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700"],
@@ -22,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${jakartaSans.variable} font-sans antialiased`}>
+        <Providers>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -30,6 +32,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

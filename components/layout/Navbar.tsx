@@ -2,10 +2,9 @@ import { ThemeToggle } from "../ThemeToggle"
 
 export function Navbar() {
   return (
-    <nav className="animate-nav fixed top-0 left-0 right-0 z-50 flex justify-center items-center px-8 md:px-72 py-4">
+    <nav className="animate-nav  top-0 left-0 right-0 z-50 flex justify-center items-center px-8 md:px-72 py-4">
       <div className="flex items-center justify-between gap-4 md:gap-8 w-full max-w-7xl rounded-2xl px-4 md:px-6 py-3 bg-blue backdrop-blur-md border border-white/30 dark:border-gray-700/40 shadow-lg">
-        {/* Left: Orange Dot */}
-        <div className="w-3 h-3 bg-orange-500 rounded-full shrink-0"></div>
+      
 
         {/* Navigation Links */}
         <div className="flex items-center gap-6 lg:gap-8 flex-1">

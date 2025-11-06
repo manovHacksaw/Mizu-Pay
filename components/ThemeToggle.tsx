@@ -12,15 +12,6 @@ export function ThemeToggle() {
     setMounted(true);
   }, []);
 
-  // Debug: Log theme changes
-  useEffect(() => {
-    if (mounted && theme) {
-      console.log('Current theme:', theme);
-      // Check if html element has the correct class
-      const htmlEl = document.documentElement;
-      console.log('HTML classes:', htmlEl.className);
-    }
-  }, [theme, mounted]);
 
   if (!mounted) {
     return (
@@ -39,7 +30,6 @@ export function ThemeToggle() {
 
   const handleToggle = () => {
     const newTheme = isDark ? 'light' : 'dark';
-    console.log('Toggling theme from', currentTheme, 'to', newTheme);
     // Force set the theme
     setTheme(newTheme);
     // Also manually update the HTML class as a fallback

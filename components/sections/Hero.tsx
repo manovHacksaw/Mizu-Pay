@@ -1,4 +1,14 @@
+"use client"
+
+import { usePrivy } from "@privy-io/react-auth";
+
 export function Hero() {
+
+  const {ready} = usePrivy();
+
+
+
+  
   return (
     <div className="relative z-10 text-center px-5 pt-32 md:pt-40 pb-24 md:pb-32 max-w-[1100px] mx-auto">
       {/* Main Headline */}
