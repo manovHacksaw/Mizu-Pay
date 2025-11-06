@@ -4,14 +4,13 @@ import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
     setMounted(true);
   }, []);
-
 
   if (!mounted) {
     return (
@@ -24,22 +23,26 @@ export function ThemeToggle() {
     );
   }
 
-  // Use theme directly, default to 'light' if undefined
-  const currentTheme = theme || 'light';
+  // Use resolvedTheme which is more reliable than theme
+  const currentTheme = resolvedTheme || theme || 'light';
   const isDark = currentTheme === 'dark';
 
   const handleToggle = () => {
-    const newTheme = isDark ? 'light' : 'dark';
-    // Force set the theme
+    if (!mounted) return;
+    
+    const root = document.documentElement;
+    const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
+    
+    // Set theme using next-themes
     setTheme(newTheme);
-    // Also manually update the HTML class as a fallback
-    const htmlEl = document.documentElement;
+    
+    // Also manually update the HTML class (portfolio approach)
     if (newTheme === 'dark') {
-      htmlEl.classList.add('dark');
-      htmlEl.classList.remove('light');
+      root.classList.add('dark');
+      root.classList.remove('light');
     } else {
-      htmlEl.classList.remove('dark');
-      htmlEl.classList.add('light');
+      root.classList.remove('dark');
+      root.classList.add('light');
     }
   };
 

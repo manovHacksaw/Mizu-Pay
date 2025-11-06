@@ -53,6 +53,15 @@
   
   /* Content text colors (for non-hero sections) */
   --content-text-secondary: rgba(23, 23, 23, 0.7);
+  
+  /* Dashboard text colors */
+  --dashboard-text-primary: #171717;
+  --dashboard-text-secondary: rgba(23, 23, 23, 0.7);
+  --dashboard-text-muted: rgba(23, 23, 23, 0.5);
+  --dashboard-border: rgba(0, 0, 0, 0.1);
+  --dashboard-card-bg: rgba(255, 255, 255, 0.8);
+  --dashboard-card-border: rgba(0, 0, 0, 0.1);
+  --dashboard-hover-bg: rgba(0, 0, 0, 0.05);
 }
 
 .dark {
@@ -108,6 +117,15 @@
   
   /* Content text colors (for non-hero sections) */
   --content-text-secondary: rgba(209, 213, 219, 0.8);
+  
+  /* Dashboard text colors */
+  --dashboard-text-primary: #f3f4f6;
+  --dashboard-text-secondary: rgba(243, 244, 246, 0.8);
+  --dashboard-text-muted: rgba(243, 244, 246, 0.6);
+  --dashboard-border: rgba(255, 255, 255, 0.1);
+  --dashboard-card-bg: rgba(31, 41, 55, 0.4);
+  --dashboard-card-border: rgba(255, 255, 255, 0.1);
+  --dashboard-hover-bg: rgba(255, 255, 255, 0.05);
 }
 
 @theme inline {
@@ -136,6 +154,15 @@ body:not(:has(.pre-loader)) {
 /* Dark mode - solid color instead of gradient */
 .dark .hero-bg {
   background: var(--hero-bg-from);
+}
+
+/* Page background - very light saturated sky blue (for non-landing/login pages) */
+.page-bg {
+  background: #D0E8FF; /* Slightly darker very light saturated sky blue */
+}
+
+.dark .page-bg {
+  background: #0f1419;
 }
 
 /* Navigation styles */
@@ -662,4 +689,218 @@ body:not(:has(.pre-loader)) {
 
 .dark .login-footer {
   border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Login Error Message */
+.login-error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  font-size: 0.875rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: slideDown 0.3s ease-out;
+}
+
+.dark .login-error-message {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-input-error {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  background: rgba(239, 68, 68, 0.05) !important;
+}
+
+.login-input-error:focus {
+  border-color: rgba(239, 68, 68, 0.7) !important;
+  box-shadow: 
+    0 0 0 3px rgba(239, 68, 68, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .login-input-error {
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.dark .login-input-error:focus {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  box-shadow: 
+    0 0 0 3px rgba(239, 68, 68, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Dashboard Modal Styles */
+.dashboard-modal-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.dark .dashboard-modal-card {
+  background: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.dashboard-modal-btn-primary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  background: rgba(10, 77, 255, 0.9);
+  border: 1px solid rgba(10, 77, 255, 0.3);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.dashboard-modal-btn-primary:hover:not(:disabled) {
+  background: rgba(10, 77, 255, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(10, 77, 255, 0.3);
+}
+
+.dashboard-modal-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dashboard-modal-btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #171717;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.dashboard-modal-btn-secondary:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.dark .dashboard-modal-btn-secondary {
+  color: #f3f4f6;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .dashboard-modal-btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dashboard-modal-btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dashboard-modal-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.dashboard-modal-divider-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dark .dashboard-modal-divider-line {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dashboard-modal-divider-text {
+  font-size: 0.75rem;
+  color: rgba(23, 23, 23, 0.6);
+  font-weight: 500;
+}
+
+.dark .dashboard-modal-divider-text {
+  color: rgba(243, 244, 246, 0.7);
+}
+
+/* Dashboard Wallet Card Styles */
+.dashboard-wallet-card {
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid var(--dashboard-card-border);
+  background: var(--dashboard-card-bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.dashboard-wallet-card:hover {
+  background: var(--dashboard-hover-bg);
+  border-color: var(--dashboard-card-border);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-wallet-card-selected {
+  background: rgba(10, 77, 255, 0.15);
+  border-color: rgba(10, 77, 255, 0.4);
+}
+
+.dashboard-wallet-card-selected:hover {
+  background: rgba(10, 77, 255, 0.18);
+  border-color: rgba(10, 77, 255, 0.5);
+}
+
+.dark .dashboard-wallet-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark .dashboard-wallet-card-selected {
+  background: rgba(10, 77, 255, 0.2);
+  border-color: rgba(10, 77, 255, 0.35);
+}
+
+.dark .dashboard-wallet-card-selected:hover {
+  background: rgba(10, 77, 255, 0.25);
+  border-color: rgba(10, 77, 255, 0.45);
+}
+
+/* Dashboard text styles */
+.dashboard-text-primary {
+  color: var(--dashboard-text-primary);
+}
+
+.dashboard-text-secondary {
+  color: var(--dashboard-text-secondary);
+}
+
+.dashboard-text-muted {
+  color: var(--dashboard-text-muted);
+}
+
+.dashboard-border {
+  border-color: var(--dashboard-border);
 }

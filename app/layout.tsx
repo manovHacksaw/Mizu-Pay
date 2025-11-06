@@ -24,14 +24,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${jakartaSans.variable} font-sans antialiased`}>
         <Providers>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          storageKey="mizu-pay-theme"
-        >
-          {children}
-        </ThemeProvider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
         </Providers>
       </body>
     </html>

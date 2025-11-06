@@ -13,6 +13,7 @@ export default function LoginWithEmail() {
   const [codeSent, setCodeSent] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { sendCode, loginWithCode } = useLoginWithEmail()
   const { ready, authenticated, login } = usePrivy()
 
@@ -24,12 +25,15 @@ export default function LoginWithEmail() {
 
   const handleSendCode = async () => {
     if (!email) return
+    setError(null)
     setIsLoading(true)
     try {
       await sendCode({ email })
       setCodeSent(true)
-    } catch (error) {
+      setError(null)
+    } catch (error: any) {
       console.error('Error sending code:', error)
+      setError(error?.message || 'Failed to send verification code. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -37,21 +41,32 @@ export default function LoginWithEmail() {
 
   const handleLogin = async () => {
     if (!code) return
+    setError(null)
     setIsLoading(true)
     try {
       await loginWithCode({ code })
-    } catch (error) {
+      setError(null)
+    } catch (error: any) {
       console.error('Error logging in:', error)
+      const errorMessage = error?.message || error?.toString() || 'Invalid verification code'
+      if (errorMessage.includes('Invalid') || errorMessage.includes('invalid') || errorMessage.includes('code')) {
+        setError('Invalid email and code combination. Please check your code and try again.')
+      } else {
+        setError(errorMessage)
+      }
       setIsLoading(false)
     }
   }
 
   const handleGoogleLogin = async () => {
+    setError(null)
     setIsGoogleLoading(true)
     try {
       await login()
-    } catch (error) {
+      setError(null)
+    } catch (error: any) {
       console.error('Error logging in with Google:', error)
+      setError(error?.message || 'Failed to sign in with Google. Please try again.')
       setIsGoogleLoading(false)
     }
   }
@@ -85,6 +100,16 @@ export default function LoginWithEmail() {
 
             {/* Form */}
             <div className="space-y-6">
+              {/* Error Message */}
+              {error && (
+                <div className="login-error-message">
+                  <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              )}
+
               {!codeSent ? (
                 <>
                   {/* Email Input */}
@@ -99,9 +124,12 @@ export default function LoginWithEmail() {
                       id="email"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        setError(null)
+                      }}
                       placeholder="you@example.com"
-                      className="login-input"
+                      className={`login-input ${error && !codeSent ? 'login-input-error' : ''}`}
                       onKeyDown={(e) => e.key === 'Enter' && handleSendCode()}
                     />
                   </div>
@@ -179,9 +207,12 @@ export default function LoginWithEmail() {
                       id="code"
                       type="text"
                       value={code}
-                      onChange={(e) => setCode(e.target.value)}
+                      onChange={(e) => {
+                        setCode(e.target.value)
+                        setError(null)
+                      }}
                       placeholder="000000"
-                      className="login-input login-code-input"
+                      className={`login-input login-code-input ${error ? 'login-input-error' : ''}`}
                       maxLength={6}
                       onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                       autoFocus
@@ -209,6 +240,7 @@ export default function LoginWithEmail() {
                     onClick={() => {
                       setCodeSent(false)
                       setCode('')
+                      setError(null)
                     }}
                     className="login-secondary-btn"
                   >
