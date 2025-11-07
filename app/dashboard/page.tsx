@@ -2,8 +2,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
-import { createPublicClient, http, formatUnits, defineChain } from 'viem'
+import { createPublicClient, http, formatUnits, defineChain, getContract } from 'viem'
 import { Navbar } from '@/components/layout/Navbar'
+import { erc20Abi } from 'viem'
+
+// MOCK_CUSD token address on Celo Sepolia testnet
+const MOCK_CUSD = '0x61d11C622Bd98A71aD9361833379A2066Ad29CCa' as `0x${string}`
 
 interface WalletBalance {
   celo: string
@@ -88,7 +92,7 @@ function WalletCard({ wallet, walletName, isSelected, onSelect, balance, isLoadi
           {isLoadingBalance ? (
             <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
           ) : (
-            <p className="text-sm font-medium dashboard-text-primary">{balance?.cusd || '—'}</p>
+            <p className="text-sm font-medium dashboard-text-primary">{balance?.cusd || '0.0000'}</p>
           )}
         </div>
       </div>
@@ -187,12 +191,24 @@ const externalWallets = wallets?.filter(w =>
     }
   }, [ready, authenticated, router])
 
-  // Show wallet choice modal for all authenticated users after login
+  // Show wallet choice modal only if no embedded wallet exists
   useEffect(() => {
     if (ready && authenticated) {
-      setShowWalletChoice(true)
+      // Check if embedded wallet exists
+      const hasEmbeddedWallet = wallets?.some(w => 
+        w.walletClientType === 'privy' || 
+        w.walletClientType === 'embedded' ||
+        w.connectorType === 'privy'
+      ) || (user?.wallet ? true : false)
+      
+      // Only show modal if no embedded wallet exists
+      if (!hasEmbeddedWallet) {
+        setShowWalletChoice(true)
+      } else {
+        setShowWalletChoice(false)
+      }
     }
-  }, [ready, authenticated])
+  }, [ready, authenticated, wallets?.length, user?.wallet?.address])
 
   // Set default selected wallet when wallets are available
   useEffect(() => {
@@ -256,13 +272,29 @@ const externalWallets = wallets?.filter(w =>
         console.error('Error fetching CELO balance:', error)
       }
 
+      // Get cUSD ERC20 token balance
+      let cusdBalance = '0'
+      try {
+        const contract = getContract({
+          address: MOCK_CUSD,
+          abi: erc20Abi,
+          client: publicClient,
+        })
+        
+        const balance = await contract.read.balanceOf([wallet.address as `0x${string}`])
+        cusdBalance = formatUnits(balance as bigint, 18)
+      } catch (error) {
+        console.error('Error fetching cUSD balance:', error)
+      }
+
       const formattedCelo = parseFloat(celoBalance).toFixed(4)
+      const formattedCusd = parseFloat(cusdBalance).toFixed(4)
 
       setWalletBalances(prev => ({
         ...prev,
         [wallet.address]: {
           celo: formattedCelo,
-          cusd: '' // Keep cUSD blank for now
+          cusd: formattedCusd
         }
       }))
     } catch (error) {
@@ -271,7 +303,7 @@ const externalWallets = wallets?.filter(w =>
         ...prev,
         [wallet.address]: {
           celo: '0.0000',
-          cusd: '' // Keep cUSD blank for now
+          cusd: '0.0000'
         }
       }))
     } finally {

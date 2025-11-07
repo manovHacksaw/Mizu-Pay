@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(cuid())
+  email           String?  @unique
+  createdAt       DateTime @default(now())
+
+  activeWalletId  String?
+  activeWallet    Wallet?  @relation("ActiveWallet", fields: [activeWalletId], references: [id])
+
+  wallets         Wallet[]
+  paymentSessions PaymentSession[]
+  payments        Payment[]
+}
+
+model Wallet {
+  id        String      @id @default(cuid())
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id])
+
+  address   String      @unique
+  type      WalletType
+  createdAt DateTime    @default(now())
+
+  payments  Payment[]
+  sessions  PaymentSession[]
+  activeUsers User[]    @relation("ActiveWallet")
+}
+
+enum WalletType {
+  embedded
+  external
+}
+
+model PaymentSession {
+  id         String       @id @default(cuid())
+  userId     String
+  walletId   String
+  store      String
+  amountUSD  Float
+  status     SessionStatus @default(pending)
+  createdAt  DateTime     @default(now())
+
+  user       User         @relation(fields: [userId], references: [id])
+  wallet     Wallet       @relation(fields: [walletId], references: [id])
+  payment    Payment?
+}
+
+enum SessionStatus {
+  pending
+  paid
+  fulfilled
+  expired
+  failed
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  sessionId    String        @unique
+  walletId     String
+  userId       String
+  amountCrypto Float
+  token        String
+  txHash       String?
+  status       PaymentStatus @default(paid)
+  createdAt    DateTime      @default(now())
+
+  session      PaymentSession @relation(fields: [sessionId], references: [id])
+  wallet       Wallet         @relation(fields: [walletId], references: [id])
+  user         User           @relation(fields: [userId], references: [id])
+}
+
+enum PaymentStatus {
+  paid
+  refunded
+  failed
+}

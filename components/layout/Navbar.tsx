@@ -1,4 +1,5 @@
 "use client"
+import { useRouter } from "next/navigation"
 import { ThemeToggle } from "../ThemeToggle"
 
 interface NavbarProps {
@@ -7,6 +8,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ showLogout = false, onLogout }: NavbarProps) {
+  const router = useRouter()
   return (
     <nav className="animate-nav top-0 left-0 right-0 z-50 flex justify-center items-center px-8 md:px-72 py-4">
       <div className="flex items-center justify-between gap-4 md:gap-8 w-full max-w-7xl rounded-2xl px-4 md:px-6 py-3 bg-blue backdrop-blur-md border border-white/30 dark:border-gray-700/40 shadow-lg">
