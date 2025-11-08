@@ -44,6 +44,16 @@ async function main() {
       stock: 3
     },
     {
+      store: "Amazon",
+      currency: "INR",
+      amountMinor: 250000, // ₹2500.00
+      amountUSD: 30.50,
+      validityDays: 365,
+      number: "AMZ-TEST-2500-99999",
+      pin: "9999",
+      stock: 2
+    },
+    {
       store: "Flipkart",
       currency: "INR",
       amountMinor: 25000, // ₹250.00
@@ -52,6 +62,36 @@ async function main() {
       number: "FLPK-TEST-250-55555",
       pin: "1111",
       stock: 7
+    },
+    {
+      store: "Flipkart",
+      currency: "INR",
+      amountMinor: 200000, // ₹2000.00
+      amountUSD: 24.40,
+      validityDays: 180,
+      number: "FLPK-TEST-2000-77777",
+      pin: "7777",
+      stock: 4
+    },
+    {
+      store: "Myntra",
+      currency: "INR",
+      amountMinor: 200000, // ₹2000.00
+      amountUSD: 24.40,
+      validityDays: 365,
+      number: "MYN-TEST-2000-11111",
+      pin: "2222",
+      stock: 5
+    },
+    {
+      store: "Myntra",
+      currency: "INR",
+      amountMinor: 500000, // ₹5000.00
+      amountUSD: 61.00,
+      validityDays: 365,
+      number: "MYN-TEST-5000-33333",
+      pin: "3333",
+      stock: 3
     }
   ]
 

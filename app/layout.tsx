@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${jakartaSans.variable} font-sans antialiased`}>
+      <body className={`${jakartaSans.variable} font-sans antialiased`} suppressHydrationWarning>
         <Providers>
           <ThemeProvider>
             {children}

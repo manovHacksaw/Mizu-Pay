@@ -17,8 +17,42 @@ export async function GET(req: Request) {
 
     const amountMinor = Math.round(parseFloat(amount || "0") * 100);
 
-    // Normalize store name and currency for matching (case-insensitive)
-    const normalizedStore = store.trim();
+    // Store name normalization map (common variations -> canonical name)
+    const storeNameMap: Record<string, string> = {
+        'amazon': 'Amazon',
+        'amazon.in': 'Amazon',
+        'amazon.com': 'Amazon',
+        'flipkart': 'Flipkart',
+        'flipkart.com': 'Flipkart',
+        'myntra': 'Myntra',
+        'myntra.com': 'Myntra',
+        // Handle common variations
+        'place your order - amazon checkout': 'Amazon',
+        'flipkart payments page': 'Flipkart',
+        'payment': 'Myntra', // Common fallback for Myntra
+    };
+
+    // Normalize store name
+    let normalizedStore = store.trim();
+    const storeLower = normalizedStore.toLowerCase();
+    
+    // Check if we have a mapping for this store name
+    if (storeNameMap[storeLower]) {
+        normalizedStore = storeNameMap[storeLower];
+    } else {
+        // Try to find partial match
+        for (const [key, value] of Object.entries(storeNameMap)) {
+            if (storeLower.includes(key) || key.includes(storeLower)) {
+                normalizedStore = value;
+                break;
+            }
+        }
+        // If no match found, capitalize first letter
+        if (normalizedStore === store.trim()) {
+            normalizedStore = normalizedStore.charAt(0).toUpperCase() + normalizedStore.slice(1).toLowerCase();
+        }
+    }
+    
     const normalizedCurrency = currency.trim().toUpperCase();
 
     // Try exact match first (case-sensitive)
@@ -81,7 +115,8 @@ export async function GET(req: Request) {
       
       console.log("DEBUG - Available gift cards:", JSON.stringify(allCards, null, 2));
       console.log("DEBUG - Requested:", { 
-        store: normalizedStore, 
+        originalStore: store,
+        normalizedStore: normalizedStore, 
         currency: normalizedCurrency, 
         amountMinor,
         amountUSD: amountMinor / 100

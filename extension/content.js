@@ -171,50 +171,33 @@ function extractCheckoutDetails() {
         currency: null
     };
     
-    // Extract Store Name
-    // Try multiple sources: title, meta tags, header elements, logo alt text
-    const storeNameSelectors = [
-        'meta[property="og:site_name"]',
-        'meta[name="application-name"]',
-        'meta[property="og:title"]',
-        '.site-name',
-        '.store-name',
-        '[data-store-name]',
-        'header .logo',
-        'header img[alt]',
-        'nav .brand'
-    ];
+    // Store name normalization map (domain -> canonical name)
+    const storeNameMap = {
+        'amazon': 'Amazon',
+        'amazon.in': 'Amazon',
+        'amazon.com': 'Amazon',
+        'flipkart': 'Flipkart',
+        'flipkart.com': 'Flipkart',
+        'myntra': 'Myntra',
+        'myntra.com': 'Myntra'
+    };
     
-    for (const selector of storeNameSelectors) {
-        try {
-            const element = document.querySelector(selector);
-            if (element) {
-                if (element.tagName === 'META') {
-                    details.storeName = element.getAttribute('content');
-                } else {
-                    details.storeName = element.getAttribute('alt') || 
-                                       element.getAttribute('data-store-name') ||
-                                       element.textContent?.trim();
-                }
-                if (details.storeName) break;
-            }
-        } catch (e) {
-            continue;
+    // Extract store name from URL/domain (most reliable method)
+    const hostname = window.location.hostname.toLowerCase();
+    const domainKey = hostname.replace(/^www\./, '');
+    
+    // Try full domain match first (e.g., "amazon.in", "myntra.com")
+    if (storeNameMap[domainKey]) {
+        details.storeName = storeNameMap[domainKey];
+    } else {
+        // Try base domain (e.g., "amazon", "flipkart", "myntra")
+        const domainBase = domainKey.split('.')[0];
+        if (storeNameMap[domainBase]) {
+            details.storeName = storeNameMap[domainBase];
+        } else {
+            // Fallback: Capitalize first letter of domain base
+            details.storeName = domainBase.charAt(0).toUpperCase() + domainBase.slice(1);
         }
-    }
-    
-    // Fallback: Extract from page title (remove common suffixes)
-    if (!details.storeName) {
-        const title = document.title;
-        details.storeName = title.replace(/\s*[-|]\s*(Checkout|Cart|Payment|Order).*$/i, '').trim();
-    }
-    
-    // Fallback: Extract from domain name
-    if (!details.storeName || details.storeName.length < 2) {
-        const hostname = window.location.hostname;
-        details.storeName = hostname.replace(/^www\./, '').split('.')[0];
-        // Capitalize first letter
-        details.storeName = details.storeName.charAt(0).toUpperCase() + details.storeName.slice(1);
     }
     
     // Extract Total Amount - More comprehensive detection

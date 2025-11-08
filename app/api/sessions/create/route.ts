@@ -1,68 +1,202 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { expireOldSessions } from "@/lib/sessionUtils";
 
 export async function POST(req: Request) {
+  console.log("API HIT SUCCESSFULLY - /api/sessions/create");
+  
   try {
-    const { giftCardId, walletAddress } = await req.json();
+    const body = await req.json();
+    console.log("Request body:", body);
+    
+    // Support two modes:
+    // 1. With giftCardId (legacy/after gift card selection)
+    // 2. With store, amount, currency (initial session creation)
+    const { 
+      giftCardId, 
+      walletAddress, 
+      userId, 
+      privyUserId, 
+      email,
+      store,
+      amount,
+      currency,
+      amountUSD // Optional: if provided, use it; otherwise calculate from amount/currency
+    } = body;
 
-    if (!giftCardId || !walletAddress) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    // Require walletAddress for session creation
+    if (!walletAddress) {
+      return NextResponse.json({ error: "Missing required field: walletAddress" }, { status: 400 });
     }
 
-    const giftCard = await prisma.giftCard.findUnique({
-      where: { id: giftCardId },
-    });
+    let finalStore: string;
+    let finalAmountUSD: number;
 
-    if (!giftCard || giftCard.stock <= 0 || !giftCard.active) {
-      return NextResponse.json({ error: "Gift card unavailable" }, { status: 400 });
+    // If giftCardId is provided, use it to get store and amountUSD
+    if (giftCardId) {
+      // Validate gift card
+      const giftCard = await prisma.giftCard.findUnique({
+        where: { id: giftCardId },
+      });
+
+      if (!giftCard || giftCard.stock <= 0 || !giftCard.active) {
+        return NextResponse.json({ error: "Gift card unavailable" }, { status: 400 });
+      }
+
+      finalStore = giftCard.store;
+      finalAmountUSD = giftCard.amountUSD;
+    } else {
+      // Create session without gift card (initial creation)
+      if (!store || !amount || !currency) {
+        return NextResponse.json({ error: "Missing required fields: store, amount, currency" }, { status: 400 });
+      }
+
+      finalStore = store;
+      
+      // Use provided amountUSD or calculate from amount/currency
+      if (amountUSD) {
+        finalAmountUSD = amountUSD;
+      } else {
+        // Default: assume amount is already in USD if currency is USD, otherwise need conversion
+        // For now, if currency is USD, use amount directly; otherwise we'd need conversion API
+        if (currency.toUpperCase() === 'USD') {
+          finalAmountUSD = parseFloat(amount);
+        } else {
+          // If not USD, we'll need to fetch conversion rate or use provided amountUSD
+          // For now, use amount as-is (should be provided via amountUSD parameter)
+          finalAmountUSD = parseFloat(amount);
+        }
+      }
     }
+
+    // Handle wallet and user setup
+    let wallet = null;
+    let finalUserId = userId;
 
     // Find or create wallet by address
-    let wallet = await prisma.wallet.findUnique({
+    wallet = await prisma.wallet.findUnique({
       where: { address: walletAddress },
     });
 
+    // Determine user ID - prefer userId (database ID), otherwise look up by email
+    if (!finalUserId && email) {
+      // Look up user by email (this is how users are synced from Privy)
+      const userByEmail = await prisma.user.findUnique({
+        where: { email },
+      });
+      if (userByEmail) {
+        finalUserId = userByEmail.id;
+      }
+    }
+
+    // If still no user ID, check if wallet has a userId
+    if (!finalUserId && wallet && wallet.userId) {
+      finalUserId = wallet.userId;
+    }
+
+    // Create wallet if it doesn't exist
     if (!wallet) {
+      // Determine wallet type (embedded if privyUserId/userId provided, otherwise external)
+      const walletType = (privyUserId || userId) ? "embedded" : "external";
+      
       wallet = await prisma.wallet.create({
         data: {
           address: walletAddress,
-          type: "external",
+          type: walletType,
+          userId: finalUserId || null,
         },
       });
+    } else if (finalUserId && !wallet.userId) {
+      // Link wallet to user if not already linked
+      wallet = await prisma.wallet.update({
+        where: { id: wallet.id },
+        data: { userId: finalUserId },
+      });
     }
 
-    // Get or create user (if wallet has userId, use it; otherwise create new user)
-    let userId = wallet.userId;
-    if (!userId) {
-      const user = await prisma.user.create({
+    // If still no user ID, create anonymous user as fallback
+    if (!finalUserId) {
+      const anonymousUser = await prisma.user.create({
         data: {},
       });
-      userId = user.id;
-      // Update wallet with userId
-      await prisma.wallet.update({
-        where: { id: wallet.id },
-        data: { userId },
+      finalUserId = anonymousUser.id;
+      
+      // Update wallet with userId if wallet exists
+      if (wallet && !wallet.userId) {
+        wallet = await prisma.wallet.update({
+          where: { id: wallet.id },
+          data: { userId: finalUserId },
+        });
+      }
+    } else {
+      // Verify user exists
+      const userExists = await prisma.user.findUnique({
+        where: { id: finalUserId },
       });
+      
+      if (!userExists) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
     }
 
+    // Ensure wallet exists (should always be set at this point since walletAddress is required)
+    if (!wallet) {
+      return NextResponse.json({ error: "Failed to create or find wallet" }, { status: 500 });
+    }
+
+    // Clean up expired sessions before creating new one
+    await expireOldSessions();
+
+    // Calculate expiration time (10 minutes from now)
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
     // Create session
+    console.log("Creating session with:", { userId: finalUserId, walletId: wallet.id, store: finalStore, amountUSD: finalAmountUSD });
+    
     const session = await prisma.paymentSession.create({
       data: {
-        userId,
+        userId: finalUserId,
         walletId: wallet.id,
-        store: giftCard.store,
-        amountUSD: giftCard.amountUSD,
+        store: finalStore,
+        amountUSD: finalAmountUSD,
         status: "pending",
+        expiresAt: expiresAt,
       },
     });
 
-    return NextResponse.json({
+    console.log("Session created successfully:", session.id);
+    
+    const response: any = {
       sessionId: session.id,
-      payableAmountMinor: giftCard.amountMinor,
-      amountUSD: giftCard.amountUSD,
-    });
+      amountUSD: finalAmountUSD,
+      store: finalStore,
+      expiresAt: expiresAt.toISOString(),
+    };
+
+    // Include gift card details if giftCardId was provided
+    if (giftCardId) {
+      const giftCard = await prisma.giftCard.findUnique({
+        where: { id: giftCardId },
+        select: { amountMinor: true, currency: true },
+      });
+      if (giftCard) {
+        response.payableAmountMinor = giftCard.amountMinor;
+        response.currency = giftCard.currency;
+      }
+    } else {
+      response.currency = currency;
+    }
+    
+    console.log("Returning response:", response);
+    return NextResponse.json(response);
   } catch (err) {
     console.error("SESSION CREATE ERROR:", err);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    const errorResponse = {
+      error: "Internal Server Error",
+      details: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    };
+    console.error("Returning error response:", errorResponse);
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }

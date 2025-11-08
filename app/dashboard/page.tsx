@@ -6,9 +6,10 @@ import { createPublicClient, http, formatUnits, defineChain, getContract } from 
 import { Navbar } from '@/components/layout/Navbar'
 import { erc20Abi } from 'viem'
 import { syncUserToDatabase, extractWalletData } from '@/lib/syncUser'
+import { MOCK_CUSD_ADDRESS } from '@/lib/contracts'
 
 // MOCK_CUSD token address on Celo Sepolia testnet
-const MOCK_CUSD = '0x61d11C622Bd98A71aD9361833379A2066Ad29CCa' as `0x${string}`
+const MOCK_CUSD = MOCK_CUSD_ADDRESS
 
 interface WalletBalance {
   celo: string

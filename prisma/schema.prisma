@@ -54,10 +54,13 @@ model PaymentSession {
   amountUSD  Float
   status     SessionStatus @default(pending)
   createdAt  DateTime     @default(now())
+  expiresAt  DateTime?    // Session expires 10 minutes after creation (nullable for legacy sessions)
+  giftCardId String?      // Gift card assigned to this session
 
   user       User         @relation(fields: [userId], references: [id])
   wallet     Wallet       @relation(fields: [walletId], references: [id])
   payment    Payment?
+  giftCard   GiftCard?    @relation(fields: [giftCardId], references: [id])
 }
 
 enum SessionStatus {
@@ -106,4 +109,6 @@ model GiftCard {
   stock           Int       @default(1)
   active          Boolean   @default(true)
   createdAt       DateTime  @default(now())
+
+  sessions        PaymentSession[] // Sessions that used this gift card
 }

@@ -9,6 +9,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       defaultTheme="light" 
       enableSystem={false}
       storageKey="mizu-pay-theme"
+      disableTransitionOnChange={false}
     >
       {children}
     </NextThemesProvider>

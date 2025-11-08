@@ -86,33 +86,25 @@ async function handlePayment(checkout) {
     
     // Disable button and show loading
     payButton.disabled = true;
-    payButton.textContent = 'Processing...';
+    payButton.textContent = 'Redirecting...';
 
     try {
-        // Get settings
-        const result = await chrome.storage.local.get(['mizuPaySettings']);
-        const settings = result.mizuPaySettings || {};
+        // Build checkout URL with query parameters
+        const checkoutUrl = 'http://localhost:3000/checkout?' + new URLSearchParams({
+            storeName: checkout.storeName || '',
+            amount: checkout.totalAmount || '',
+            currency: checkout.currency || '',
+            url: checkout.url || '',
+            source: 'extension' // Flag to indicate coming from extension
+        });
         
-        // For now, open the dApp URL with checkout details as query params
-        if (settings.dappUrl) {
-            const dappUrl = `http://${settings.dappUrl}?` + new URLSearchParams({
-                storeName: checkout.storeName || '',
-                amount: checkout.totalAmount || '',
-                currency: checkout.currency || '',
-                url: checkout.url || ''
-            });
-            
-            chrome.tabs.create({ url: dappUrl });
-        } else {
-            // No dApp URL configured
-            alert('Please configure the dApp URL in extension settings');
-        }
-
-        // Reset button after a delay
+        // Open checkout page in new tab
+        chrome.tabs.create({ url: checkoutUrl });
+        
+        // Close popup after a short delay
         setTimeout(() => {
-            payButton.disabled = false;
-            payButton.textContent = 'Pay with Mizu Pay';
-        }, 2000);
+            window.close();
+        }, 500);
 
     } catch (error) {
         console.error('Payment error:', error);
