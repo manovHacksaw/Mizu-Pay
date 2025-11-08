@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useLoginWithEmail, usePrivy } from '@privy-io/react-auth'
 import { Waves } from '@/components/decorative/Waves'
 import { Watermark } from '@/components/decorative/Watermark'
@@ -8,6 +8,8 @@ import { LightStreaks } from '@/components/decorative/LightStreaks'
 
 export default function LoginWithEmail() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get('returnUrl') || '/dashboard'
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [codeSent, setCodeSent] = useState(false)
@@ -19,9 +21,9 @@ export default function LoginWithEmail() {
 
   useEffect(() => {
     if (ready && authenticated) {
-      router.push('/dashboard')
+      router.push(returnUrl)
     }
-  }, [ready, authenticated, router])
+  }, [ready, authenticated, router, returnUrl])
 
   const handleSendCode = async () => {
     if (!email) return

@@ -5,6 +5,7 @@ import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { createPublicClient, http, formatUnits, defineChain, getContract } from 'viem'
 import { Navbar } from '@/components/layout/Navbar'
 import { erc20Abi } from 'viem'
+import { syncUserToDatabase, extractWalletData } from '@/lib/syncUser'
 
 // MOCK_CUSD token address on Celo Sepolia testnet
 const MOCK_CUSD = '0x61d11C622Bd98A71aD9361833379A2066Ad29CCa' as `0x${string}`
@@ -122,6 +123,7 @@ export default function Dashboard() {
     setIsConnecting(true)
     try {
       await connectWallet()
+      // Sync will happen automatically via useEffect when wallets update
     } catch (error) {
       console.error('Error connecting wallet:', error)
     } finally {
@@ -138,6 +140,7 @@ export default function Dashboard() {
     try {
       await createWallet()
       setShowWalletChoice(false)
+      // Sync will happen automatically via useEffect when wallets update
     } catch (error) {
       console.error('Error creating embedded wallet:', error)
     } finally {
@@ -150,6 +153,7 @@ export default function Dashboard() {
     try {
       await connectWallet()
       setShowWalletChoice(false)
+      // Sync will happen automatically via useEffect when wallets update
     } catch (error) {
       console.error('Error connecting wallet:', error)
     } finally {
@@ -191,6 +195,29 @@ const externalWallets = wallets?.filter(w =>
     }
   }, [ready, authenticated, router])
 
+  // Sync user and wallets to database on login and when wallets change
+  useEffect(() => {
+    if (!ready || !authenticated || !user?.id) return
+
+    const syncUser = async () => {
+      try {
+        const walletData = wallets ? extractWalletData(wallets) : []
+        await syncUserToDatabase({
+          privyUserId: user.id,
+          email: user.email?.address || null,
+          wallets: walletData,
+          activeWalletAddress: selectedWalletAddress,
+        })
+      } catch (error) {
+        console.error('Error syncing user:', error)
+      }
+    }
+
+    // Debounce sync to avoid too many calls
+    const timeoutId = setTimeout(syncUser, 500)
+    return () => clearTimeout(timeoutId)
+  }, [ready, authenticated, user?.id, user?.email?.address, wallets?.length, selectedWalletAddress])
+
   // Show wallet choice modal only if no embedded wallet exists
   useEffect(() => {
     if (ready && authenticated) {
@@ -217,12 +244,32 @@ const externalWallets = wallets?.filter(w =>
       const defaultWallet = embeddedWallet || wallets?.[0]
       if (defaultWallet) {
         setSelectedWalletAddress(defaultWallet.address)
+        
+        // Sync default wallet selection
+        if (user?.id) {
+          syncUserToDatabase({
+            privyUserId: user.id,
+            email: user.email?.address || null,
+            wallets: wallets ? extractWalletData(wallets) : [],
+            activeWalletAddress: defaultWallet.address,
+          })
+        }
       }
     }
-  }, [hasWallets, embeddedWallet, wallets, selectedWalletAddress])
+  }, [hasWallets, embeddedWallet, wallets, selectedWalletAddress, user?.id, user?.email?.address])
 
-  const handleSelectWallet = (wallet: any) => {
+  const handleSelectWallet = async (wallet: any) => {
     setSelectedWalletAddress(wallet.address)
+    
+    // Sync active wallet selection to database
+    if (user?.id && wallet.address) {
+      await syncUserToDatabase({
+        privyUserId: user.id,
+        email: user.email?.address || null,
+        wallets: wallets ? extractWalletData(wallets) : [],
+        activeWalletAddress: wallet.address,
+      })
+    }
   }
 
   // Fetch wallet balances (fresh, not cached)
