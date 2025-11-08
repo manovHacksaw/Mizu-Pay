@@ -1,0 +1,14 @@
+{
+  "name": "mizu-pay-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for Mizu Pay",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.0"
+  }
+}
+
