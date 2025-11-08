@@ -10,7 +10,8 @@ import {
   formatUnits,
   defineChain,
   createWalletClient,
-  custom
+  custom,
+  encodeFunctionData
 } from 'viem'
 import { MOCK_CUSD_ADDRESS, MIZU_PAY_CONTRACT, MockCUSD_ABI_typed, MizuPay_ABI_typed } from './contracts'
 
@@ -148,9 +149,11 @@ export async function executePayment(
     
     // Step 2: Approve if needed (or if allowance is less than amount)
     if (currentAllowance < amountWei) {
-      console.log('Step 1/2: Approving cUSD spending...')
+      console.log('Step 1/2: Approving cUSD spending...', { amountUSD, amountWei: amountWei.toString() })
       onStatusUpdate?.('approving')
       
+      // Use viem's write method - Privy will show transaction details
+      // Note: The amount (amountWei) is encoded in the transaction data
       const approveHash = await mockCusd.write.approve([MIZU_PAY_CONTRACT, amountWei], {
         account,
       })
@@ -179,9 +182,11 @@ export async function executePayment(
     }
 
     // Step 3: Pay for session (this is the actual purchase transaction)
-    console.log('Step 2/2: Executing PAYMENT transaction...', { sessionId, amountWei: amountWei.toString() })
+    console.log('Step 2/2: Executing PAYMENT transaction...', { sessionId, amountUSD, amountWei: amountWei.toString() })
     onStatusUpdate?.('paying')
     
+    // Use viem's write method - Privy will show transaction details
+    // Note: The amount (amountWei) is encoded in the transaction data
     const payHash = await mizuPay.write.payForSession([sessionId, amountWei], {
       account,
     })

@@ -113,6 +113,9 @@ export default function Dashboard() {
   const [selectedWalletAddress, setSelectedWalletAddress] = useState<string | null>(null)
   const [walletBalances, setWalletBalances] = useState<Record<string, WalletBalance>>({})
   const [loadingBalances, setLoadingBalances] = useState<Record<string, boolean>>({})
+  const [payments, setPayments] = useState<any[]>([])
+  const [loadingPayments, setLoadingPayments] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   
 
   const handleLogout = async () => {
@@ -203,12 +206,17 @@ const externalWallets = wallets?.filter(w =>
     const syncUser = async () => {
       try {
         const walletData = wallets ? extractWalletData(wallets) : []
-        await syncUserToDatabase({
+        const result = await syncUserToDatabase({
           privyUserId: user.id,
           email: user.email?.address || null,
           wallets: walletData,
           activeWalletAddress: selectedWalletAddress,
         })
+        
+        // Store user ID for fetching payments
+        if (result.user?.id) {
+          setUserId(result.user.id)
+        }
       } catch (error) {
         console.error('Error syncing user:', error)
       }
@@ -528,6 +536,112 @@ const externalWallets = wallets?.filter(w =>
               )}
             </div>
           )}
+
+          {/* Payment History Section */}
+          <div className="mt-12 space-y-4">
+            <div>
+              <h2 className="text-lg font-medium dashboard-text-primary mb-2">
+                Payment History
+              </h2>
+              <p className="text-sm dashboard-text-secondary">
+                View all your past transactions and payment sessions
+              </p>
+            </div>
+
+            {loadingPayments ? (
+              <div className="dashboard-modal-card p-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-sm dashboard-text-secondary">Loading payments...</p>
+              </div>
+            ) : payments.length === 0 ? (
+              <div className="dashboard-modal-card p-8 text-center">
+                <svg className="w-12 h-12 mx-auto mb-4 dashboard-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-sm dashboard-text-secondary">No payments yet</p>
+                <p className="text-xs dashboard-text-muted mt-1">Your payment history will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {payments.map((payment) => {
+                  const statusColors = {
+                    pending: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400',
+                    paid: 'bg-blue-500/20 text-blue-600 dark:text-blue-400',
+                    fulfilled: 'bg-green-500/20 text-green-600 dark:text-green-400',
+                    expired: 'bg-gray-500/20 text-gray-600 dark:text-gray-400',
+                    failed: 'bg-red-500/20 text-red-600 dark:text-red-400',
+                  }
+                  
+                  const statusColor = statusColors[payment.status as keyof typeof statusColors] || statusColors.pending
+                  
+                  return (
+                    <div key={payment.sessionId} className="dashboard-modal-card p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-sm font-semibold dashboard-text-primary">
+                              {payment.store}
+                            </h3>
+                            <span className={`text-xs px-2 py-0.5 rounded font-medium ${statusColor}`}>
+                              {payment.status.toUpperCase()}
+                            </span>
+                          </div>
+                          <p className="text-xs dashboard-text-secondary">
+                            {new Date(payment.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold dashboard-text-primary">
+                            ${payment.amountUSD.toFixed(2)}
+                          </p>
+                          {payment.payment && (
+                            <p className="text-xs dashboard-text-secondary">
+                              {payment.payment.amountCrypto.toFixed(4)} {payment.payment.token}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {payment.payment?.txHash && (
+                        <div className="pt-3 border-t dashboard-border">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs dashboard-text-secondary">Transaction</span>
+                            <a
+                              href={`https://celo-sepolia.blockscout.com/tx/${payment.payment.txHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-mono"
+                            >
+                              {payment.payment.txHash.slice(0, 10)}...{payment.payment.txHash.slice(-8)}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
+                      {payment.giftCard && (
+                        <div className="pt-2">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 dashboard-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                            <span className="text-xs dashboard-text-secondary">
+                              Gift Card: {payment.giftCard.currency} {payment.giftCard.amountUSD.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

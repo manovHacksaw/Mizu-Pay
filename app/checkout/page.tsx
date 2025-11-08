@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
-import { Navbar } from '@/components/layout/Navbar'
 
 /**
  * Checkout page - creates a session immediately and redirects to session-based checkout flow
@@ -141,9 +140,7 @@ export default function CheckoutPage() {
   
   // Show loading state with skeleton UI
   return (
-    <div className="min-h-screen page-bg relative overflow-hidden transition-colors duration-300">
-      <Navbar />
-      
+    <div className="min-h-screen hero-bg relative overflow-hidden transition-colors duration-300">
       <div className="relative z-10 px-5 py-16">
         <div className="max-w-2xl mx-auto">
           {/* Header Skeleton */}
