@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 
@@ -15,6 +15,9 @@ export default function CheckoutPage() {
   const { wallets } = useWallets()
   const [status, setStatus] = useState<'initializing' | 'authenticating' | 'creating' | 'redirecting' | 'error'>('initializing')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const sessionCreatedRef = useRef(false) // Prevent duplicate session creation
+  const isCreatingRef = useRef(false) // Track if session creation is in progress
+  const walletCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null) // Track wallet check timeout
   
   // Query params from extension
   const storeNameParam = searchParams.get('storeName')
@@ -28,6 +31,11 @@ export default function CheckoutPage() {
   
   // Create session and redirect
   useEffect(() => {
+    // Prevent duplicate session creation
+    if (sessionCreatedRef.current || isCreatingRef.current) {
+      return
+    }
+
     if (!ready) {
       setStatus('initializing')
       return
@@ -47,8 +55,47 @@ export default function CheckoutPage() {
       return
     }
 
+    // Wait for wallets to be available
+    // Privy creates embedded wallets automatically, but they might not be loaded immediately
+    if (!wallets || wallets.length === 0) {
+      setStatus('creating')
+      
+      // Clear any existing timeout
+      if (walletCheckTimeoutRef.current) {
+        clearTimeout(walletCheckTimeoutRef.current)
+      }
+      
+      // Set a timeout to show error if wallets don't load within 5 seconds
+      walletCheckTimeoutRef.current = setTimeout(() => {
+        if (!wallets || wallets.length === 0) {
+          setStatus('error')
+          setErrorMessage('No wallet found. Please ensure your wallet is connected. If you just logged in, please wait a moment and refresh the page.')
+          isCreatingRef.current = false
+        }
+      }, 5000) // Wait 5 seconds for wallets to load
+      
+      // Return early - the effect will re-run when wallets are loaded
+      return () => {
+        if (walletCheckTimeoutRef.current) {
+          clearTimeout(walletCheckTimeoutRef.current)
+        }
+      }
+    }
+    
+    // Clear timeout if wallets are now available
+    if (walletCheckTimeoutRef.current) {
+      clearTimeout(walletCheckTimeoutRef.current)
+      walletCheckTimeoutRef.current = null
+    }
+
     // Create session immediately
     const createSession = async () => {
+      // Double-check to prevent race conditions
+      if (sessionCreatedRef.current || isCreatingRef.current) {
+        return
+      }
+
+      isCreatingRef.current = true
       try {
         setStatus('creating')
 
@@ -63,6 +110,7 @@ export default function CheckoutPage() {
         if (!walletToUse?.address) {
           setStatus('error')
           setErrorMessage('No wallet found. Please connect a wallet first.')
+          isCreatingRef.current = false
           return
         }
 
@@ -111,6 +159,9 @@ export default function CheckoutPage() {
         const sessionData = await sessionResponse.json()
         const sessionId = sessionData.sessionId
 
+        // Mark session as created to prevent duplicates
+        sessionCreatedRef.current = true
+
         // Redirect to session-based checkout
         setStatus('redirecting')
         const redirectParams = new URLSearchParams({
@@ -124,11 +175,13 @@ export default function CheckoutPage() {
         console.error('Error creating session:', error)
         setStatus('error')
         setErrorMessage(error instanceof Error ? error.message : 'Failed to create checkout session')
+        // Reset creating flag on error so user can retry
+        isCreatingRef.current = false
       }
     }
 
     createSession()
-  }, [ready, authenticated, hasRequiredParams, storeNameParam, amountParam, currencyParam, merchantUrl, router, searchParams, wallets, user])
+  }, [ready, authenticated, hasRequiredParams, storeNameParam, amountParam, currencyParam, merchantUrl, router, searchParams, wallets, user?.id])
   
   const statusMessages = {
     initializing: 'Initializing checkout...',

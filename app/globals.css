@@ -59,9 +59,11 @@
   --dashboard-text-secondary: rgba(23, 23, 23, 0.7);
   --dashboard-text-muted: rgba(23, 23, 23, 0.5);
   --dashboard-border: rgba(0, 0, 0, 0.1);
-  --dashboard-card-bg: rgba(255, 255, 255, 0.8);
+  --dashboard-card-bg: #ffffff;
   --dashboard-card-border: rgba(0, 0, 0, 0.1);
   --dashboard-hover-bg: rgba(0, 0, 0, 0.05);
+  --dashboard-sidebar-bg: #ffffff;
+  --dashboard-input-bg: #f9fafb;
 }
 
 .dark {
@@ -123,9 +125,11 @@
   --dashboard-text-secondary: rgba(243, 244, 246, 0.8);
   --dashboard-text-muted: rgba(243, 244, 246, 0.6);
   --dashboard-border: rgba(255, 255, 255, 0.1);
-  --dashboard-card-bg: rgba(31, 41, 55, 0.4);
+  --dashboard-card-bg: #181A1F;
   --dashboard-card-border: rgba(255, 255, 255, 0.1);
   --dashboard-hover-bg: rgba(255, 255, 255, 0.05);
+  --dashboard-sidebar-bg: #101215;
+  --dashboard-input-bg: #181A1F;
 }
 
 @theme inline {
@@ -162,7 +166,16 @@ body:not(:has(.pre-loader)) {
 }
 
 .dark .page-bg {
-  background: #0f1419;
+  background: #101215;
+}
+
+/* Dashboard page background */
+.dashboard-page-bg {
+  background: #f9fafb;
+}
+
+.dark .dashboard-page-bg {
+  background: #101215;
 }
 
 /* Navigation styles */
@@ -903,6 +916,43 @@ body:not(:has(.pre-loader)) {
 
 .dashboard-border {
   border-color: var(--dashboard-border);
+}
+
+/* Dashboard component styles */
+.dashboard-bg {
+  background: var(--background);
+}
+
+.dashboard-card-bg {
+  background: var(--dashboard-card-bg);
+}
+
+.dashboard-card-border {
+  border-color: var(--dashboard-card-border);
+}
+
+.dashboard-hover-bg {
+  background: var(--dashboard-hover-bg);
+}
+
+.dashboard-sidebar-bg {
+  background: var(--dashboard-sidebar-bg);
+}
+
+.dashboard-sidebar-border {
+  border-color: var(--dashboard-border);
+}
+
+.dashboard-input-bg {
+  background: var(--dashboard-input-bg);
+}
+
+.dashboard-hover:hover {
+  background: var(--dashboard-hover-bg);
+}
+
+.placeholder-dashboard-text-muted::placeholder {
+  color: var(--dashboard-text-muted);
 }
 
 /* Checkout Flow Animations */

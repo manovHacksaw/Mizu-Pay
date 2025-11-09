@@ -147,6 +147,50 @@ export async function POST(req: Request) {
     // Clean up expired sessions before creating new one
     await expireOldSessions();
 
+    // Check for recent duplicate session (within last 30 seconds) to prevent duplicates
+    const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
+    const recentSession = await prisma.paymentSession.findFirst({
+      where: {
+        userId: finalUserId,
+        walletId: wallet.id,
+        store: finalStore,
+        amountUSD: finalAmountUSD,
+        status: "pending",
+        createdAt: {
+          gte: thirtySecondsAgo,
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // If a recent duplicate session exists, return it instead of creating a new one
+    if (recentSession) {
+      console.log("Duplicate session detected, returning existing session:", recentSession.id);
+      const response: any = {
+        sessionId: recentSession.id,
+        amountUSD: finalAmountUSD,
+        store: finalStore,
+        expiresAt: recentSession.expiresAt?.toISOString(),
+      };
+
+      if (giftCardId) {
+        const giftCard = await prisma.giftCard.findUnique({
+          where: { id: giftCardId },
+          select: { amountMinor: true, currency: true },
+        });
+        if (giftCard) {
+          response.payableAmountMinor = giftCard.amountMinor;
+          response.currency = giftCard.currency;
+        }
+      } else {
+        response.currency = currency;
+      }
+
+      return NextResponse.json(response);
+    }
+
     // Calculate expiration time (10 minutes from now)
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 

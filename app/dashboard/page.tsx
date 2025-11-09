@@ -1,650 +1,274 @@
-"use client"
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { usePrivy, useWallets } from '@privy-io/react-auth'
-import { createPublicClient, http, formatUnits, defineChain, getContract } from 'viem'
-import { Navbar } from '@/components/layout/Navbar'
-import { erc20Abi } from 'viem'
-import { syncUserToDatabase, extractWalletData } from '@/lib/syncUser'
-import { MOCK_CUSD_ADDRESS } from '@/lib/contracts'
+'use client';
 
-// MOCK_CUSD token address on Celo Sepolia testnet
-const MOCK_CUSD = MOCK_CUSD_ADDRESS
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { Chart } from '@/components/dashboard/Chart';
+import { Table } from '@/components/dashboard/Table';
+import { usePrivy } from '@privy-io/react-auth';
+import { useEffect, useState } from 'react';
+import { formatDateForChart } from '@/lib/dateUtils';
 
-interface WalletBalance {
-  celo: string
-  cusd: string
+interface PaymentData {
+  sessionId: string;
+  store: string;
+  amountUSD: number;
+  status: 'pending' | 'paid' | 'fulfilled' | 'expired' | 'failed';
+  createdAt: string;
+  expiresAt: string | null;
+  payment: {
+    txHash: string | null;
+    amountCrypto: number;
+    token: string;
+    status: string;
+    createdAt: string;
+  } | null;
+  giftCard: {
+    store: string;
+    currency: string;
+    amountUSD: number;
+  } | null;
+  wallet: {
+    address: string;
+    type: string;
+  } | null;
 }
 
-interface WalletCardProps {
-  wallet: any
-  walletName: string
-  isSelected: boolean
-  onSelect: () => void
-  balance?: WalletBalance
-  isLoadingBalance: boolean
-  onCopyAddress: () => void
-  copiedAddress: boolean
-}
+export default function DashboardPage() {
+  const { user, ready, authenticated } = usePrivy();
+  const [payments, setPayments] = useState<PaymentData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalBalance: 0,
+    totalTransactions: 0,
+    successfulTransactions: 0,
+    pendingTransactions: 0,
+  });
 
-function WalletCard({ wallet, walletName, isSelected, onSelect, balance, isLoadingBalance, onCopyAddress, copiedAddress }: WalletCardProps) {
-  const shortenedAddress = wallet.address ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}` : ''
-  
-  return (
-    <div
-      onClick={onSelect}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onSelect()
+  useEffect(() => {
+    if (!ready || !authenticated || !user?.email?.address) return;
+
+    const fetchPayments = async () => {
+      try {
+        setLoading(true);
+        // Use email to find user since database users are identified by email
+        const response = await fetch(`/api/payments/history?email=${encodeURIComponent(user.email.address)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('Payment history API error:', data);
+          return;
         }
-      }}
-      role="button"
-      tabIndex={0}
-      className={`p-4 rounded-lg border transition-colors cursor-pointer ${
-        isSelected 
-          ? 'border-blue-500/40 bg-blue-500/5' 
-          : 'border-neutral-300/20 hover:bg-blue-500/5'
-      }`}
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-medium dashboard-text-primary">{walletName}</span>
-            {isSelected && (
-              <span className="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-400 font-medium">Active</span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <p className="text-xs dashboard-text-secondary font-mono">{shortenedAddress}</p>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onCopyAddress()
-              }}
-              className="p-1 rounded hover:opacity-70 transition-opacity shrink-0 dashboard-text-secondary"
-              title="Copy address"
+
+        if (data.success && data.payments) {
+          console.log('Fetched payments:', data.payments.length);
+          setPayments(data.payments);
+
+          // Calculate stats
+          const totalBalance = data.payments.reduce(
+            (sum: number, p: PaymentData) => sum + (p.payment ? p.amountUSD : 0),
+            0
+          );
+          const totalTransactions = data.payments.length;
+          const successfulTransactions = data.payments.filter(
+            (p: PaymentData) => p.status === 'paid' || p.status === 'fulfilled'
+          ).length;
+          const pendingTransactions = data.payments.filter(
+            (p: PaymentData) => p.status === 'pending'
+          ).length;
+
+          setStats({
+            totalBalance,
+            totalTransactions,
+            successfulTransactions,
+            pendingTransactions,
+          });
+        } else {
+          console.log('No payments found or API returned:', data);
+        }
+      } catch (error) {
+        console.error('Error fetching payments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPayments();
+  }, [ready, authenticated, user?.email?.address]);
+
+  // Calculate chart data from payments - group by date
+  const chartDataMap = new Map<string, { volume: number; transactions: number; date: Date }>();
+  
+  payments
+    .filter((p) => p.payment)
+    .forEach((payment) => {
+      const date = new Date(payment.createdAt);
+      const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      if (!chartDataMap.has(dateKey)) {
+        chartDataMap.set(dateKey, { volume: 0, transactions: 0, date });
+      }
+      
+      const entry = chartDataMap.get(dateKey)!;
+      entry.volume += payment.amountUSD;
+      entry.transactions += 1;
+    });
+
+  const chartDataArray = Array.from(chartDataMap.entries())
+    .map(([dateKey, data]) => ({
+      dateKey,
+      date: formatDateForChart(data.date),
+      volume: data.volume,
+      transactions: data.transactions,
+    }))
+    .sort((a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime())
+    .slice(-6) // Last 6 data points
+    .map(({ dateKey, ...rest }) => rest); // Remove dateKey from final output
+
+  // Calculate percentage changes (comparing last 7 days vs previous 7 days)
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+  const recentPayments = payments.filter(
+    (p) => new Date(p.createdAt) >= sevenDaysAgo
+  );
+  const previousPayments = payments.filter(
+    (p) => {
+      const date = new Date(p.createdAt);
+      return date >= fourteenDaysAgo && date < sevenDaysAgo;
+    }
+  );
+
+  const recentTotal = recentPayments.reduce((sum, p) => sum + p.amountUSD, 0);
+  const previousTotal = previousPayments.reduce((sum, p) => sum + p.amountUSD, 0);
+  const balanceChange = previousTotal > 0 
+    ? ((recentTotal - previousTotal) / previousTotal * 100).toFixed(1)
+    : '0';
+
+  const recentTransactions = recentPayments.length;
+  const previousTransactions = previousPayments.length;
+  const transactionChange = previousTransactions > 0
+    ? ((recentTransactions - previousTransactions) / previousTransactions * 100).toFixed(1)
+    : '0';
+
+  return (
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl font-bold dashboard-text-primary">Dashboard</h1>
+        <p className="text-sm dashboard-text-secondary mt-1">
+          Welcome back! Here's an overview of your account.
+        </p>
+      </div>
+
+      {/* Stats Cards */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm"
             >
-              {copiedAddress ? (
-                <svg className="w-3.5 h-3.5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              ) : (
-                <svg className="w-3.5 h-3.5 dashboard-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Balances */}
-      <div className="pt-3 border-t dashboard-border space-y-2">
-        <div>
-          <p className="text-xs dashboard-text-secondary mb-1">CELO Balance</p>
-          {isLoadingBalance ? (
-            <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-          ) : (
-            <p className="text-sm font-medium dashboard-text-primary">{balance?.celo || '0.0000'}</p>
-          )}
-        </div>
-        <div>
-          <p className="text-xs dashboard-text-secondary mb-1">cUSD Balance</p>
-          {isLoadingBalance ? (
-            <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-          ) : (
-            <p className="text-sm font-medium dashboard-text-primary">{balance?.cusd || '0.0000'}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default function Dashboard() {
-  const router = useRouter()
-  const { ready, authenticated, user, logout, connectWallet, createWallet } = usePrivy()
-  const { wallets } = useWallets()
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [isCreating, setIsCreating] = useState(false)
-  const [copiedAddress, setCopiedAddress] = useState(false)
-  const [showWalletChoice, setShowWalletChoice] = useState(false)
-  const [selectedWalletAddress, setSelectedWalletAddress] = useState<string | null>(null)
-  const [walletBalances, setWalletBalances] = useState<Record<string, WalletBalance>>({})
-  const [loadingBalances, setLoadingBalances] = useState<Record<string, boolean>>({})
-  const [payments, setPayments] = useState<any[]>([])
-  const [loadingPayments, setLoadingPayments] = useState(false)
-  const [userId, setUserId] = useState<string | null>(null)
-  
-
-  const handleLogout = async () => {
-    await logout()
-    router.push('/login')
-  }
-
-  const handleConnectWallet = async () => {
-    setIsConnecting(true)
-    try {
-      await connectWallet()
-      // Sync will happen automatically via useEffect when wallets update
-    } catch (error) {
-      console.error('Error connecting wallet:', error)
-    } finally {
-      setIsConnecting(false)
-    }
-  }
-
-  const handleCreateEmbeddedWallet = async () => {
-    if (!createWallet) {
-      console.error('createWallet is not available')
-      return
-    }
-    setIsCreating(true)
-    try {
-      await createWallet()
-      setShowWalletChoice(false)
-      // Sync will happen automatically via useEffect when wallets update
-    } catch (error) {
-      console.error('Error creating embedded wallet:', error)
-    } finally {
-      setIsCreating(false)
-    }
-  }
-
-  const handleConnectExistingWallet = async () => {
-    setIsConnecting(true)
-    try {
-      await connectWallet()
-      setShowWalletChoice(false)
-      // Sync will happen automatically via useEffect when wallets update
-    } catch (error) {
-      console.error('Error connecting wallet:', error)
-    } finally {
-      setIsConnecting(false)
-    }
-  }
-
-  // Check if user has any wallets
- // Check if user has any wallets
-const hasWallets = wallets && wallets.length > 0
-
-// Try multiple ways to find embedded wallet
-const embeddedWallet = wallets?.find(w => 
-  w.walletClientType === 'privy' || 
-  w.walletClientType === 'embedded' ||
-  w.connectorType === 'privy'
-) || (user?.wallet ? { address: user.wallet.address, walletClientType: 'privy' } : null)
-
-const externalWallets = wallets?.filter(w => 
-  w.walletClientType !== 'privy' && 
-  w.walletClientType !== 'embedded' &&
-  w.connectorType !== 'privy'
-) || []
-
-
-  const copyToClipboard = async (address: string) => {
-    try {
-      await navigator.clipboard.writeText(address)
-      setCopiedAddress(true)
-      setTimeout(() => setCopiedAddress(false), 2000)
-    } catch (error) {
-      console.error('Failed to copy:', error)
-    }
-  }
-
-  useEffect(() => {
-    if (ready && !authenticated) {
-      router.push('/login')
-    }
-  }, [ready, authenticated, router])
-
-  // Sync user and wallets to database on login and when wallets change
-  useEffect(() => {
-    if (!ready || !authenticated || !user?.id) return
-
-    const syncUser = async () => {
-      try {
-        const walletData = wallets ? extractWalletData(wallets) : []
-        const result = await syncUserToDatabase({
-          privyUserId: user.id,
-          email: user.email?.address || null,
-          wallets: walletData,
-          activeWalletAddress: selectedWalletAddress,
-        })
-        
-        // Store user ID for fetching payments
-        if (result.user?.id) {
-          setUserId(result.user.id)
-        }
-      } catch (error) {
-        console.error('Error syncing user:', error)
-      }
-    }
-
-    // Debounce sync to avoid too many calls
-    const timeoutId = setTimeout(syncUser, 500)
-    return () => clearTimeout(timeoutId)
-  }, [ready, authenticated, user?.id, user?.email?.address, wallets?.length, selectedWalletAddress])
-
-  // Show wallet choice modal only if no embedded wallet exists
-  useEffect(() => {
-    if (ready && authenticated) {
-      // Check if embedded wallet exists
-      const hasEmbeddedWallet = wallets?.some(w => 
-        w.walletClientType === 'privy' || 
-        w.walletClientType === 'embedded' ||
-        w.connectorType === 'privy'
-      ) || (user?.wallet ? true : false)
-      
-      // Only show modal if no embedded wallet exists
-      if (!hasEmbeddedWallet) {
-        setShowWalletChoice(true)
-      } else {
-        setShowWalletChoice(false)
-      }
-    }
-  }, [ready, authenticated, wallets?.length, user?.wallet?.address])
-
-  // Set default selected wallet when wallets are available
-  useEffect(() => {
-    if (hasWallets && !selectedWalletAddress) {
-      // Prefer embedded wallet, otherwise use first available wallet
-      const defaultWallet = embeddedWallet || wallets?.[0]
-      if (defaultWallet) {
-        setSelectedWalletAddress(defaultWallet.address)
-        
-        // Sync default wallet selection
-        if (user?.id) {
-          syncUserToDatabase({
-            privyUserId: user.id,
-            email: user.email?.address || null,
-            wallets: wallets ? extractWalletData(wallets) : [],
-            activeWalletAddress: defaultWallet.address,
-          })
-        }
-      }
-    }
-  }, [hasWallets, embeddedWallet, wallets, selectedWalletAddress, user?.id, user?.email?.address])
-
-  const handleSelectWallet = async (wallet: any) => {
-    setSelectedWalletAddress(wallet.address)
-    
-    // Sync active wallet selection to database
-    if (user?.id && wallet.address) {
-      await syncUserToDatabase({
-        privyUserId: user.id,
-        email: user.email?.address || null,
-        wallets: wallets ? extractWalletData(wallets) : [],
-        activeWalletAddress: wallet.address,
-      })
-    }
-  }
-
-  // Fetch wallet balances (fresh, not cached)
-  const fetchWalletBalance = async (wallet: any) => {
-    if (!wallet || !wallet.address) return
-
-    setLoadingBalances(prev => ({ ...prev, [wallet.address]: true }))
-    
-    try {
-      // Define Celo Sepolia testnet chain
-      const celoSepolia = defineChain({
-        id: 11142220,
-        name: 'Celo Sepolia',
-        nativeCurrency: {
-          decimals: 18,
-          name: 'CELO',
-          symbol: 'CELO',
-        },
-        rpcUrls: {
-          default: {
-            http: ['https://rpc.ankr.com/celo_sepolia'],
-          },
-        },
-        blockExplorers: {
-          default: {
-            name: 'Celo Sepolia Explorer',
-            url: 'https://celo-sepolia.blockscout.com',
-          },
-        },
-        testnet: true,
-      })
-
-      // Create public client for Celo Sepolia
-      const publicClient = createPublicClient({
-        chain: celoSepolia,
-        transport: http()
-      })
-
-      // Get CELO native balance
-      let celoBalance = '0'
-      try {
-        const balance = await publicClient.getBalance({
-          address: wallet.address as `0x${string}`
-        })
-        celoBalance = formatUnits(balance, 18)
-      } catch (error) {
-        console.error('Error fetching CELO balance:', error)
-      }
-
-      // Get cUSD ERC20 token balance
-      let cusdBalance = '0'
-      try {
-        const contract = getContract({
-          address: MOCK_CUSD,
-          abi: erc20Abi,
-          client: publicClient,
-        })
-        
-        const balance = await contract.read.balanceOf([wallet.address as `0x${string}`])
-        cusdBalance = formatUnits(balance as bigint, 18)
-      } catch (error) {
-        console.error('Error fetching cUSD balance:', error)
-      }
-
-      const formattedCelo = parseFloat(celoBalance).toFixed(4)
-      const formattedCusd = parseFloat(cusdBalance).toFixed(4)
-
-      setWalletBalances(prev => ({
-        ...prev,
-        [wallet.address]: {
-          celo: formattedCelo,
-          cusd: formattedCusd
-        }
-      }))
-    } catch (error) {
-      console.error('Error fetching wallet balance:', error)
-      setWalletBalances(prev => ({
-        ...prev,
-        [wallet.address]: {
-          celo: '0.0000',
-          cusd: '0.0000'
-        }
-      }))
-    } finally {
-      setLoadingBalances(prev => ({ ...prev, [wallet.address]: false }))
-    }
-  }
-
-  // Fetch balances for all wallets when they're available (fresh fetch)
-  useEffect(() => {
-    if (wallets && wallets.length > 0) {
-      wallets.forEach(wallet => {
-        if (wallet.address) {
-          fetchWalletBalance(wallet)
-        }
-      })
-    }
-  }, [wallets])
-
-  if (!ready) {
-    return (
-      <div className="min-h-screen page-bg relative overflow-hidden transition-colors duration-300 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="dashboard-text-secondary">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!authenticated) {
-    return null
-  }
-
-  return (
-    <div className="min-h-screen page-bg relative overflow-hidden transition-colors duration-300">
-      <Navbar showLogout={true} onLogout={handleLogout} />
-      
-      {/* Wallet Choice Modal - Shown for all authenticated users */}
-      {showWalletChoice && authenticated && ready && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="dashboard-modal-card max-w-md w-full space-y-6">
-            <div>
-              <h2 className="text-2xl font-semibold dashboard-text-primary">
-                Choose how you want to pay
-              </h2>
+              <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
             </div>
-
-            <div className="space-y-4">
-              {/* Option 1: Create embedded wallet */}
-              <div className="space-y-2">
-                <button
-                  onClick={handleCreateEmbeddedWallet}
-                  disabled={isCreating || isConnecting}
-                  className="dashboard-modal-btn-primary w-full"
-                >
-                  {isCreating ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
-                      Creating...
-                    </span>
-                  ) : (
-                    'Use Mizu Pay Wallet (Recommended)'
-                  )}
-                </button>
-                <p className="text-xs dashboard-text-secondary leading-relaxed">
-                  Secure in-app wallet protected by Privy. No setup needed. Best for users new to crypto.
-                </p>
-              </div>
-
-              {/* Divider */}
-              <div className="dashboard-modal-divider">
-                <div className="dashboard-modal-divider-line"></div>
-                <span className="dashboard-modal-divider-text">Or</span>
-                <div className="dashboard-modal-divider-line"></div>
-              </div>
-
-              {/* Option 2: Connect external wallet */}
-              <div className="space-y-2">
-                <button
-                  onClick={handleConnectExistingWallet}
-                  disabled={isConnecting || isCreating}
-                  className="dashboard-modal-btn-secondary w-full"
-                >
-                  {isConnecting ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="animate-spin text-blue-900 rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
-                      Connecting...
-                    </span>
-                  ) : (
-                    'Connect Your Existing Wallet'
-                  )}
-                </button>
-                <p className="text-xs dashboard-text-secondary leading-relaxed">
-                  Use MetaMask, Coinbase Wallet, or WalletConnect if you already have a crypto wallet.
-                </p>
-              </div>
-            </div>
-          </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatsCard
+            title="Total Balance"
+            value={`$${stats.totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            change={{
+              value: `${balanceChange}%`,
+              isPositive: parseFloat(balanceChange) >= 0,
+            }}
+            icon={
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            }
+          />
+          <StatsCard
+            title="Total Transactions"
+            value={stats.totalTransactions.toLocaleString()}
+            change={{
+              value: `${transactionChange}%`,
+              isPositive: parseFloat(transactionChange) >= 0,
+            }}
+            icon={
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+            }
+          />
+          <StatsCard
+            title="Successful Payments"
+            value={stats.successfulTransactions.toLocaleString()}
+            subtitle={`${stats.totalTransactions > 0 ? ((stats.successfulTransactions / stats.totalTransactions) * 100).toFixed(1) : 0}% success rate`}
+            icon={
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            }
+          />
+          <StatsCard
+            title="Pending Payments"
+            value={stats.pendingTransactions.toLocaleString()}
+            icon={
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            }
+          />
         </div>
       )}
-      
-      <div className="relative z-10 px-5 py-8 md:py-12">
-        <div className="max-w-4xl mx-auto">
-          {/* Dashboard Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-semibold dashboard-text-primary mb-2">Dashboard</h1>
-            {user?.email && (
-              <p className="text-sm dashboard-text-secondary">{user.email.address}</p>
-            )}
-          </div>
 
-          {/* Wallet Selection Section */}
-          {hasWallets && (
-            <div className="space-y-4">
-              {/* Mizu Pay Wallet Section */}
-              {embeddedWallet && (
-                <div className="space-y-4">
-                  <div>
-                    <h2 className="text-lg font-medium dashboard-text-primary mb-2">
-                      Mizu Pay Wallet (Recommended)
-                    </h2>
-                    <p className="text-sm dashboard-text-secondary">
-                      Embedded wallet generated and secured through Privy. Ideal for users new to crypto or those who want a seamless checkout.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <WalletCard
-                      wallet={embeddedWallet}
-                      walletName="Mizu Pay Wallet"
-                      isSelected={selectedWalletAddress === embeddedWallet.address}
-                      onSelect={() => handleSelectWallet(embeddedWallet)}
-                      balance={walletBalances[embeddedWallet.address]}
-                      isLoadingBalance={loadingBalances[embeddedWallet.address]}
-                      onCopyAddress={() => copyToClipboard(embeddedWallet.address)}
-                      copiedAddress={copiedAddress}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* External Wallets Section */}
-              {externalWallets.length > 0 && (
-                <div className="space-y-4">
-                  <div>
-                    <h2 className="text-lg font-medium dashboard-text-primary mb-2">
-                      External Wallet
-                    </h2>
-                    <p className="text-sm dashboard-text-secondary">
-                      A self-custodied wallet you already control. Use this if you manage your own crypto or want to transact manually.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {externalWallets.map((wallet, index) => {
-                      const walletName = wallet.walletClientType === 'metamask' ? 'MetaMask' : 
-                                       wallet.walletClientType === 'coinbase_wallet' ? 'Coinbase Wallet' :
-                                       wallet.walletClientType === 'wallet_connect' ? 'WalletConnect' :
-                                       'External Wallet'
-                      return (
-                        <WalletCard
-                          key={index}
-                          wallet={wallet}
-                          walletName={walletName}
-                          isSelected={selectedWalletAddress === wallet.address}
-                          onSelect={() => handleSelectWallet(wallet)}
-                          balance={walletBalances[wallet.address]}
-                          isLoadingBalance={loadingBalances[wallet.address]}
-                          onCopyAddress={() => copyToClipboard(wallet.address)}
-                          copiedAddress={copiedAddress}
-                        />
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Payment History Section */}
-          <div className="mt-12 space-y-4">
-            <div>
-              <h2 className="text-lg font-medium dashboard-text-primary mb-2">
-                Payment History
-              </h2>
-              <p className="text-sm dashboard-text-secondary">
-                View all your past transactions and payment sessions
-              </p>
-            </div>
-
-            {loadingPayments ? (
-              <div className="dashboard-modal-card p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                <p className="text-sm dashboard-text-secondary">Loading payments...</p>
-              </div>
-            ) : payments.length === 0 ? (
-              <div className="dashboard-modal-card p-8 text-center">
-                <svg className="w-12 h-12 mx-auto mb-4 dashboard-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-sm dashboard-text-secondary">No payments yet</p>
-                <p className="text-xs dashboard-text-muted mt-1">Your payment history will appear here</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {payments.map((payment) => {
-                  const statusColors = {
-                    pending: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400',
-                    paid: 'bg-blue-500/20 text-blue-600 dark:text-blue-400',
-                    fulfilled: 'bg-green-500/20 text-green-600 dark:text-green-400',
-                    expired: 'bg-gray-500/20 text-gray-600 dark:text-gray-400',
-                    failed: 'bg-red-500/20 text-red-600 dark:text-red-400',
-                  }
-                  
-                  const statusColor = statusColors[payment.status as keyof typeof statusColors] || statusColors.pending
-                  
-                  return (
-                    <div key={payment.sessionId} className="dashboard-modal-card p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-sm font-semibold dashboard-text-primary">
-                              {payment.store}
-                            </h3>
-                            <span className={`text-xs px-2 py-0.5 rounded font-medium ${statusColor}`}>
-                              {payment.status.toUpperCase()}
-                            </span>
-                          </div>
-                          <p className="text-xs dashboard-text-secondary">
-                            {new Date(payment.createdAt).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-semibold dashboard-text-primary">
-                            ${payment.amountUSD.toFixed(2)}
-                          </p>
-                          {payment.payment && (
-                            <p className="text-xs dashboard-text-secondary">
-                              {payment.payment.amountCrypto.toFixed(4)} {payment.payment.token}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {payment.payment?.txHash && (
-                        <div className="pt-3 border-t dashboard-border">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs dashboard-text-secondary">Transaction</span>
-                            <a
-                              href={`https://celo-sepolia.blockscout.com/tx/${payment.payment.txHash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-mono"
-                            >
-                              {payment.payment.txHash.slice(0, 10)}...{payment.payment.txHash.slice(-8)}
-                            </a>
-                          </div>
-                        </div>
-                      )}
-
-                      {payment.giftCard && (
-                        <div className="pt-2">
-                          <div className="flex items-center gap-2">
-                            <svg className="w-4 h-4 dashboard-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                            </svg>
-                            <span className="text-xs dashboard-text-secondary">
-                              Gift Card: {payment.giftCard.currency} {payment.giftCard.amountUSD.toFixed(2)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+      {/* Chart */}
+      {loading ? (
+        <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
+          <div className="h-80 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
         </div>
+      ) : (
+        <Chart title="Payment Volume" data={chartDataArray} />
+      )}
+
+      {/* Recent Transactions */}
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold dashboard-text-primary">
+            Recent Transactions
+          </h2>
+          <p className="text-sm dashboard-text-secondary mt-1">
+            Your latest payment activity
+          </p>
+        </div>
+        {loading ? (
+          <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
+            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          </div>
+        ) : (
+          <Table transactions={payments.slice(0, 5)} showPagination={false} />
+        )}
       </div>
     </div>
-  )
+  );
 }
-

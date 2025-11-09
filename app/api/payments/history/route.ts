@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { checkAndExpireSession } from "@/lib/sessionUtils";
 
 /**
  * GET /api/payments/history
@@ -74,8 +75,52 @@ export async function GET(req: Request) {
       },
     });
 
+    // Check and expire any old pending sessions before returning
+    // This ensures expired sessions are marked correctly
+    for (const session of sessions) {
+      if (session.status === "pending") {
+        await checkAndExpireSession(session.id);
+      }
+    }
+
+    // Re-fetch sessions to get updated statuses
+    const updatedSessions = await prisma.paymentSession.findMany({
+      where: {
+        userId: finalUserId,
+      },
+      include: {
+        payment: {
+          select: {
+            id: true,
+            txHash: true,
+            amountCrypto: true,
+            token: true,
+            status: true,
+            createdAt: true,
+          },
+        },
+        giftCard: {
+          select: {
+            id: true,
+            store: true,
+            currency: true,
+            amountUSD: true,
+          },
+        },
+        wallet: {
+          select: {
+            address: true,
+            type: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
     // Format the response
-    const paymentHistory = sessions.map((session) => ({
+    const paymentHistory = updatedSessions.map((session) => ({
       sessionId: session.id,
       store: session.store,
       amountUSD: session.amountUSD,

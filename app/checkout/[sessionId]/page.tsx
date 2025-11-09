@@ -723,6 +723,23 @@
             console.error('Payment error:', error)
             setPaymentStatus('error')
             setPaymentError(error instanceof Error ? error.message : 'Payment failed. Please try again.')
+            
+            // Mark session as failed in database
+            try {
+                await fetch('/api/payments/fail', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sessionId,
+                        error: error instanceof Error ? error.message : 'Payment failed',
+                    }),
+                })
+            } catch (failError) {
+                console.error('Failed to mark payment as failed:', failError)
+            }
+            
             setIsProcessing(false)
         }
     }
