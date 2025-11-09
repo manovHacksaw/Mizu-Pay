@@ -92,6 +92,46 @@ async function main() {
       number: "MYN-TEST-5000-33333",
       pin: "3333",
       stock: 3
+    },
+    {
+      store: "Make My Trip",
+      currency: "INR",
+      amountMinor: 100000, // ₹1000.00
+      amountUSD: 12.20,
+      validityDays: 365,
+      number: "MMT-TEST-1000-AAAAA",
+      pin: "4444",
+      stock: 5
+    },
+    {
+      store: "Make My Trip",
+      currency: "INR",
+      amountMinor: 250000, // ₹2500.00
+      amountUSD: 30.50,
+      validityDays: 365,
+      number: "MMT-TEST-2500-BBBBB",
+      pin: "5555",
+      stock: 4
+    },
+    {
+      store: "Make My Trip",
+      currency: "INR",
+      amountMinor: 500000, // ₹5000.00
+      amountUSD: 61.00,
+      validityDays: 365,
+      number: "MMT-TEST-5000-CCCCC",
+      pin: "6666",
+      stock: 3
+    },
+    {
+      store: "Make My Trip",
+      currency: "INR",
+      amountMinor: 1000000, // ₹10000.00
+      amountUSD: 122.00,
+      validityDays: 365,
+      number: "MMT-TEST-10000-DDDDD",
+      pin: "8888",
+      stock: 2
     }
   ]
 

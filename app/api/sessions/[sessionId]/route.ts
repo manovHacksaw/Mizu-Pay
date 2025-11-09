@@ -52,7 +52,7 @@ export async function GET(
       expiresAt: session.expiresAt,
       wallet: sessionWithDetails?.wallet,
       user: sessionWithDetails?.user,
-      expired: session.status === "expired",
+      expired: session.status === "expired" || session.status === "failed",
     });
   } catch (err) {
     console.error("SESSION GET ERROR:", err);

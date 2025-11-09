@@ -56,9 +56,9 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "sessionId",
-        "type": "string"
+        "type": "bytes32"
       },
       {
         "indexed": true,
@@ -136,9 +136,9 @@
   {
     "inputs": [
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "sessionId",
-        "type": "string"
+        "type": "bytes32"
       }
     ],
     "name": "getPaymentInfo",
@@ -183,9 +183,9 @@
   {
     "inputs": [
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "sessionId",
-        "type": "string"
+        "type": "bytes32"
       },
       {
         "internalType": "uint256",
@@ -201,9 +201,9 @@
   {
     "inputs": [
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "",
-        "type": "string"
+        "type": "bytes32"
       }
     ],
     "name": "payments",

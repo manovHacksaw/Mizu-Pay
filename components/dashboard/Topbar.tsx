@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { createPublicClient, http, formatUnits, defineChain, getContract } from 'viem';
 import { erc20Abi } from 'viem';
 import { MOCK_CUSD_ADDRESS } from '@/lib/contracts';
+import { useCurrencyStore } from '@/lib/currencyStore';
 
 interface TopbarProps {
   onLogout?: () => void;
@@ -16,6 +17,14 @@ export function Topbar({ onLogout }: TopbarProps) {
   const { wallets } = useWallets();
   const [walletBalance, setWalletBalance] = useState<{ celo: string; cusd: string } | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
+  const { 
+    userDefaultCurrency, 
+    selectedDisplayCurrency, 
+    setSelectedDisplayCurrency,
+    convertCryptoToUSD,
+    convertUSDToUserCurrency,
+    formatAmount 
+  } = useCurrencyStore();
 
   // Get the first wallet or embedded wallet
   const activeWallet = wallets?.[0];
@@ -82,9 +91,15 @@ export function Topbar({ onLogout }: TopbarProps) {
     fetchBalance();
   }, [activeWallet?.address]);
 
-  const totalBalance = walletBalance
-    ? (parseFloat(walletBalance.celo) + parseFloat(walletBalance.cusd)).toFixed(2)
-    : '0.00';
+  // Calculate total balance in USD, then convert to display currency
+  const totalBalanceUSD = walletBalance
+    ? convertCryptoToUSD(parseFloat(walletBalance.celo), 'CELO') + 
+      convertCryptoToUSD(parseFloat(walletBalance.cusd), 'cUSD')
+    : 0;
+  
+  const totalBalanceDisplay = convertUSDToUserCurrency(totalBalanceUSD);
+  const formattedBalance = formatAmount(totalBalanceDisplay, selectedDisplayCurrency);
+  const usdEquivalent = formatAmount(totalBalanceUSD, 'USD');
 
   return (
     <header className="fixed top-0 left-64 right-0 h-16 dashboard-sidebar-bg border-b dashboard-sidebar-border z-30">
@@ -115,8 +130,33 @@ export function Topbar({ onLogout }: TopbarProps) {
           </div>
         </div>
 
-        {/* Wallet Balance & Profile */}
+        {/* Currency Toggle & Wallet Balance & Profile */}
         <div className="flex items-center gap-4">
+          {/* Currency Toggle */}
+          <div className="flex items-center gap-2 px-3 py-1.5 dashboard-input-bg rounded-lg border dashboard-card-border">
+            <button
+              onClick={() => setSelectedDisplayCurrency(userDefaultCurrency)}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                selectedDisplayCurrency === userDefaultCurrency
+                  ? 'bg-blue-600 text-white'
+                  : 'dashboard-text-secondary dashboard-hover'
+              }`}
+            >
+              {userDefaultCurrency}
+            </button>
+            <span className="text-xs dashboard-text-muted">|</span>
+            <button
+              onClick={() => setSelectedDisplayCurrency('USD')}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                selectedDisplayCurrency === 'USD'
+                  ? 'bg-blue-600 text-white'
+                  : 'dashboard-text-secondary dashboard-hover'
+              }`}
+            >
+              USD
+            </button>
+          </div>
+
           {/* Wallet Balance */}
           <div className="flex items-center gap-2 px-4 py-2 dashboard-input-bg rounded-lg">
             <svg
@@ -137,9 +177,16 @@ export function Topbar({ onLogout }: TopbarProps) {
               {loadingBalance ? (
                 <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
               ) : (
-                <div className="text-sm font-semibold dashboard-text-primary">
-                  ${totalBalance}
-                </div>
+                <>
+                  <div className="text-sm font-semibold dashboard-text-primary">
+                    {formattedBalance}
+                  </div>
+                  {selectedDisplayCurrency !== 'USD' && (
+                    <div className="text-xs dashboard-text-muted">
+                      {usdEquivalent}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

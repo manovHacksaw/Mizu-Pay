@@ -13,6 +13,7 @@ import {
   custom,
   encodeFunctionData
 } from 'viem'
+import { encodeBytes32String } from 'ethers'
 import { MOCK_CUSD_ADDRESS, MIZU_PAY_CONTRACT, MockCUSD_ABI_typed, MizuPay_ABI_typed } from './contracts'
 
 // Celo Sepolia configuration
@@ -185,9 +186,15 @@ export async function executePayment(
     console.log('Step 2/2: Executing PAYMENT transaction...', { sessionId, amountUSD, amountWei: amountWei.toString() })
     onStatusUpdate?.('paying')
     
+    // Encode sessionId to bytes32 using ethers.encodeBytes32String
+    // This matches the encoding used in the scripts and ensures compatibility
+    const sessionIdBytes32 = encodeBytes32String(sessionId) as `0x${string}`
+    
+    console.log('Encoded sessionId to bytes32:', sessionIdBytes32)
+    
     // Use viem's write method - Privy will show transaction details
     // Note: The amount (amountWei) is encoded in the transaction data
-    const payHash = await mizuPay.write.payForSession([sessionId, amountWei], {
+    const payHash = await mizuPay.write.payForSession([sessionIdBytes32, amountWei], {
       account,
     })
     
@@ -199,14 +206,28 @@ export async function executePayment(
     
     // Verify payment was successful
     if (receipt.status !== 'success') {
-      throw new Error('Payment transaction failed')
+      // Try to get more details about the failure
+      try {
+        const tx = await publicClient.getTransaction({ hash: payHash })
+        console.error('Transaction details:', tx)
+      } catch (e) {
+        console.error('Could not fetch transaction details:', e)
+      }
+      
+      // Check if there are any revert reasons in the receipt
+      if (receipt.logs && receipt.logs.length > 0) {
+        console.error('Transaction logs:', receipt.logs)
+      }
+      
+      throw new Error(`Payment transaction failed. Transaction hash: ${payHash}. Check console for details.`)
     }
     
     console.log('Payment confirmed:', payHash)
     
     // Verify payment on-chain
     try {
-      const [paid, payer, amount, timestamp] = await mizuPay.read.getPaymentInfo([sessionId])
+      // Use encoded bytes32 sessionId for getPaymentInfo as well
+      const [paid, payer, amount, timestamp] = await mizuPay.read.getPaymentInfo([sessionIdBytes32])
       console.log('On-chain payment verification:', { paid, payer, amount: amount.toString() })
       
       if (!paid) {
@@ -220,6 +241,23 @@ export async function executePayment(
     return { txHash: payHash, receipt }
   } catch (error) {
     console.error('Payment error:', error)
+    
+    // Mark session as failed when payment fails
+    try {
+      await fetch('/api/payments/fail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          error: error instanceof Error ? error.message : String(error)
+        })
+      })
+      console.log('Session marked as failed:', sessionId)
+    } catch (failError) {
+      console.error('Failed to mark session as failed:', failError)
+      // Don't throw - the original error is more important
+    }
+    
     throw error
   }
 }
@@ -242,7 +280,10 @@ export async function checkPaymentStatus(sessionId: string) {
   })
 
   try {
-    const [paid, payer, amount, timestamp] = await mizuPay.read.getPaymentInfo([sessionId])
+    // Encode sessionId to bytes32 using ethers.encodeBytes32String
+    const sessionIdBytes32 = encodeBytes32String(sessionId) as `0x${string}`
+    
+    const [paid, payer, amount, timestamp] = await mizuPay.read.getPaymentInfo([sessionIdBytes32])
     
     return {
       paid,

@@ -36,10 +36,93 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Store detection utility (same as in content.js)
+function detectStoreFromUrl(url) {
+    const STORE_MAP = {
+        amazon: "Amazon",
+        flipkart: "Flipkart",
+        myntra: "Myntra",
+        ajio: "Ajio",
+        makemytrip: "MakeMyTrip",
+        swiggy: "Swiggy",
+        zomato: "Zomato",
+        jiomart: "JioMart",
+        tatacliq: "Tata Cliq"
+    };
+
+    try {
+        const urlObj = new URL(url);
+        let hostname = urlObj.hostname.toLowerCase();
+        
+        // Remove common prefixes
+        hostname = hostname.replace(/^(www\.|m\.|secure\.|checkout\.|payments\.|payment\.|shop\.|store\.|buy\.)/, '');
+        
+        // Extract main domain
+        const parts = hostname.split('.');
+        let normalizedDomain = hostname;
+        
+        if (parts.length > 2) {
+            normalizedDomain = parts.slice(1).join('.');
+        }
+        
+        const baseDomain = normalizedDomain.split('.')[0];
+        
+        // Try direct match
+        if (STORE_MAP[baseDomain]) {
+            return STORE_MAP[baseDomain];
+        }
+        
+        // Try full normalized domain match
+        if (STORE_MAP[normalizedDomain]) {
+            return STORE_MAP[normalizedDomain];
+        }
+        
+        // Fallback: Capitalize
+        return baseDomain.charAt(0).toUpperCase() + baseDomain.slice(1);
+    } catch (e) {
+        return 'Unknown Store';
+    }
+}
+
+// Function to check if a store supports gift cards
+function getStoreGiftCardSupport(storeName) {
+    const supportedStores = [
+        "Amazon",
+        "Flipkart",
+        "Myntra",
+        "MakeMyTrip",
+        "Ajio",
+        "Tata Cliq"
+    ];
+    
+    return supportedStores.includes(storeName);
+}
+
 function displayCheckoutSummary(checkout) {
+    // Detect store name from URL if not already set
+    let storeName = checkout.storeName;
+    if (!storeName || storeName === 'Unknown Store' || storeName.toLowerCase() === 'payments') {
+        storeName = detectStoreFromUrl(checkout.url || '');
+    }
+    
     // Display store name
     const storeNameEl = document.getElementById('storeName');
-    storeNameEl.textContent = checkout.storeName || 'Unknown Store';
+    storeNameEl.textContent = storeName;
+
+    // Display gift card support status
+    const giftCardStatusEl = document.getElementById('giftCardStatus');
+    const giftCardStatusTextEl = document.getElementById('giftCardStatusText');
+    const supportsGiftCards = getStoreGiftCardSupport(storeName);
+    
+    if (supportsGiftCards) {
+        giftCardStatusEl.style.display = 'flex';
+        giftCardStatusTextEl.textContent = '✅ Gift Cards Supported';
+        giftCardStatusTextEl.style.color = '#10b981'; // emerald-500
+    } else {
+        giftCardStatusEl.style.display = 'flex';
+        giftCardStatusTextEl.textContent = '⚠️ Gift Card Support Unknown';
+        giftCardStatusTextEl.style.color = '#f59e0b'; // amber-500
+    }
 
     // Display total amount
     const totalAmountEl = document.getElementById('totalAmount');
@@ -60,6 +143,9 @@ function displayCheckoutSummary(checkout) {
     });
     amountCurrencyEl.textContent = currency;
     currencyEl.textContent = currency;
+    
+    // Update checkout object with detected store name for payment
+    checkout.storeName = storeName;
 }
 
 function formatCurrency(amount, currency) {

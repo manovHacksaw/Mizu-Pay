@@ -6,6 +6,8 @@ import { Table } from '@/components/dashboard/Table';
 import { usePrivy } from '@privy-io/react-auth';
 import { useEffect, useState } from 'react';
 import { formatDateForChart } from '@/lib/dateUtils';
+import { useCurrencyStore } from '@/lib/currencyStore';
+import { formatAmountWithConversion } from '@/lib/currencyUtils';
 
 interface PaymentData {
   sessionId: string;
@@ -42,6 +44,7 @@ export default function DashboardPage() {
     successfulTransactions: 0,
     pendingTransactions: 0,
   });
+  const { selectedDisplayCurrency } = useCurrencyStore();
 
   useEffect(() => {
     if (!ready || !authenticated || !user?.email?.address) return;
@@ -174,24 +177,30 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard
-            title="Total Balance"
-            value={`$${stats.totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-            change={{
-              value: `${balanceChange}%`,
-              isPositive: parseFloat(balanceChange) >= 0,
-            }}
-            icon={
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            }
-          />
+          {(() => {
+            const formattedBalance = formatAmountWithConversion(stats.totalBalance);
+            return (
+              <StatsCard
+                title="Total Balance"
+                value={formattedBalance.display}
+                subtitle={formattedBalance.showUSDEquivalent ? formattedBalance.usdEquivalent : undefined}
+                change={{
+                  value: `${balanceChange}%`,
+                  isPositive: parseFloat(balanceChange) >= 0,
+                }}
+                icon={
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                }
+              />
+            );
+          })()}
           <StatsCard
             title="Total Transactions"
             value={stats.totalTransactions.toLocaleString()}

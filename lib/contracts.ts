@@ -5,7 +5,7 @@
 
 // Contract addresses
 export const MOCK_CUSD_ADDRESS = '0x967DBe52B9b4133B18A91bDC4F800063D205704A' as `0x${string}`
-export const MIZU_PAY_CONTRACT = '0x34C5A617e32c84BC9A54c862723FA5538f42F221' as `0x${string}`
+export const MIZU_PAY_CONTRACT = '0x18042d3C48d7f09E863A5e18Ef3562E4827638aA' as `0x${string}`
 
 // Contract ABIs
 import MockCUSD_ABI from './abis/MockCUSD.json'

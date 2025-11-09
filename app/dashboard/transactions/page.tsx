@@ -65,16 +65,30 @@ export default function TransactionsPage() {
       : payments.filter((p) => p.status === statusFilter);
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Store', 'Amount (USD)', 'Status', 'Transaction Hash', 'Token', 'Amount (Crypto)'];
-    const rows = filteredPayments.map((p) => [
-      formatDateForTable(p.createdAt),
-      p.store,
-      p.amountUSD.toString(),
-      p.status,
-      p.payment?.txHash || '',
-      p.payment?.token || '',
-      p.payment?.amountCrypto.toString() || '',
-    ]);
+    const headers = ['Date', 'Store', 'Purchase (USD)', 'Paid (USD)', 'Extra Paid', 'Status', 'Transaction Hash', 'Token', 'Amount (Crypto)'];
+    const rows = filteredPayments.map((p) => {
+      const purchaseAmount = p.amountUSD;
+      const paidAmount = p.payment?.amountCrypto || 0;
+      const extraPaid = p.payment ? paidAmount - purchaseAmount : 0;
+      const extraPaidPercentage = purchaseAmount > 0 ? ((extraPaid / purchaseAmount) * 100) : 0;
+      const extraPaidText = p.payment 
+        ? (Math.abs(extraPaid) < 0.01 
+            ? '$0.00 (0%)' 
+            : `${extraPaid > 0 ? '+' : ''}$${Math.abs(extraPaid).toFixed(2)} (${extraPaid > 0 ? '+' : ''}${extraPaidPercentage.toFixed(1)}%)`)
+        : '—';
+
+      return [
+        formatDateForTable(p.createdAt),
+        p.store,
+        purchaseAmount.toString(),
+        p.payment ? paidAmount.toString() : '—',
+        extraPaidText,
+        p.status,
+        p.payment?.txHash || '',
+        p.payment?.token || '',
+        p.payment?.amountCrypto.toString() || '',
+      ];
+    });
 
     const csvContent = [headers, ...rows]
       .map((row) => row.map((cell) => `"${cell}"`).join(','))

@@ -1,6 +1,8 @@
 'use client';
 
 import { formatDateForTable } from '@/lib/dateUtils';
+import { useCurrencyStore } from '@/lib/currencyStore';
+import { formatAmountWithConversion } from '@/lib/currencyUtils';
 
 interface Transaction {
   sessionId: string;
@@ -31,6 +33,54 @@ interface TableProps {
 }
 
 export function Table({ transactions = [], showPagination = true }: TableProps) {
+  const { selectedDisplayCurrency, convertUSDToUserCurrency, formatAmount } = useCurrencyStore();
+
+  // Calculate extra paid amount and percentage
+  const calculateExtraPaid = (transaction: Transaction) => {
+    if (!transaction.payment) {
+      return null; // No payment made yet
+    }
+
+    const purchaseAmount = transaction.amountUSD;
+    const paidAmount = transaction.payment.amountCrypto; // Already in USD equivalent
+    const difference = paidAmount - purchaseAmount;
+    const percentage = purchaseAmount > 0 ? (difference / purchaseAmount) * 100 : 0;
+
+    return {
+      absolute: difference,
+      percentage: percentage,
+    };
+  };
+
+  // Format extra paid display
+  const formatExtraPaid = (transaction: Transaction) => {
+    const extraPaid = calculateExtraPaid(transaction);
+    
+    if (extraPaid === null) {
+      return { text: '—', isMuted: false }; // No payment yet
+    }
+
+    const { absolute, percentage } = extraPaid;
+    
+    if (Math.abs(absolute) < 0.01) {
+      // Zero or very small difference
+      return {
+        text: `$0.00 (0%)`,
+        isMuted: true,
+      };
+    }
+
+    // Convert difference to display currency
+    const displayDifference = convertUSDToUserCurrency(Math.abs(absolute));
+    const formattedDifference = formatAmount(displayDifference, selectedDisplayCurrency);
+    const sign = absolute > 0 ? '+' : '';
+    
+    return {
+      text: `${sign}${formattedDifference} (${sign}${percentage.toFixed(1)}%)`,
+      isMuted: false,
+    };
+  };
+
   const getStatusBadge = (status: string) => {
     const styles = {
       paid: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
@@ -132,7 +182,13 @@ export function Table({ transactions = [], showPagination = true }: TableProps) 
                 />
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium dashboard-text-muted uppercase tracking-wider">
-                Amount
+                Purchase
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium dashboard-text-muted uppercase tracking-wider">
+                Paid
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium dashboard-text-muted uppercase tracking-wider">
+                Extra Paid
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium dashboard-text-muted uppercase tracking-wider">
                 Store
@@ -161,14 +217,63 @@ export function Table({ transactions = [], showPagination = true }: TableProps) 
                   />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium dashboard-text-primary">
-                    ${transaction.amountUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </div>
-                  {transaction.payment && (
-                    <div className="text-xs dashboard-text-secondary">
-                      {transaction.payment.amountCrypto.toFixed(4)} {transaction.payment.token}
-                    </div>
+                  {(() => {
+                    const formatted = formatAmountWithConversion(transaction.amountUSD);
+                    return (
+                      <>
+                        <div className="text-sm font-medium dashboard-text-primary">
+                          {formatted.display}
+                        </div>
+                        {formatted.showUSDEquivalent && (
+                          <div className="text-xs dashboard-text-muted mt-0.5">
+                            {formatted.usdEquivalent}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {transaction.payment ? (
+                    <>
+                      {(() => {
+                        const formatted = formatAmountWithConversion(transaction.payment.amountCrypto);
+                        return (
+                          <>
+                            <div className="text-sm font-medium dashboard-text-primary">
+                              {formatted.display}
+                            </div>
+                            {formatted.showUSDEquivalent && (
+                              <div className="text-xs dashboard-text-muted mt-0.5">
+                                ≈ {formatted.usdEquivalent}
+                              </div>
+                            )}
+                            <div className="text-xs dashboard-text-secondary mt-0.5">
+                              {transaction.payment.amountCrypto.toFixed(4)} {transaction.payment.token}
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </>
+                  ) : (
+                    <span className="text-sm dashboard-text-muted">—</span>
                   )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {(() => {
+                    const extraPaid = formatExtraPaid(transaction);
+                    return (
+                      <span
+                        className={`text-sm ${
+                          extraPaid.isMuted
+                            ? 'dashboard-text-muted opacity-60'
+                            : 'dashboard-text-secondary'
+                        }`}
+                      >
+                        {extraPaid.text}
+                      </span>
+                    );
+                  })()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm dashboard-text-primary">{transaction.store}</div>

@@ -18,6 +18,7 @@ export async function GET(req: Request) {
     const amountMinor = Math.round(parseFloat(amount || "0") * 100);
 
     // Store name normalization map (common variations -> canonical name)
+    // This maps detected store names to the exact names stored in the database
     const storeNameMap: Record<string, string> = {
         'amazon': 'Amazon',
         'amazon.in': 'Amazon',
@@ -26,6 +27,14 @@ export async function GET(req: Request) {
         'flipkart.com': 'Flipkart',
         'myntra': 'Myntra',
         'myntra.com': 'Myntra',
+        'makemytrip': 'Make My Trip', // Database stores "Make My Trip" with spaces
+        'make my trip': 'Make My Trip',
+        'make-my-trip': 'Make My Trip',
+        'ajio': 'Ajio',
+        'swiggy': 'Swiggy',
+        'zomato': 'Zomato',
+        'jiomart': 'JioMart',
+        'tatacliq': 'Tata Cliq',
         // Handle common variations
         'place your order - amazon checkout': 'Amazon',
         'flipkart payments page': 'Flipkart',
@@ -36,22 +45,36 @@ export async function GET(req: Request) {
     let normalizedStore = store.trim();
     const storeLower = normalizedStore.toLowerCase();
     
-    // Check if we have a mapping for this store name
+    // Check if we have a direct mapping for this store name
     if (storeNameMap[storeLower]) {
         normalizedStore = storeNameMap[storeLower];
     } else {
-        // Try to find partial match
+        // Try to find partial match (e.g., "makemytrip" contains "makemytrip")
+        let foundMatch = false;
         for (const [key, value] of Object.entries(storeNameMap)) {
+            // Check if store name contains the key or vice versa
             if (storeLower.includes(key) || key.includes(storeLower)) {
                 normalizedStore = value;
+                foundMatch = true;
                 break;
             }
         }
-        // If no match found, capitalize first letter
-        if (normalizedStore === store.trim()) {
-            normalizedStore = normalizedStore.charAt(0).toUpperCase() + normalizedStore.slice(1).toLowerCase();
+        
+        // If no match found, try to normalize common patterns
+        if (!foundMatch) {
+            // Handle "MakeMyTrip" -> "Make My Trip" pattern (camelCase to spaced)
+            // Check for camelCase patterns like "MakeMyTrip"
+            if (storeLower === 'makemytrip' || normalizedStore === 'MakeMyTrip' || storeLower.includes('makemytrip')) {
+                normalizedStore = 'Make My Trip';
+            } else {
+                // Capitalize first letter as fallback
+                normalizedStore = normalizedStore.charAt(0).toUpperCase() + normalizedStore.slice(1).toLowerCase();
+            }
         }
     }
+    
+    // Debug logging
+    console.log('Store normalization:', { original: store, normalized: normalizedStore, storeLower });
     
     const normalizedCurrency = currency.trim().toUpperCase();
 
@@ -100,6 +123,38 @@ export async function GET(req: Request) {
 
     // Debug: Log available gift cards if no match found
     if (giftCards.length === 0) {
+      // Check if store exists at all (even if no cards match the amount)
+      const storeExists = await prisma.giftCard.findFirst({
+        where: {
+          store: normalizedStore,
+          currency: normalizedCurrency,
+          stock: { gt: 0 },
+          active: true,
+        },
+        select: {
+          store: true,
+        },
+      });
+      
+      // Also try case-insensitive check
+      let storeExistsCaseInsensitive = false;
+      if (!storeExists) {
+        try {
+          const rawResult = await prisma.$queryRaw<Array<{ store: string }>>`
+            SELECT store
+            FROM "GiftCard"
+            WHERE LOWER(store) = LOWER(${normalizedStore})
+              AND UPPER(currency) = ${normalizedCurrency}
+              AND stock > 0
+              AND active = true
+            LIMIT 1
+          `;
+          storeExistsCaseInsensitive = rawResult.length > 0;
+        } catch (e) {
+          console.warn("Case-insensitive check failed:", e);
+        }
+      }
+      
       const allCards = await prisma.giftCard.findMany({
         where: {
           stock: { gt: 0 },
@@ -119,8 +174,20 @@ export async function GET(req: Request) {
         normalizedStore: normalizedStore, 
         currency: normalizedCurrency, 
         amountMinor,
-        amountUSD: amountMinor / 100
+        amountUSD: amountMinor / 100,
+        storeExists: !!storeExists || storeExistsCaseInsensitive
       });
+      
+      // If store exists but no cards match the amount, return empty array (not 404)
+      // This allows the UI to show "store supported" even if no cards are available
+      if (storeExists || storeExistsCaseInsensitive) {
+        return NextResponse.json({
+          store,
+          currency,
+          requestedAmountMinor: amountMinor,
+          giftCards: [], // Empty array means store is supported but no cards match
+        });
+      }
     }
 
     if (giftCards.length === 0) {

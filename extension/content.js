@@ -162,6 +162,78 @@ function hasGiftCardSupport() {
     return hasGiftCardInputs || hasGiftCardText || hasGiftCardElements || hasGiftCardButtons;
 }
 
+// Store detection utility function
+function detectStore() {
+    const STORE_MAP = {
+        amazon: "Amazon",
+        flipkart: "Flipkart",
+        myntra: "Myntra",
+        ajio: "Ajio",
+        makemytrip: "MakeMyTrip",
+        swiggy: "Swiggy",
+        zomato: "Zomato",
+        jiomart: "JioMart",
+        tatacliq: "Tata Cliq"
+    };
+
+    // Get hostname and normalize it
+    let hostname = window.location.hostname.toLowerCase();
+    
+    // Remove common prefixes: www., m., secure., checkout., payments., etc.
+    hostname = hostname.replace(/^(www\.|m\.|secure\.|checkout\.|payments\.|payment\.|shop\.|store\.|buy\.)/, '');
+    
+    // Extract main domain (e.g., "payments.makemytrip.com" -> "makemytrip")
+    // Split by dots and take the domain parts (usually last 2 parts, but handle subdomains)
+    const parts = hostname.split('.');
+    let normalizedDomain = hostname;
+    
+    // If we have subdomains, extract the main domain
+    // e.g., "payments.makemytrip.com" -> "makemytrip.com" -> "makemytrip"
+    if (parts.length > 2) {
+        // Remove the first part (subdomain) and join the rest
+        normalizedDomain = parts.slice(1).join('.');
+    }
+    
+    // Extract base domain name (without TLD)
+    const baseDomain = normalizedDomain.split('.')[0];
+    
+    // Try direct match in STORE_MAP
+    if (STORE_MAP[baseDomain]) {
+        return STORE_MAP[baseDomain];
+    }
+    
+    // Try full normalized domain match
+    if (STORE_MAP[normalizedDomain]) {
+        return STORE_MAP[normalizedDomain];
+    }
+    
+    // Try inference from document.title
+    const title = document.title.toLowerCase();
+    for (const [key, value] of Object.entries(STORE_MAP)) {
+        if (title.includes(key)) {
+            return value;
+        }
+    }
+    
+    // Fallback: Capitalize the cleaned hostname
+    return baseDomain.charAt(0).toUpperCase() + baseDomain.slice(1);
+}
+
+// Function to check if a store supports gift cards
+function getStoreGiftCardSupport(storeName) {
+    // Known stores that support gift cards (from our database)
+    const supportedStores = [
+        "Amazon",
+        "Flipkart",
+        "Myntra",
+        "MakeMyTrip",
+        "Ajio",
+        "Tata Cliq"
+    ];
+    
+    return supportedStores.includes(storeName);
+}
+
 // Function to extract checkout details from the page
 function extractCheckoutDetails() {
     const details = {
@@ -171,34 +243,8 @@ function extractCheckoutDetails() {
         currency: null
     };
     
-    // Store name normalization map (domain -> canonical name)
-    const storeNameMap = {
-        'amazon': 'Amazon',
-        'amazon.in': 'Amazon',
-        'amazon.com': 'Amazon',
-        'flipkart': 'Flipkart',
-        'flipkart.com': 'Flipkart',
-        'myntra': 'Myntra',
-        'myntra.com': 'Myntra'
-    };
-    
-    // Extract store name from URL/domain (most reliable method)
-    const hostname = window.location.hostname.toLowerCase();
-    const domainKey = hostname.replace(/^www\./, '');
-    
-    // Try full domain match first (e.g., "amazon.in", "myntra.com")
-    if (storeNameMap[domainKey]) {
-        details.storeName = storeNameMap[domainKey];
-    } else {
-        // Try base domain (e.g., "amazon", "flipkart", "myntra")
-        const domainBase = domainKey.split('.')[0];
-        if (storeNameMap[domainBase]) {
-            details.storeName = storeNameMap[domainBase];
-        } else {
-            // Fallback: Capitalize first letter of domain base
-            details.storeName = domainBase.charAt(0).toUpperCase() + domainBase.slice(1);
-        }
-    }
+    // Use the new detectStore() function
+    details.storeName = detectStore();
     
     // Extract Total Amount - More comprehensive detection
     // Helper function to extract number from text
