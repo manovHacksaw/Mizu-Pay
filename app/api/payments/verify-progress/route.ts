@@ -170,7 +170,6 @@ export async function GET(req: Request) {
           stepMessages.amountVerified = "✓ Amount verification skipped";
         }
       } catch (verifyError) {
-        console.error("Error verifying transaction details:", verifyError);
         // Continue with confirmations even if verification fails
       }
       
@@ -182,14 +181,6 @@ export async function GET(req: Request) {
         stepMessages.confirmationsComplete = `Waiting for confirmations... (${confirmations}/${REQUIRED_CONFIRMATIONS})`;
       }
       
-      console.log("Verification progress:", {
-        blockNumber,
-        confirmations,
-        required: REQUIRED_CONFIRMATIONS,
-        success: txInfo.success,
-        isConfirmed,
-        verificationSteps,
-      });
 
       return NextResponse.json({
         confirmed: isConfirmed,
@@ -235,7 +226,6 @@ export async function GET(req: Request) {
       throw error;
     }
   } catch (err) {
-    console.error("VERIFY PROGRESS ERROR:", err);
     return NextResponse.json(
       {
         error: "Internal Server Error",

@@ -13,9 +13,15 @@
  * node scripts/verify-transaction.js 0x123... session-123 10.5
  */
 
+require('dotenv').config();
 const { ethers } = require('ethers');
 
-const ETHERSCAN_API_KEY = 'AX7UYGEWBMPK97S5KQWQJ6FXUJI3AKKEN8';
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
+if (!ETHERSCAN_API_KEY) {
+  console.error('Error: ETHERSCAN_API_KEY not found in environment variables');
+  console.error('Please add ETHERSCAN_API_KEY to your .env file');
+  process.exit(1);
+}
 const CHAIN_ID = 11142220; // Celo Sepolia
 const TOKEN_CONTRACT = '0x967DBe52B9b4133B18A91bDC4F800063D205704A'; // MockCUSD
 const MIZU_PAY_CONTRACT = '0x18042d3C48d7f09E863A5e18Ef3562E4827638aA'; // MizuPay contract (updated - uses bytes32 sessionId)

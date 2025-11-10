@@ -67,7 +67,6 @@ export async function executePayment(
       const currentChainIdNumber = parseInt(currentChainId, 16)
       
       if (currentChainIdNumber !== celoSepolia.id) {
-        console.log(`Switching from chain ${currentChainIdNumber} to Celo Sepolia (${celoSepolia.id})...`)
         
         try {
           // Try to switch to Celo Sepolia
@@ -75,11 +74,9 @@ export async function executePayment(
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: `0x${celoSepolia.id.toString(16)}` }],
           })
-          console.log('Successfully switched to Celo Sepolia')
         } catch (switchError: any) {
           // If chain doesn't exist, add it
           if (switchError.code === 4902 || switchError.code === -32603) {
-            console.log('Celo Sepolia not found, adding chain...')
             await ethereumProvider.request({
               method: 'wallet_addEthereumChain',
               params: [
@@ -96,7 +93,6 @@ export async function executePayment(
                 },
               ],
             })
-            console.log('Successfully added and switched to Celo Sepolia')
           } else {
             throw switchError
           }
@@ -106,7 +102,6 @@ export async function executePayment(
         await new Promise(resolve => setTimeout(resolve, 1000))
       }
     } catch (chainError) {
-      console.error('Error switching chain:', chainError)
       throw new Error('Failed to switch to Celo Sepolia network. Please switch manually in your wallet.')
     }
 
@@ -150,7 +145,6 @@ export async function executePayment(
     
     // Step 2: Approve if needed (or if allowance is less than amount)
     if (currentAllowance < amountWei) {
-      console.log('Step 1/2: Approving cUSD spending...', { amountUSD, amountWei: amountWei.toString() })
       onStatusUpdate?.('approving')
       
       // Use viem's write method - Privy will show transaction details
@@ -159,10 +153,7 @@ export async function executePayment(
         account,
       })
       
-      console.log('Approval transaction sent:', approveHash)
-      console.log('Waiting for approval confirmation...')
       const approveReceipt = await publicClient.waitForTransactionReceipt({ hash: approveHash })
-      console.log('Approval confirmed:', approveHash)
       
       // Verify approval was successful
       if (approveReceipt.status !== 'success') {
@@ -171,26 +162,21 @@ export async function executePayment(
       
       // Double-check allowance after approval
       const newAllowance = await mockCusd.read.allowance([account, MIZU_PAY_CONTRACT])
-      console.log('New allowance after approval:', newAllowance.toString())
       
       if (newAllowance < amountWei) {
         throw new Error('Approval amount insufficient after transaction')
       }
       
-      console.log('✓ Approval completed successfully')
     } else {
-      console.log('Sufficient allowance already exists:', currentAllowance.toString())
     }
 
     // Step 3: Pay for session (this is the actual purchase transaction)
-    console.log('Step 2/2: Executing PAYMENT transaction...', { sessionId, amountUSD, amountWei: amountWei.toString() })
     onStatusUpdate?.('paying')
     
     // Encode sessionId to bytes32 using ethers.encodeBytes32String
     // This matches the encoding used in the scripts and ensures compatibility
     const sessionIdBytes32 = encodeBytes32String(sessionId) as `0x${string}`
     
-    console.log('Encoded sessionId to bytes32:', sessionIdBytes32)
     
     // Use viem's write method - Privy will show transaction details
     // Note: The amount (amountWei) is encoded in the transaction data
@@ -198,49 +184,40 @@ export async function executePayment(
       account,
     })
     
-    console.log('✓ Payment transaction sent:', payHash)
-    console.log('Waiting for payment confirmation...')
     onStatusUpdate?.('confirming')
     
     const receipt = await publicClient.waitForTransactionReceipt({ hash: payHash })
     
     // Verify payment was successful
     if (receipt.status !== 'success') {
-      // Try to get more details about the failure
-      try {
-        const tx = await publicClient.getTransaction({ hash: payHash })
-        console.error('Transaction details:', tx)
-      } catch (e) {
-        console.error('Could not fetch transaction details:', e)
-      }
-      
-      // Check if there are any revert reasons in the receipt
-      if (receipt.logs && receipt.logs.length > 0) {
-        console.error('Transaction logs:', receipt.logs)
-      }
-      
-      throw new Error(`Payment transaction failed. Transaction hash: ${payHash}. Check console for details.`)
+      throw new Error(`Payment transaction failed. Transaction hash: ${payHash}`)
     }
-    
-    console.log('Payment confirmed:', payHash)
     
     // Verify payment on-chain
     try {
       // Use encoded bytes32 sessionId for getPaymentInfo as well
       const [paid, payer, amount, timestamp] = await mizuPay.read.getPaymentInfo([sessionIdBytes32])
-      console.log('On-chain payment verification:', { paid, payer, amount: amount.toString() })
       
       if (!paid) {
         throw new Error('Payment not recorded on-chain')
       }
+      
+      // Payment made (details)
+      console.log('Payment made:', {
+        txHash: payHash,
+        sessionId,
+        amountUSD,
+        amountWei: amountWei.toString(),
+        payer: payer,
+        amount: amount.toString(),
+        timestamp: timestamp.toString(),
+      })
     } catch (verifyError) {
-      console.warn('Could not verify payment on-chain:', verifyError)
       // Don't throw - receipt confirms the transaction succeeded
     }
 
     return { txHash: payHash, receipt }
   } catch (error) {
-    console.error('Payment error:', error)
     
     // Mark session as failed when payment fails
     try {
@@ -252,9 +229,7 @@ export async function executePayment(
           error: error instanceof Error ? error.message : String(error)
         })
       })
-      console.log('Session marked as failed:', sessionId)
     } catch (failError) {
-      console.error('Failed to mark session as failed:', failError)
       // Don't throw - the original error is more important
     }
     
@@ -292,7 +267,6 @@ export async function checkPaymentStatus(sessionId: string) {
       timestamp: new Date(Number(timestamp) * 1000),
     }
   } catch (error) {
-    console.error('Error checking payment:', error)
     throw error
   }
 }
@@ -318,7 +292,6 @@ export async function getCusdBalance(address: string): Promise<string> {
     const balance = await mockCusd.read.balanceOf([address as `0x${string}`])
     return formatUnits(balance, 18)
   } catch (error) {
-    console.error('Error fetching balance:', error)
     throw error
   }
 }

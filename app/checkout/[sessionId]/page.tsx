@@ -131,7 +131,6 @@
                         setStoreSupported(false)
                     }
                 } catch (error) {
-                    console.error('Error checking store support:', error)
                     setStoreSupported(false)
                 } finally {
                     setIsCheckingStore(false)
@@ -159,14 +158,6 @@
         // Format USD equivalent if available
         const usdEquivalentFormatted = usdAmount ? formatAmount(usdAmount, 'USD') : null
         
-        // Debug logging
-        console.log('Amount display:', {
-            originalAmount,
-            currency: purchaseDetails.currency,
-            formatted: originalAmountFormatted,
-            usdAmount,
-            usdEquivalent: usdEquivalentFormatted
-        })
 
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
@@ -461,7 +452,6 @@
                         const balance = await getCusdBalance(embeddedWallet.address)
                         setEmbeddedBalance(parseFloat(balance).toFixed(2))
                     } catch (error) {
-                        console.error('Error fetching embedded wallet balance:', error)
                         setEmbeddedBalance('0.00')
                     } finally {
                         setLoadingEmbedded(false)
@@ -475,7 +465,6 @@
                         const balance = await getCusdBalance(externalWallet.address)
                         setExternalBalance(parseFloat(balance).toFixed(2))
                     } catch (error) {
-                        console.error('Error fetching external wallet balance:', error)
                         setExternalBalance('0.00')
                     } finally {
                         setLoadingExternal(false)
@@ -662,13 +651,10 @@
                                 expectedAmountCrypto: selectedCard.amountUSD.toString(),
                             })
                             
-                            console.log(`[Poll ${attempts + 1}] Checking verification progress for tx: ${paymentTxHash}`)
-                            
                             const progressResponse = await fetch(`/api/payments/verify-progress?${params.toString()}`)
                             
                             if (!progressResponse.ok) {
                                 const errorText = await progressResponse.text().catch(() => 'Unknown error')
-                                console.warn(`[Poll ${attempts + 1}] API error (${progressResponse.status}):`, errorText)
                                 // Continue polling on API errors (might be temporary)
                                 attempts++
                                 if (attempts >= maxAttempts) {
@@ -679,10 +665,15 @@
                             }
 
                             const progressData = await progressResponse.json()
-                            console.log(`[Poll ${attempts + 1}] Progress update:`, {
+                            
+                            // Confirmation progress: details
+                            console.log('Confirmation progress:', {
+                                txHash: paymentTxHash,
                                 confirmations: progressData.confirmations,
+                                requiredConfirmations: progressData.requiredConfirmations,
                                 status: progressData.status,
                                 confirmed: progressData.confirmed,
+                                verificationSteps: progressData.verificationSteps,
                             })
                             
                             // Always update state, even if values are the same (forces re-render)
@@ -704,7 +695,6 @@
 
                             // If confirmed, proceed to create payment record
                             if (progressData.confirmed) {
-                                console.log('[Poll] Transaction confirmed! Creating payment record...')
                                 // Call backend API to record payment and assign gift card
                                 const response = await fetch('/api/payments/create', {
                                     method: 'POST',
@@ -725,7 +715,6 @@
                                     const errorMessage = errorData.details 
                                         ? `${errorData.error}: ${errorData.details}`
                                         : errorData.error || 'Failed to record payment in backend'
-                                    console.error('Payment API error:', errorData)
                                     
                                     // Mark session as failed if payment recording fails
                                     try {
@@ -738,7 +727,6 @@
                                             })
                                         })
                                     } catch (failError) {
-                                        console.error('Failed to mark session as failed:', failError)
                                     }
                                     
                                     throw new Error(errorMessage)
@@ -761,7 +749,6 @@
                             // Poll again after 2 seconds
                             setTimeout(poll, 2000)
                         } catch (error) {
-                            console.error(`[Poll ${attempts + 1}] Verification progress error:`, error)
                             // Only throw fatal errors (timeout, confirmed failure)
                             // For other errors, continue polling
                             if (error instanceof Error && (
@@ -788,7 +775,6 @@
                 // Start polling for verification progress
                 await pollVerificationProgress()
             } catch (error) {
-                console.error('Payment error:', error)
                 setPaymentStatus('error')
                 const errorMessage = error instanceof Error ? error.message : 'Payment failed. Please try again.'
                 
@@ -813,7 +799,6 @@
                         }),
                     })
                 } catch (failError) {
-                    console.error('Failed to mark payment as failed:', failError)
                 }
                 
                 setIsProcessing(false)
@@ -1143,14 +1128,6 @@
         })
         
         // Debug: Log the amount to verify it's correct
-        useEffect(() => {
-            console.log('Checkout amount from URL:', {
-                urlAmount,
-                parsedAmount: parseFloat(urlAmount || '0'),
-                currency: urlCurrency,
-                purchaseDetailsAmount: purchaseDetails.amount
-            })
-        }, [urlAmount, urlCurrency, purchaseDetails.amount])
         const [sessionExpired, setSessionExpired] = useState(false)
         const [sessionCreatedAt, setSessionCreatedAt] = useState<Date | null>(null)
         const [timeRemaining, setTimeRemaining] = useState<number | null>(null)
@@ -1199,7 +1176,6 @@
                         }
                     }
                 } catch (error) {
-                    console.error('Error checking session:', error)
                 }
             }
 

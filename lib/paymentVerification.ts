@@ -144,13 +144,6 @@ export async function fetchTransactionReceipt(txHash: string): Promise<Transacti
       txStatus = '0x1'
     }
     
-    console.log("Blockscout API response:", {
-      blockNumber: txInfo.blockNumber,
-      convertedBlockNumber: blockNumber,
-      txreceipt_status: txInfo.txreceipt_status,
-      success: txInfo.success,
-      finalStatus: txStatus,
-    })
     
     return {
       blockNumber: blockNumber || null,
@@ -238,7 +231,6 @@ export function decodeTransactionInput(input: string, expectedSessionId: string,
     
     // Minimum length check: selector (8) + sessionId (64) + amount (64) = 136 hex chars
     if (cleanInput.length < 136) {
-      console.error('Transaction input too short')
       return { sessionIdMatches: false, amountMatches: false, functionSelectorValid: false }
     }
     
@@ -273,7 +265,6 @@ export function decodeTransactionInput(input: string, expectedSessionId: string,
     
     return { sessionIdMatches, amountMatches, functionSelectorValid }
   } catch (error) {
-    console.error('Error decoding transaction input:', error)
     return { sessionIdMatches: false, amountMatches: false, functionSelectorValid: false }
   }
 }
@@ -318,12 +309,6 @@ async function waitForConfirmations(
       
       const blockNumber = parseInt(txInfo.blockNumber, 10)
       
-      console.log("Confirmation check:", {
-        blockNumber,
-        confirmations,
-        required: REQUIRED_CONFIRMATIONS,
-        success: txInfo.success,
-      })
       
       if (confirmations >= REQUIRED_CONFIRMATIONS) {
         return { confirmations, blockNumber }

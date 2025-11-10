@@ -55,7 +55,6 @@ export function Table({ transactions = [], showPagination = true }: TableProps) 
             return { txHash, confirmations: data.confirmations || 0 };
           }
         } catch (error) {
-          console.error(`Error fetching confirmations for ${txHash}:`, error);
         }
         return { txHash, confirmations: null };
       });

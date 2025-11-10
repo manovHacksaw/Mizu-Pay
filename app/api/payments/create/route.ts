@@ -74,12 +74,6 @@ export async function POST(req: Request) {
     }
 
     // Verify payment transaction before creating payment record
-    console.log("Verifying payment transaction:", {
-      txHash,
-      sessionId,
-      walletAddress: sessionWithDetails.wallet.address,
-      amountCrypto,
-    });
 
     const verificationResult = await verifyPaymentTransaction(
       txHash,
@@ -89,7 +83,6 @@ export async function POST(req: Request) {
     );
 
     if (!verificationResult.verified) {
-      console.error("Payment verification failed:", verificationResult.error);
       return NextResponse.json(
         {
           error: "Payment verification failed",
@@ -100,10 +93,6 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log("Payment verification successful:", {
-      txHash,
-      confirmations: verificationResult.confirmations,
-    });
 
     // If giftCardId is provided, assign it to the session and mark as inactive
     if (giftCardId) {
@@ -155,7 +144,6 @@ export async function POST(req: Request) {
         } catch (updateError: any) {
           // If giftCardId field doesn't exist (migration not run), update without it
           if (updateError.message?.includes('giftCardId') || updateError.code === 'P2009') {
-            console.warn('giftCardId field not found, updating without it. Please run migration.');
             updatedSession = await tx.paymentSession.update({
               where: { id: sessionId },
               data: { 
@@ -181,7 +169,8 @@ export async function POST(req: Request) {
         return { payment, session: updatedSession };
       });
 
-      console.log("Payment created and gift card assigned:", {
+      // Payment made (details)
+      console.log("Payment made:", {
         paymentId: result.payment.id,
         sessionId: session.id,
         giftCardId: giftCardId,
@@ -226,7 +215,8 @@ export async function POST(req: Request) {
       data: { status: "paid" },
     });
 
-    console.log("Payment created successfully:", {
+    // Payment made (details)
+    console.log("Payment made:", {
       paymentId: payment.id,
       sessionId: session.id,
       txHash: txHash,
@@ -249,7 +239,6 @@ export async function POST(req: Request) {
       },
     });
   } catch (err) {
-    console.error("PAYMENT CREATE ERROR:", err);
     const errorMessage = err instanceof Error ? err.message : String(err);
     const errorStack = err instanceof Error ? err.stack : undefined;
     
@@ -258,13 +247,6 @@ export async function POST(req: Request) {
                          errorMessage.includes('Unknown column') ||
                          errorMessage.includes('column') && errorMessage.includes('does not exist');
     
-    // Log full error details for debugging
-    console.error("Error details:", {
-      message: errorMessage,
-      stack: errorStack,
-      body: { sessionId, txHash, amountCrypto, token, giftCardId },
-      isSchemaError,
-    });
     
     return NextResponse.json(
       {
