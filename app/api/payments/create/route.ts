@@ -156,6 +156,13 @@ export async function POST(req: Request) {
       try {
         // Step 1: Check user email (MUST exist)
         const userEmail = sessionWithDetails.user.email;
+        console.log('Phase 2 started - checking user email:', {
+          paymentId: phase1Result.payment.id,
+          sessionId: sessionId,
+          hasEmail: !!userEmail,
+          userId: sessionWithDetails.userId,
+        });
+        
         if (!userEmail) {
           // Release reservation and fail
           await prisma.$transaction(async (tx) => {
@@ -183,20 +190,52 @@ export async function POST(req: Request) {
         }
 
         // Step 2: Decrypt gift card (throws on failure)
+        console.log('Starting decryption:', {
+          paymentId: phase1Result.payment.id,
+          sessionId: sessionId,
+          giftCardId: giftCardId,
+        });
+        
         let decryptedNumber: string;
         let decryptedPin: string;
         try {
-          decryptedNumber = decrypt(
+          // Decrypt the combined data (number and pin are encrypted together)
+          const decryptedData = decrypt(
             phase1Result.giftCard.encryptedNumber,
             phase1Result.giftCard.iv,
             phase1Result.giftCard.tag
           );
-          decryptedPin = decrypt(
-            phase1Result.giftCard.encryptedPin,
-            phase1Result.giftCard.iv,
-            phase1Result.giftCard.tag
-          );
+          
+          // Parse the JSON to extract number and pin
+          const parsed = JSON.parse(decryptedData);
+          decryptedNumber = parsed.number;
+          decryptedPin = parsed.pin;
+          
+          console.log('Decryption successful:', {
+            paymentId: phase1Result.payment.id,
+            sessionId: sessionId,
+            giftCardId: giftCardId,
+          });
         } catch (decryptError) {
+          console.error('Decryption failed:', {
+            paymentId: phase1Result.payment.id,
+            sessionId: sessionId,
+            giftCardId: giftCardId,
+            error: decryptError instanceof Error ? decryptError.message : String(decryptError),
+            errorName: decryptError instanceof Error ? decryptError.name : undefined,
+            stack: decryptError instanceof Error ? decryptError.stack : undefined,
+            hasEncryptionSecret: !!process.env.ENCRYPTION_SECRET,
+            giftCardData: {
+              hasEncryptedNumber: !!phase1Result.giftCard.encryptedNumber,
+              hasEncryptedPin: !!phase1Result.giftCard.encryptedPin,
+              hasIv: !!phase1Result.giftCard.iv,
+              hasTag: !!phase1Result.giftCard.tag,
+              encryptedNumberLength: phase1Result.giftCard.encryptedNumber?.length,
+              encryptedPinLength: phase1Result.giftCard.encryptedPin?.length,
+              ivLength: phase1Result.giftCard.iv?.length,
+              tagLength: phase1Result.giftCard.tag?.length,
+            },
+          });
           // Release reservation and fail
           await prisma.$transaction(async (tx) => {
             await tx.payment.update({
@@ -230,6 +269,13 @@ export async function POST(req: Request) {
         }
 
         // Step 3: Send email
+        console.log('Starting email send process:', {
+          paymentId: phase1Result.payment.id,
+          sessionId: sessionId,
+          userEmail: userEmail,
+          giftCardId: giftCardId,
+        });
+
         const emailSent = await sendGiftCardEmail(
           userEmail,
           {
@@ -247,6 +293,13 @@ export async function POST(req: Request) {
             token: token,
           }
         );
+
+        console.log('Email send result:', {
+          emailSent,
+          paymentId: phase1Result.payment.id,
+          sessionId: sessionId,
+          userEmail: userEmail,
+        });
 
         if (!emailSent) {
           // Email failed - release reservation, set status to email_failed
@@ -268,12 +321,14 @@ export async function POST(req: Request) {
             });
           });
 
-          // Log only IDs
-          console.error("Email send failed:", {
+          // Log email failure details
+          console.error("Email send failed - releasing reservation:", {
             paymentId: phase1Result.payment.id,
             sessionId: sessionId,
             giftCardId: giftCardId,
             userId: sessionWithDetails.userId,
+            userEmail: userEmail,
+            txHash: txHash,
           });
 
           return NextResponse.json(
@@ -319,6 +374,8 @@ export async function POST(req: Request) {
           giftCardId: giftCardId,
           userId: sessionWithDetails.userId,
           txHash: txHash,
+          userEmail: userEmail,
+          emailSent: true,
         });
 
         return NextResponse.json({

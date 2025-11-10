@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "eslint"
   },
+  "prisma": {
+    "seed": "bun prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^6.19.0",
     "@privy-io/react-auth": "^3.6.1",

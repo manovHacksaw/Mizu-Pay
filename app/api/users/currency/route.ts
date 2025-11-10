@@ -64,9 +64,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = await prisma.user.update({
+    // Use upsert to create user if they don't exist, or update if they do
+    const user = await prisma.user.upsert({
       where: { email },
-      data: { defaultCurrency },
+      update: { defaultCurrency },
+      create: {
+        email,
+        defaultCurrency,
+      },
       select: { id: true, email: true, defaultCurrency: true },
     });
 
@@ -80,14 +85,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('Error updating user currency:', error);
-    
-    if (error instanceof Error && error.message.includes('Record to update not found')) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }

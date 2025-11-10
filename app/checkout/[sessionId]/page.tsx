@@ -3,7 +3,7 @@
         import { useParams, useRouter, useSearchParams } from 'next/navigation'
         import { usePrivy, useWallets } from '@privy-io/react-auth'
         import { executePayment, getCusdBalance } from '@/lib/paymentUtils'
-        import { createPublicClient, http, formatUnits, defineChain } from 'viem'
+        import { createPublicClient, http, formatUnits, defineChain, createWalletClient, custom } from 'viem'
         import { Clock, CheckCircle, AlertCircle, Wallet, CreditCard, Gift } from 'lucide-react'
         import { useCurrencyStore } from '@/lib/currencyStore'
         import { formatAmountWithConversion } from '@/lib/currencyUtils'
@@ -417,34 +417,39 @@
         function Step3SelectWallet({ 
         onSelect,
         selectedType,
-        onContinue
+        onContinue,
+        sessionId
         }: { 
         onSelect: (type: "embedded" | "external") => void
         selectedType: "embedded" | "external" | null
         onContinue: () => void
+        sessionId: string
         }) {
         const { wallets } = useWallets()
+        const { user } = usePrivy()
         const [embeddedBalance, setEmbeddedBalance] = useState<string | null>(null)
         const [externalBalance, setExternalBalance] = useState<string | null>(null)
         const [loadingEmbedded, setLoadingEmbedded] = useState(false)
         const [loadingExternal, setLoadingExternal] = useState(false)
+        const [signingWallet, setSigningWallet] = useState<"embedded" | "external" | null>(null)
+        const [walletSigned, setWalletSigned] = useState<"embedded" | "external" | null>(null)
+        const [signError, setSignError] = useState<string | null>(null)
+
+        // Get wallet addresses
+        const embeddedWallet = wallets?.find(w => 
+            w.walletClientType === 'privy' || 
+            w.walletClientType === 'embedded' ||
+            w.connectorType === 'privy'
+        )
+        
+        const externalWallet = wallets?.find(w => 
+            w.walletClientType !== 'privy' && 
+            w.walletClientType !== 'embedded' &&
+            w.connectorType !== 'privy'
+        )
 
         useEffect(() => {
             const fetchBalances = async () => {
-                // Find embedded wallet
-                const embeddedWallet = wallets?.find(w => 
-                    w.walletClientType === 'privy' || 
-                    w.walletClientType === 'embedded' ||
-                    w.connectorType === 'privy'
-                )
-                
-                // Find external wallet
-                const externalWallet = wallets?.find(w => 
-                    w.walletClientType !== 'privy' && 
-                    w.walletClientType !== 'embedded' &&
-                    w.connectorType !== 'privy'
-                )
-
                 // Fetch embedded wallet balance
                 if (embeddedWallet?.address) {
                     setLoadingEmbedded(true)
@@ -475,7 +480,108 @@
             if (wallets && wallets.length > 0) {
                 fetchBalances()
             }
-        }, [wallets])
+        }, [wallets, embeddedWallet?.address, externalWallet?.address])
+
+        // Handle wallet selection with signature
+        const handleWalletSelect = async (type: "embedded" | "external") => {
+            setSignError(null)
+            
+            // Get the wallet address based on type
+            const wallet = type === "embedded" ? embeddedWallet : externalWallet
+            
+            if (!wallet?.address) {
+                setSignError(`No ${type} wallet found. Please connect a wallet.`)
+                return
+            }
+
+            // Check if already signed
+            if (walletSigned === type) {
+                onSelect(type)
+                return
+            }
+
+            setSigningWallet(type)
+
+            try {
+                // Create message to sign
+                const message = `I authorize Mizu Pay to use this wallet (${wallet.address}) for payment session ${sessionId}. This is a gasless signature and does not cost any fees.`
+                
+                // Get the wallet's Ethereum provider
+                const ethereumProvider = await wallet.getEthereumProvider()
+                
+                // Get account address from provider
+                const accounts = await ethereumProvider.request({ method: 'eth_accounts' })
+                if (!accounts || accounts.length === 0) {
+                    throw new Error('No account found. Please connect your wallet.')
+                }
+                const account = accounts[0] as `0x${string}`
+                
+                // Create wallet client using viem
+                const celoSepolia = defineChain({
+                    id: 11142220,
+                    name: 'Celo Sepolia',
+                    nativeCurrency: {
+                        decimals: 18,
+                        name: 'CELO',
+                        symbol: 'CELO',
+                    },
+                    rpcUrls: {
+                        default: {
+                            http: ['https://rpc.ankr.com/celo_sepolia'],
+                        },
+                    },
+                    blockExplorers: {
+                        default: {
+                            name: 'Celo Sepolia Explorer',
+                            url: 'https://celo-sepolia.blockscout.com',
+                        },
+                    },
+                    testnet: true,
+                })
+                
+                const walletClient = createWalletClient({
+                    chain: celoSepolia,
+                    transport: custom(ethereumProvider),
+                    account,
+                })
+                
+                // Sign message using viem's signMessage
+                const signature = await walletClient.signMessage({
+                    account,
+                    message,
+                })
+
+                // Update active wallet via API
+                const response = await fetch(`/api/sessions/${sessionId}/wallet`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        walletAddress: wallet.address,
+                        signature,
+                        message,
+                    }),
+                })
+
+                if (!response.ok) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || 'Failed to update wallet')
+                }
+
+                // Success - mark as signed and update selection
+                setWalletSigned(type)
+                onSelect(type)
+                console.log('Wallet signed and updated:', {
+                    type,
+                    walletAddress: wallet.address,
+                    sessionId,
+                })
+            } catch (error) {
+                console.error('Error signing wallet:', error)
+                setSignError(error instanceof Error ? error.message : 'Failed to sign wallet')
+            } finally {
+                setSigningWallet(null)
+            }
+        }
 
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
@@ -484,46 +590,83 @@
                 <p className="text-sm text-gray-600">Choose your payment method</p>
             </div>
 
+            {signError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-800">{signError}</p>
+                </div>
+            )}
+
             <div className="space-y-4">
                 {[
-                { type: 'embedded' as const, label: 'Mizu Pay Wallet', desc: 'Secured by Privy' },
-                { type: 'external' as const, label: 'External Wallet', desc: 'MetaMask, WalletConnect, etc.' },
-                ].map((wallet) => (
-                <button
-                    key={wallet.type}
-                    onClick={() => onSelect(wallet.type)}
-                    className={`w-full p-6 rounded-xl border-2 text-left transition-all duration-200 ${
-                        selectedType === wallet.type
-                        ? 'border-blue-600 bg-blue-50 shadow-lg'
-                        : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
-                    }`}
-                >
-                    <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        selectedType === wallet.type ? 'bg-blue-600' : 'bg-gray-100'
-                    }`}>
-                        <Wallet className={`w-6 h-6 ${
-                        selectedType === wallet.type ? 'text-white' : 'text-gray-600'
-                        }`} />
-                    </div>
-                    <div className="flex-1">
-                        <p className="font-bold text-gray-900">{wallet.label}</p>
-                        <p className="text-sm text-gray-600">{wallet.desc}</p>
-                    </div>
-                    {selectedType === wallet.type && (
-                        <CheckCircle className="w-6 h-6 text-blue-600" />
-                    )}
-                    </div>
-                </button>
-                ))}
+                { type: 'embedded' as const, label: 'Mizu Pay Wallet', desc: 'Secured by Privy', wallet: embeddedWallet, balance: embeddedBalance, loading: loadingEmbedded },
+                { type: 'external' as const, label: 'External Wallet', desc: 'MetaMask, WalletConnect, etc.', wallet: externalWallet, balance: externalBalance, loading: loadingExternal },
+                ].map((walletOption) => {
+                    const isSelected = selectedType === walletOption.type
+                    const isSigning = signingWallet === walletOption.type
+                    const isSigned = walletSigned === walletOption.type
+                    const hasWallet = !!walletOption.wallet?.address
+
+                    return (
+                    <button
+                        key={walletOption.type}
+                        onClick={() => handleWalletSelect(walletOption.type)}
+                        disabled={!hasWallet || isSigning}
+                        className={`w-full p-6 rounded-xl border-2 text-left transition-all duration-200 ${
+                            isSelected
+                            ? 'border-blue-600 bg-blue-50 shadow-lg'
+                            : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
+                        } ${!hasWallet || isSigning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                            isSelected ? 'bg-blue-600' : 'bg-gray-100'
+                        }`}>
+                            {isSigning ? (
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                            ) : (
+                                <Wallet className={`w-6 h-6 ${
+                                    isSelected ? 'text-white' : 'text-gray-600'
+                                }`} />
+                            )}
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-bold text-gray-900">{walletOption.label}</p>
+                            <p className="text-sm text-gray-600">{walletOption.desc}</p>
+                            {walletOption.wallet?.address && (
+                                <p className="text-xs text-gray-500 mt-1 font-mono">
+                                    {walletOption.wallet.address.slice(0, 6)}...{walletOption.wallet.address.slice(-4)}
+                                </p>
+                            )}
+                            {walletOption.balance !== null && (
+                                <p className="text-xs text-gray-600 mt-1">
+                                    Balance: {walletOption.balance} cUSD
+                                </p>
+                            )}
+                            {walletOption.loading && (
+                                <p className="text-xs text-gray-400 mt-1">Loading balance...</p>
+                            )}
+                        </div>
+                        {isSigning && (
+                            <div className="text-sm text-blue-600">Signing...</div>
+                        )}
+                        {isSigned && !isSigning && (
+                            <CheckCircle className="w-6 h-6 text-green-600" />
+                        )}
+                        {isSelected && !isSigned && !isSigning && (
+                            <CheckCircle className="w-6 h-6 text-blue-600" />
+                        )}
+                        </div>
+                    </button>
+                    )
+                })}
             </div>
 
             <button
                 onClick={onContinue}
-                disabled={!selectedType}
+                disabled={!selectedType || !walletSigned || signingWallet !== null}
                 className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                Continue to Payment
+                {signingWallet ? 'Signing Wallet...' : walletSigned ? 'Continue to Payment' : 'Please sign wallet to continue'}
             </button>
             </div>
         )
@@ -732,11 +875,80 @@
                                     throw new Error(errorMessage)
                                 }
 
-                                setPaymentStatus('success')
-                                // Call onPay callback to proceed to success page
-                                setTimeout(() => {
-                                    onPay()
-                                }, 1500)
+                                const paymentData = await response.json()
+                                
+                                // Check if email was sent successfully
+                                if (paymentData.session?.status === 'fulfilled') {
+                                    // Email sent successfully
+                                    setPaymentStatus('success')
+                                    setTimeout(() => {
+                                        onPay()
+                                    }, 1500)
+                                } else if (paymentData.session?.status === 'email_failed') {
+                                    // Email failed - show error but allow redirect
+                                    setPaymentStatus('email_failed')
+                                    setTimeout(() => {
+                                        onPay()
+                                    }, 2000)
+                                } else {
+                                    // Payment confirmed but email still processing
+                                    // Poll for email status
+                                    setPaymentStatus('sending_email')
+                                    
+                                    // Poll for email completion
+                                    const pollEmailStatus = async (): Promise<void> => {
+                                        const maxEmailAttempts = 30 // 1 minute max (30 * 2 seconds)
+                                        let emailAttempts = 0
+                                        
+                                        const pollEmail = async (): Promise<void> => {
+                                            try {
+                                                const sessionResponse = await fetch(`/api/sessions/${sessionId}`)
+                                                if (sessionResponse.ok) {
+                                                    const sessionData = await sessionResponse.json()
+                                                    
+                                                    if (sessionData.status === 'fulfilled') {
+                                                        // Email sent successfully
+                                                        setPaymentStatus('success')
+                                                        setTimeout(() => {
+                                                            onPay()
+                                                        }, 1500)
+                                                        return
+                                                    } else if (sessionData.status === 'email_failed') {
+                                                        // Email failed
+                                                        setPaymentStatus('email_failed')
+                                                        setTimeout(() => {
+                                                            onPay()
+                                                        }, 2000)
+                                                        return
+                                                    }
+                                                }
+                                                
+                                                // Continue polling
+                                                emailAttempts++
+                                                if (emailAttempts >= maxEmailAttempts) {
+                                                    // Timeout - redirect anyway
+                                                    setPaymentStatus('email_timeout')
+                                                    setTimeout(() => {
+                                                        onPay()
+                                                    }, 2000)
+                                                    return
+                                                }
+                                                
+                                                setTimeout(pollEmail, 2000)
+                                            } catch (error) {
+                                                // Error polling - redirect anyway
+                                                setPaymentStatus('email_timeout')
+                                                setTimeout(() => {
+                                                    onPay()
+                                                }, 2000)
+                                            }
+                                        }
+                                        
+                                        setTimeout(pollEmail, 2000)
+                                    }
+                                    
+                                    pollEmailStatus()
+                                }
                                 return
                             }
 
@@ -831,7 +1043,64 @@
                             Payment Successful!
                         </h2>
                         <p className="text-sm dashboard-text-secondary">
-                            Redirecting to success page...
+                            Gift card sent to your email. Redirecting...
+                        </p>
+                    </>
+                ) : paymentStatus === 'sending_email' ? (
+                    <>
+                        <div className="mb-8">
+                            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p className="text-lg font-semibold mb-2">Payment Verified!</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Your payment has been confirmed. We're now sending your gift card to your email...
+                        </p>
+                        <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Sending email...</span>
+                        </div>
+                    </>
+                ) : paymentStatus === 'email_failed' ? (
+                    <>
+                        <div className="mb-8">
+                            <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p className="text-lg font-semibold mb-2 text-orange-600 dark:text-orange-400">Payment Verified, Email Failed</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Your payment was successfully verified, but we couldn't send the email. Please contact support to receive your gift card.
+                        </p>
+                        <div className="mt-4">
+                            <a
+                                href={`mailto:payments.mizu@gmail.com?subject=Gift Card Request - Session ${sessionId}&body=Hello,%0D%0A%0D%0AI need help retrieving my gift card for session: ${sessionId}%0D%0A%0D%0AThank you!`}
+                                className="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors"
+                            >
+                                Contact Support
+                            </a>
+                        </div>
+                    </>
+                ) : paymentStatus === 'email_timeout' ? (
+                    <>
+                        <div className="mb-8">
+                            <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p className="text-lg font-semibold mb-2">Payment Verified</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Your payment has been confirmed. We're checking the email status. You'll be redirected to see the final status.
                         </p>
                     </>
                 ) : paymentStatus === 'error' ? (
@@ -1366,6 +1635,7 @@
                     onSelect={handleStep3Select}
                     selectedType={checkoutState.selectedWalletType}
                     onContinue={handleStep3Continue}
+                    sessionId={sessionId}
                     />
                 )}
                 

@@ -29,12 +29,31 @@ export async function sendGiftCardEmail(
   giftCardDetails: GiftCardDetails,
   sessionDetails: SessionDetails
 ): Promise<boolean> {
+  console.log('Email sending started:', {
+    userEmail,
+    sessionId: sessionDetails.sessionId,
+    txHash: sessionDetails.txHash,
+    store: giftCardDetails.store,
+    amountUSD: giftCardDetails.amountUSD,
+  });
+
   try {
     // Validate email configuration
     if (!process.env.EMAIL_HOST || !process.env.EMAIL_PORT || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.error('Email configuration missing. Please set EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS in .env');
+      console.error('Email configuration missing:', {
+        EMAIL_HOST: !!process.env.EMAIL_HOST,
+        EMAIL_PORT: !!process.env.EMAIL_PORT,
+        EMAIL_USER: !!process.env.EMAIL_USER,
+        EMAIL_PASS: !!process.env.EMAIL_PASS,
+      });
       return false;
     }
+
+    console.log('Email configuration validated:', {
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      user: process.env.EMAIL_USER,
+    });
 
     // Create transporter
     const transporter = nodemailer.createTransport({
@@ -46,6 +65,8 @@ export async function sendGiftCardEmail(
         pass: process.env.EMAIL_PASS,
       },
     });
+
+    console.log('Email transporter created');
 
     // Format amount based on currency
     const formatAmount = (amountUSD: number, currency: string) => {
@@ -156,16 +177,33 @@ export async function sendGiftCardEmail(
     `;
 
     // Send email
-    await transporter.sendMail({
+    console.log('Attempting to send email to:', userEmail);
+    const mailOptions = {
       from: `"Mizu Pay" <${process.env.EMAIL_USER}>`,
       to: userEmail,
       subject: `🎉 Your ${giftCardDetails.store} Gift Card is Ready!`,
       html: emailHTML,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully:', {
+      messageId: info.messageId,
+      response: info.response,
+      userEmail,
+      sessionId: sessionDetails.sessionId,
     });
 
     return true;
   } catch (error) {
-    console.error('Error sending gift card email:', error);
+    console.error('Error sending gift card email:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      code: (error as any)?.code,
+      command: (error as any)?.command,
+      response: (error as any)?.response,
+      userEmail,
+      sessionId: sessionDetails.sessionId,
+    });
     return false;
   }
 }

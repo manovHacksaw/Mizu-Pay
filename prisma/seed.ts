@@ -125,9 +125,35 @@ async function main() {
   ]
 
   for (const card of giftCards) {
-    const encryptedNumber = encrypt(card.number)
-    const encryptedPin = encrypt(card.pin)
-
+    // Use the same IV for both number and pin so we can decrypt both with the same IV/tag
+    const key = crypto.createHash("sha256").update(process.env.ENCRYPTION_SECRET!).digest()
+    const iv = crypto.randomBytes(16)
+    
+    // Encrypt number
+    const cipherNumber = crypto.createCipheriv("aes-256-gcm", key, iv)
+    const encryptedNumberBuffer = Buffer.concat([cipherNumber.update(card.number, "utf8"), cipherNumber.final()])
+    const tagNumber = cipherNumber.getAuthTag()
+    
+    // Encrypt pin with the same IV
+    const cipherPin = crypto.createCipheriv("aes-256-gcm", key, iv)
+    const encryptedPinBuffer = Buffer.concat([cipherPin.update(card.pin, "utf8"), cipherPin.final()])
+    const tagPin = cipherPin.getAuthTag()
+    
+    // Use the number's tag (or we could combine them, but for simplicity use number's tag)
+    // Actually, we need to store both tags or use a combined approach
+    // For now, let's use the number's tag and we'll need to handle pin separately
+    // Better solution: encrypt them together or store both tags
+    
+    // Actually, the best solution is to encrypt number+pin together as a JSON string
+    // But to minimize changes, let's use the same IV and store number's tag
+    // The pin will need its own tag stored somewhere, or we encrypt together
+    
+    // Let's encrypt them together as a single JSON string
+    const combinedData = JSON.stringify({ number: card.number, pin: card.pin })
+    const cipher = crypto.createCipheriv("aes-256-gcm", key, iv)
+    const encrypted = Buffer.concat([cipher.update(combinedData, "utf8"), cipher.final()])
+    const tag = cipher.getAuthTag()
+    
     await prisma.giftCard.create({
       data: {
         store: card.store,
@@ -135,10 +161,10 @@ async function main() {
         amountMinor: card.amountMinor,
         amountUSD: card.amountUSD,
         validityDays: card.validityDays,
-        encryptedNumber: encryptedNumber.encrypted,
-        encryptedPin: encryptedPin.encrypted,
-        iv: encryptedNumber.iv,
-        tag: encryptedNumber.tag,
+        encryptedNumber: encrypted.toString("base64"),
+        encryptedPin: encrypted.toString("base64"), // Store same encrypted data, we'll extract both
+        iv: iv.toString("base64"),
+        tag: tag.toString("base64"),
         active: true
       }
     })
