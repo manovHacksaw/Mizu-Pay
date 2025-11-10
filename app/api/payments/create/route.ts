@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { checkAndExpireSession } from "@/lib/sessionUtils";
 import { verifyPaymentTransaction } from "@/lib/paymentVerification";
+import { decrypt } from "@/lib/giftCardUtils";
+import { sendGiftCardEmail } from "@/lib/emailService";
 
 /**
  * POST /api/payments/create
@@ -74,7 +76,6 @@ export async function POST(req: Request) {
     }
 
     // Verify payment transaction before creating payment record
-
     const verificationResult = await verifyPaymentTransaction(
       txHash,
       sessionId,
@@ -93,8 +94,7 @@ export async function POST(req: Request) {
       );
     }
 
-
-    // If giftCardId is provided, assign it to the session and mark as inactive
+    // PHASE 1: Reserve gift card (if giftCardId provided)
     if (giftCardId) {
       // Verify gift card exists and is available
       const giftCard = await prisma.giftCard.findUnique({
@@ -108,16 +108,17 @@ export async function POST(req: Request) {
         );
       }
 
-      if (!giftCard.active || giftCard.stock <= 0) {
+      // Check if gift card is available (active and not reserved)
+      if (!giftCard.active || giftCard.reservedByPaymentId) {
         return NextResponse.json(
           { error: "Gift card is no longer available" },
           { status: 400 }
         );
       }
 
-      // Use transaction to ensure atomicity
-      const result = await prisma.$transaction(async (tx) => {
-        // Create Payment record
+      // Phase 1 Transaction: Reserve gift card (don't consume yet)
+      const phase1Result = await prisma.$transaction(async (tx) => {
+        // Create Payment record with status 'confirming'
         const payment = await tx.payment.create({
           data: {
             sessionId: session.id,
@@ -126,77 +127,253 @@ export async function POST(req: Request) {
             amountCrypto: parseFloat(amountCrypto.toString()),
             token: token,
             txHash: txHash,
-            status: "paid",
+            status: "confirming",
           },
         });
 
-        // Update session: mark as paid and assign gift card
-        // Try to include giftCardId, but handle case where migration hasn't been run
-        let updatedSession;
-        try {
-          updatedSession = await tx.paymentSession.update({
-            where: { id: sessionId },
-            data: { 
-              status: "paid",
-              giftCardId: giftCardId,
-            },
-          });
-        } catch (updateError: any) {
-          // If giftCardId field doesn't exist (migration not run), update without it
-          if (updateError.message?.includes('giftCardId') || updateError.code === 'P2009') {
-            updatedSession = await tx.paymentSession.update({
-              where: { id: sessionId },
-              data: { 
-                status: "paid",
-              },
-            });
-          } else {
-            throw updateError;
-          }
-        }
+        // Update session status to 'paid'
+        const updatedSession = await tx.paymentSession.update({
+          where: { id: sessionId },
+          data: { 
+            status: "paid",
+            giftCardId: giftCardId,
+          },
+        });
 
-        // Mark gift card as inactive and decrement stock
+        // Reserve gift card (set reservedByPaymentId and reservedAt)
         await tx.giftCard.update({
           where: { id: giftCardId },
           data: {
-            active: false, // Mark as inactive so it's not used again
-            stock: {
-              decrement: 1,
-            },
+            reservedByPaymentId: payment.id,
+            reservedAt: new Date(),
           },
         });
 
-        return { payment, session: updatedSession };
+        return { payment, session: updatedSession, giftCard };
       });
 
-      // Payment made (details)
-      console.log("Payment made:", {
-        paymentId: result.payment.id,
-        sessionId: session.id,
-        giftCardId: giftCardId,
-        txHash: txHash,
-      });
+      // PHASE 2: Decrypt → Email → Consume (only if email succeeds)
+      try {
+        // Step 1: Check user email (MUST exist)
+        const userEmail = sessionWithDetails.user.email;
+        if (!userEmail) {
+          // Release reservation and fail
+          await prisma.$transaction(async (tx) => {
+            await tx.payment.update({
+              where: { id: phase1Result.payment.id },
+              data: { status: "failed" },
+            });
+            await tx.paymentSession.update({
+              where: { id: sessionId },
+              data: { status: "failed" },
+            });
+            await tx.giftCard.update({
+              where: { id: giftCardId },
+              data: {
+                reservedByPaymentId: null,
+                reservedAt: null,
+              },
+            });
+          });
 
-      return NextResponse.json({
-        success: true,
-        payment: {
-          id: result.payment.id,
-          sessionId: result.payment.sessionId,
-          txHash: result.payment.txHash,
-          amountCrypto: result.payment.amountCrypto,
-          token: result.payment.token,
-          status: result.payment.status,
-        },
-        session: {
-          id: result.session.id,
-          status: result.session.status,
-          giftCardId: result.session.giftCardId,
-        },
-      });
+          return NextResponse.json(
+            { error: "Missing email" },
+            { status: 400 }
+          );
+        }
+
+        // Step 2: Decrypt gift card (throws on failure)
+        let decryptedNumber: string;
+        let decryptedPin: string;
+        try {
+          decryptedNumber = decrypt(
+            phase1Result.giftCard.encryptedNumber,
+            phase1Result.giftCard.iv,
+            phase1Result.giftCard.tag
+          );
+          decryptedPin = decrypt(
+            phase1Result.giftCard.encryptedPin,
+            phase1Result.giftCard.iv,
+            phase1Result.giftCard.tag
+          );
+        } catch (decryptError) {
+          // Release reservation and fail
+          await prisma.$transaction(async (tx) => {
+            await tx.payment.update({
+              where: { id: phase1Result.payment.id },
+              data: { status: "failed" },
+            });
+            await tx.paymentSession.update({
+              where: { id: sessionId },
+              data: { status: "failed" },
+            });
+            await tx.giftCard.update({
+              where: { id: giftCardId },
+              data: {
+                reservedByPaymentId: null,
+                reservedAt: null,
+              },
+            });
+          });
+
+          // Log only IDs, never decrypted data
+          console.error("Decryption failed:", {
+            paymentId: phase1Result.payment.id,
+            sessionId: sessionId,
+            giftCardId: giftCardId,
+          });
+
+          return NextResponse.json(
+            { error: "Decryption failed" },
+            { status: 500 }
+          );
+        }
+
+        // Step 3: Send email
+        const emailSent = await sendGiftCardEmail(
+          userEmail,
+          {
+            number: decryptedNumber,
+            pin: decryptedPin,
+            store: phase1Result.giftCard.store,
+            currency: phase1Result.giftCard.currency,
+            amountUSD: phase1Result.giftCard.amountUSD,
+            validityDays: phase1Result.giftCard.validityDays,
+          },
+          {
+            sessionId: sessionId,
+            txHash: txHash,
+            amountCrypto: parseFloat(amountCrypto.toString()),
+            token: token,
+          }
+        );
+
+        if (!emailSent) {
+          // Email failed - release reservation, set status to email_failed
+          await prisma.$transaction(async (tx) => {
+            await tx.payment.update({
+              where: { id: phase1Result.payment.id },
+              data: { status: "email_failed" },
+            });
+            await tx.paymentSession.update({
+              where: { id: sessionId },
+              data: { status: "email_failed" },
+            });
+            await tx.giftCard.update({
+              where: { id: giftCardId },
+              data: {
+                reservedByPaymentId: null,
+                reservedAt: null,
+              },
+            });
+          });
+
+          // Log only IDs
+          console.error("Email send failed:", {
+            paymentId: phase1Result.payment.id,
+            sessionId: sessionId,
+            giftCardId: giftCardId,
+            userId: sessionWithDetails.userId,
+          });
+
+          return NextResponse.json(
+            { 
+              error: "Email failed",
+              message: "Payment verified but email delivery failed. Please contact support for gift card details.",
+            },
+            { status: 502 }
+          );
+        }
+
+        // Step 4: Email succeeded - consume gift card and mark as fulfilled
+        const finalResult = await prisma.$transaction(async (tx) => {
+          // Consume gift card (set active=false, clear reservation)
+          await tx.giftCard.update({
+            where: { id: giftCardId },
+            data: {
+              active: false,
+              reservedByPaymentId: null,
+              reservedAt: null,
+            },
+          });
+
+          // Update payment status to 'succeeded'
+          const updatedPayment = await tx.payment.update({
+            where: { id: phase1Result.payment.id },
+            data: { status: "succeeded" },
+          });
+
+          // Update session status to 'fulfilled'
+          const updatedSession = await tx.paymentSession.update({
+            where: { id: sessionId },
+            data: { status: "fulfilled" },
+          });
+
+          return { payment: updatedPayment, session: updatedSession };
+        });
+
+        // Log only IDs and hashes (never decrypted data)
+        console.log("Payment fulfilled:", {
+          paymentId: finalResult.payment.id,
+          sessionId: sessionId,
+          giftCardId: giftCardId,
+          userId: sessionWithDetails.userId,
+          txHash: txHash,
+        });
+
+        return NextResponse.json({
+          success: true,
+          payment: {
+            id: finalResult.payment.id,
+            sessionId: finalResult.payment.sessionId,
+            txHash: finalResult.payment.txHash,
+            amountCrypto: finalResult.payment.amountCrypto,
+            token: finalResult.payment.token,
+            status: finalResult.payment.status,
+          },
+          session: {
+            id: finalResult.session.id,
+            status: finalResult.session.status,
+            giftCardId: finalResult.session.giftCardId,
+          },
+        });
+      } catch (phase2Error) {
+        // Unexpected error in phase 2 - release reservation
+        await prisma.$transaction(async (tx) => {
+          await tx.payment.update({
+            where: { id: phase1Result.payment.id },
+            data: { status: "failed" },
+          });
+          await tx.paymentSession.update({
+            where: { id: sessionId },
+            data: { status: "failed" },
+          });
+          await tx.giftCard.update({
+            where: { id: giftCardId },
+            data: {
+              reservedByPaymentId: null,
+              reservedAt: null,
+            },
+          });
+        });
+
+        // Log only IDs
+        console.error("Phase 2 error:", {
+          paymentId: phase1Result.payment.id,
+          sessionId: sessionId,
+          giftCardId: giftCardId,
+          userId: sessionWithDetails.userId,
+        });
+
+        return NextResponse.json(
+          { error: "Internal Server Error" },
+          { status: 500 }
+        );
+      }
     }
 
     // If no giftCardId provided, just create payment (for backward compatibility)
-    // Create Payment record
+    // Create Payment record with status 'succeeded' (no gift card to fulfill)
     const payment = await prisma.payment.create({
       data: {
         sessionId: session.id,
@@ -205,7 +382,7 @@ export async function POST(req: Request) {
         amountCrypto: parseFloat(amountCrypto.toString()),
         token: token,
         txHash: txHash,
-        status: "paid", // Payment is created only when transaction is successful
+        status: "succeeded",
       },
     });
 
@@ -215,12 +392,12 @@ export async function POST(req: Request) {
       data: { status: "paid" },
     });
 
-    // Payment made (details)
+    // Log only IDs and hashes
     console.log("Payment made:", {
       paymentId: payment.id,
       sessionId: session.id,
+      userId: sessionWithDetails.userId,
       txHash: txHash,
-      status: updatedSession.status,
     });
 
     return NextResponse.json({

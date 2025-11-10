@@ -84,8 +84,8 @@ export async function GET(req: Request) {
         store: normalizedStore,
         currency: normalizedCurrency,
         amountMinor: { gte: amountMinor },
-        stock: { gt: 0 },
         active: true,
+        reservedByPaymentId: null, // Only show unreserved cards
       },
       orderBy: { amountMinor: "asc" },
       select: {
@@ -110,8 +110,8 @@ export async function GET(req: Request) {
           WHERE LOWER(store) = LOWER(${normalizedStore})
             AND UPPER(currency) = ${normalizedCurrency}
             AND "amountMinor" >= ${amountMinor}
-            AND stock > 0
             AND active = true
+            AND "reservedByPaymentId" IS NULL
           ORDER BY "amountMinor" ASC
         `;
         giftCards = rawResults;
@@ -128,8 +128,8 @@ export async function GET(req: Request) {
         where: {
           store: normalizedStore,
           currency: normalizedCurrency,
-          stock: { gt: 0 },
           active: true,
+          reservedByPaymentId: null,
         },
         select: {
           store: true,
@@ -145,8 +145,8 @@ export async function GET(req: Request) {
             FROM "GiftCard"
             WHERE LOWER(store) = LOWER(${normalizedStore})
               AND UPPER(currency) = ${normalizedCurrency}
-              AND stock > 0
               AND active = true
+              AND "reservedByPaymentId" IS NULL
             LIMIT 1
           `;
           storeExistsCaseInsensitive = rawResult.length > 0;
@@ -157,8 +157,8 @@ export async function GET(req: Request) {
       
       const allCards = await prisma.giftCard.findMany({
         where: {
-          stock: { gt: 0 },
           active: true,
+          reservedByPaymentId: null,
         },
         select: {
           store: true,
