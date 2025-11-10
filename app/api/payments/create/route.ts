@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { checkAndExpireSession } from "@/lib/sessionUtils";
+import { verifyPaymentTransaction } from "@/lib/paymentVerification";
 
 /**
  * POST /api/payments/create
@@ -71,6 +72,38 @@ export async function POST(req: Request) {
     if (!sessionWithDetails) {
       return NextResponse.json({ error: "Session details not found" }, { status: 404 });
     }
+
+    // Verify payment transaction before creating payment record
+    console.log("Verifying payment transaction:", {
+      txHash,
+      sessionId,
+      walletAddress: sessionWithDetails.wallet.address,
+      amountCrypto,
+    });
+
+    const verificationResult = await verifyPaymentTransaction(
+      txHash,
+      sessionId,
+      sessionWithDetails.wallet.address,
+      amountCrypto
+    );
+
+    if (!verificationResult.verified) {
+      console.error("Payment verification failed:", verificationResult.error);
+      return NextResponse.json(
+        {
+          error: "Payment verification failed",
+          details: verificationResult.error,
+          confirmations: verificationResult.confirmations,
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log("Payment verification successful:", {
+      txHash,
+      confirmations: verificationResult.confirmations,
+    });
 
     // If giftCardId is provided, assign it to the session and mark as inactive
     if (giftCardId) {

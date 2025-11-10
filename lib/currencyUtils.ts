@@ -45,3 +45,4 @@ export function formatCryptoAmount(amount: number, token: 'CELO' | 'cUSD') {
   };
 }
 
+

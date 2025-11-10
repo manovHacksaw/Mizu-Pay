@@ -116,7 +116,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         onSelect={handleCurrencySelect}
       />
       <div className="min-h-screen dashboard-page-bg">
-        <Sidebar />
+        <Sidebar onLogout={handleLogout} />
         <Topbar onLogout={handleLogout} />
         <main className="ml-64 mt-16 p-6">
           {children}

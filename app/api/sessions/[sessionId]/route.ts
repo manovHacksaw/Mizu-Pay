@@ -24,7 +24,7 @@ export async function GET(
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    // Get wallet and user details
+    // Get wallet, user, and payment details
     const sessionWithDetails = await prisma.paymentSession.findUnique({
       where: { id: sessionId },
       include: {
@@ -40,6 +40,22 @@ export async function GET(
             email: true,
           },
         },
+        payment: {
+          select: {
+            txHash: true,
+            amountCrypto: true,
+            token: true,
+            status: true,
+            createdAt: true,
+          },
+        },
+        giftCard: {
+          select: {
+            store: true,
+            currency: true,
+            amountUSD: true,
+          },
+        },
       },
     });
 
@@ -52,6 +68,8 @@ export async function GET(
       expiresAt: session.expiresAt,
       wallet: sessionWithDetails?.wallet,
       user: sessionWithDetails?.user,
+      payment: sessionWithDetails?.payment,
+      giftCard: sessionWithDetails?.giftCard,
       expired: session.status === "expired" || session.status === "failed",
     });
   } catch (err) {

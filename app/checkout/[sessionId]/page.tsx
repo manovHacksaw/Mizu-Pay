@@ -267,9 +267,30 @@
         const [giftCards, setGiftCards] = useState<GiftCard[]>([])
         const [isLoading, setIsLoading] = useState(true)
         const [error, setError] = useState<string | null>(null)
-        const { selectedDisplayCurrency } = useCurrencyStore()
+        const [conversionRate, setConversionRate] = useState<{ rate: number } | null>(null)
+        const { exchangeRates, formatAmount, fetchExchangeRates } = useCurrencyStore()
 
         useEffect(() => {
+            // Fetch exchange rates for CELO conversion
+            fetchExchangeRates()
+            
+            // Fetch conversion rate for purchase currency to USD
+            const fetchConversion = async () => {
+                if (purchaseDetails.currency === 'USD') {
+                    setConversionRate({ rate: 1 })
+                    return
+                }
+                try {
+                    const response = await fetch(`/api/conversion?from=${purchaseDetails.currency}&to=USD`)
+                    if (response.ok) {
+                        const data = await response.json()
+                        setConversionRate(data)
+                    }
+                } catch (error) {
+                    console.error('Error fetching conversion:', error)
+                }
+            }
+            
             const fetchGiftCards = async () => {
             setIsLoading(true)
             setError(null)
@@ -291,8 +312,9 @@
             }
             }
             
+            fetchConversion()
             fetchGiftCards()
-        }, [purchaseDetails])
+        }, [purchaseDetails, fetchExchangeRates])
 
         if (isLoading) {
             return (
@@ -311,12 +333,49 @@
             )
         }
 
+        // Calculate purchase amount in USD
+        const purchaseAmountUSD = conversionRate 
+            ? purchaseDetails.amount * conversionRate.rate 
+            : (purchaseDetails.currency === 'USD' ? purchaseDetails.amount : 0)
+        
+        // Calculate extra payment when a card is selected
+        const extraPaymentUSD = selectedCard ? selectedCard.amountUSD - purchaseAmountUSD : 0
+        const extraPaymentCUSD = extraPaymentUSD // cUSD is pegged to USD
+        
+        // Convert extra payment to CELO
+        const extraPaymentCELO = exchangeRates && exchangeRates.celo.usd > 0 
+            ? extraPaymentUSD / exchangeRates.celo.usd 
+            : 0
+
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
             <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Gift Card</h2>
                 <p className="text-sm text-gray-600">Choose a card that covers your purchase</p>
             </div>
+
+            {/* Extra Payment Display */}
+            {selectedCard && extraPaymentUSD > 0 && (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                    <p className="text-sm font-semibold text-yellow-800 mb-2">Extra Amount You're Paying:</p>
+                    <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                            <span className="text-yellow-700">cUSD:</span>
+                            <span className="font-semibold text-yellow-900">{formatAmount(extraPaymentCUSD, 'USD')} cUSD</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-yellow-700">USD:</span>
+                            <span className="font-semibold text-yellow-900">{formatAmount(extraPaymentUSD, 'USD')}</span>
+                        </div>
+                        {extraPaymentCELO > 0 && (
+                            <div className="flex justify-between">
+                                <span className="text-yellow-700">CELO:</span>
+                                <span className="font-semibold text-yellow-900">{extraPaymentCELO.toFixed(4)} CELO</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {giftCards.map((card) => {
@@ -498,6 +557,24 @@
         const [conversionRate, setConversionRate] = useState<{ rate: number } | null>(null)
         const [paymentError, setPaymentError] = useState<string | null>(null)
         const [paymentStatus, setPaymentStatus] = useState<'idle' | 'switching' | 'approving' | 'paying' | 'confirming' | 'success' | 'error'>('idle')
+        const [verificationProgress, setVerificationProgress] = useState<{
+            confirmations: number
+            requiredConfirmations: number
+            message: string
+            status: string
+            lastUpdate?: number
+            verificationSteps?: {
+                transactionFound: boolean
+                transactionIncluded: boolean
+                contractVerified: boolean
+                walletVerified: boolean
+                sessionIdVerified: boolean
+                amountVerified: boolean
+                confirmationsComplete: boolean
+            }
+            stepMessages?: Record<string, string>
+        } | null>(null)
+        const [txHash, setTxHash] = useState<string | null>(null)
         const { wallets } = useWallets()
 
         useEffect(() => {
@@ -553,7 +630,7 @@
                 
                 // Execute payment with status callbacks
                 // This function handles: chain switching -> approval (if needed) -> payment
-                const { txHash } = await executePayment(
+                const { txHash: paymentTxHash } = await executePayment(
                     ethereumProvider,
                     sessionId,
                     selectedCard.amountUSD,
@@ -563,56 +640,165 @@
                     }
                 )
 
-                // Call backend API to record payment and assign gift card
+                // Store txHash for progress polling
+                setTxHash(paymentTxHash)
                 setPaymentStatus('confirming')
-                const response = await fetch('/api/payments/create', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        sessionId,
-                        txHash,
-                        amountCrypto: selectedCard.amountUSD, // Already in USD equivalent
-                        token: 'cUSD',
-                        giftCardId: selectedCard.id, // Assign the selected gift card
-                    }),
-                })
 
-                if (!response.ok) {
-                    const errorData = await response.json()
-                    const errorMessage = errorData.details 
-                        ? `${errorData.error}: ${errorData.details}`
-                        : errorData.error || 'Failed to record payment in backend'
-                    console.error('Payment API error:', errorData)
-                    
-                    // Mark session as failed if payment recording fails
-                    try {
-                        await fetch('/api/payments/fail', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                sessionId,
-                                error: errorMessage
+                // Get wallet address for verification
+                const walletAddress = wallet.address
+
+                // Poll for verification progress
+                const pollVerificationProgress = async (): Promise<void> => {
+                    const maxAttempts = 300 // 10 minutes max (300 * 2 seconds)
+                    let attempts = 0
+
+                    const poll = async (): Promise<void> => {
+                        try {
+                            // Build query params with verification details
+                            const params = new URLSearchParams({
+                                txHash: paymentTxHash,
+                                sessionId: sessionId,
+                                expectedWalletAddress: walletAddress,
+                                expectedAmountCrypto: selectedCard.amountUSD.toString(),
                             })
-                        })
-                    } catch (failError) {
-                        console.error('Failed to mark session as failed:', failError)
+                            
+                            console.log(`[Poll ${attempts + 1}] Checking verification progress for tx: ${paymentTxHash}`)
+                            
+                            const progressResponse = await fetch(`/api/payments/verify-progress?${params.toString()}`)
+                            
+                            if (!progressResponse.ok) {
+                                const errorText = await progressResponse.text().catch(() => 'Unknown error')
+                                console.warn(`[Poll ${attempts + 1}] API error (${progressResponse.status}):`, errorText)
+                                // Continue polling on API errors (might be temporary)
+                                attempts++
+                                if (attempts >= maxAttempts) {
+                                    throw new Error('Verification timeout. Your transaction is being processed. If any amount was deducted, it will be automatically refunded to your wallet within 24 hours.')
+                                }
+                                setTimeout(poll, 2000)
+                                return
+                            }
+
+                            const progressData = await progressResponse.json()
+                            console.log(`[Poll ${attempts + 1}] Progress update:`, {
+                                confirmations: progressData.confirmations,
+                                status: progressData.status,
+                                confirmed: progressData.confirmed,
+                            })
+                            
+                            // Always update state, even if values are the same (forces re-render)
+                            // Include timestamp to ensure React detects the change
+                            setVerificationProgress({
+                                confirmations: progressData.confirmations || 0,
+                                requiredConfirmations: progressData.requiredConfirmations || 5,
+                                message: progressData.message || 'Checking...',
+                                status: progressData.status || 'pending',
+                                verificationSteps: progressData.verificationSteps,
+                                stepMessages: progressData.stepMessages,
+                                lastUpdate: Date.now(), // Force re-render
+                            })
+
+                            // If transaction failed on-chain
+                            if (progressData.status === 'failed') {
+                                throw new Error('Transaction failed on-chain. Any deducted amount will be automatically refunded to your wallet.')
+                            }
+
+                            // If confirmed, proceed to create payment record
+                            if (progressData.confirmed) {
+                                console.log('[Poll] Transaction confirmed! Creating payment record...')
+                                // Call backend API to record payment and assign gift card
+                                const response = await fetch('/api/payments/create', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        sessionId,
+                                        txHash: paymentTxHash,
+                                        amountCrypto: selectedCard.amountUSD,
+                                        token: 'cUSD',
+                                        giftCardId: selectedCard.id,
+                                    }),
+                                })
+
+                                if (!response.ok) {
+                                    const errorData = await response.json()
+                                    const errorMessage = errorData.details 
+                                        ? `${errorData.error}: ${errorData.details}`
+                                        : errorData.error || 'Failed to record payment in backend'
+                                    console.error('Payment API error:', errorData)
+                                    
+                                    // Mark session as failed if payment recording fails
+                                    try {
+                                        await fetch('/api/payments/fail', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                sessionId,
+                                                error: errorMessage
+                                            })
+                                        })
+                                    } catch (failError) {
+                                        console.error('Failed to mark session as failed:', failError)
+                                    }
+                                    
+                                    throw new Error(errorMessage)
+                                }
+
+                                setPaymentStatus('success')
+                                // Call onPay callback to proceed to success page
+                                setTimeout(() => {
+                                    onPay()
+                                }, 1500)
+                                return
+                            }
+
+                            // Continue polling if not confirmed yet
+                            attempts++
+                            if (attempts >= maxAttempts) {
+                                throw new Error('Verification timeout. Your transaction is being processed. If any amount was deducted, it will be automatically refunded to your wallet within 24 hours.')
+                            }
+
+                            // Poll again after 2 seconds
+                            setTimeout(poll, 2000)
+                        } catch (error) {
+                            console.error(`[Poll ${attempts + 1}] Verification progress error:`, error)
+                            // Only throw fatal errors (timeout, confirmed failure)
+                            // For other errors, continue polling
+                            if (error instanceof Error && (
+                                error.message.includes('timeout') ||
+                                error.message.includes('failed on-chain') ||
+                                attempts >= maxAttempts
+                            )) {
+                                throw error
+                            }
+                            // For other errors, continue polling
+                            attempts++
+                            if (attempts < maxAttempts) {
+                                setTimeout(poll, 2000)
+                            } else {
+                                throw new Error('Verification timeout. Your transaction is being processed. If any amount was deducted, it will be automatically refunded to your wallet within 24 hours.')
+                            }
+                        }
                     }
-                    
-                    throw new Error(errorMessage)
+
+                    // Start polling
+                    await poll()
                 }
 
-                setPaymentStatus('success')
-                // Call onPay callback to proceed to success page
-                setTimeout(() => {
-                    onPay()
-                }, 1500)
+                // Start polling for verification progress
+                await pollVerificationProgress()
             } catch (error) {
                 console.error('Payment error:', error)
                 setPaymentStatus('error')
                 const errorMessage = error instanceof Error ? error.message : 'Payment failed. Please try again.'
-                setPaymentError(errorMessage)
+                
+                // Check if error mentions refund
+                const includesRefund = errorMessage.toLowerCase().includes('refund')
+                const finalErrorMessage = includesRefund 
+                    ? errorMessage 
+                    : `${errorMessage}\n\n💡 If any amount was deducted from your wallet, it will be automatically refunded within 24 hours.`
+                
+                setPaymentError(finalErrorMessage)
                 
                 // Mark session as failed in database
                 try {
@@ -626,29 +812,6 @@
                             error: errorMessage,
                         }),
                     })
-                    
-                    // Show message that session is closed and user needs to restart
-                    setTimeout(() => {
-                        setPaymentError('Payment failed. This session is now closed. Redirecting to create a new session...')
-                        
-                        // Redirect to create new session after showing message
-                        setTimeout(() => {
-                            const params = new URLSearchParams(window.location.search)
-                            const store = params.get('store') || ''
-                            const amount = params.get('amount') || ''
-                            const currency = params.get('currency') || 'USD'
-                            const url = params.get('url') || ''
-                            
-                            const redirectParams = new URLSearchParams({
-                                store,
-                                amount,
-                                currency,
-                                ...(url ? { url } : {})
-                            })
-                            
-                            window.location.href = `/checkout?${redirectParams.toString()}`
-                        }, 2000)
-                    }, 2000)
                 } catch (failError) {
                     console.error('Failed to mark payment as failed:', failError)
                 }
@@ -698,7 +861,7 @@
                         <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-3">
                             Payment Failed
                         </h2>
-                        <p className="text-sm dashboard-text-secondary mb-4">
+                        <p className="text-sm dashboard-text-secondary mb-4 whitespace-pre-line">
                             {paymentError || 'An error occurred during payment'}
                         </p>
                         <button
@@ -706,6 +869,8 @@
                                 setIsProcessing(false)
                                 setPaymentStatus('idle')
                                 setPaymentError(null)
+                                setVerificationProgress(null)
+                                setTxHash(null)
                             }}
                             className="px-4 py-2 bg-white text-[#0066ff] hover:bg-white/90 rounded-lg transition-colors shadow-lg"
                         >
@@ -732,6 +897,126 @@
                                 </p>
                             </div>
                         )}
+                        
+                        {/* Show verification progress */}
+                        {paymentStatus === 'confirming' && verificationProgress && (
+                            <div className="mb-4 p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 space-y-4">
+                                {/* Verification Steps */}
+                                {verificationProgress.verificationSteps && verificationProgress.stepMessages && (
+                                    <div className="space-y-2">
+                                        <p className="text-sm font-semibold text-white mb-2">Verification Progress:</p>
+                                        <div className="space-y-1.5">
+                                            {/* Transaction Found */}
+                                            {verificationProgress.stepMessages.transactionFound && (
+                                                <div className="flex items-center gap-2 text-xs">
+                                                    <span className={verificationProgress.verificationSteps.transactionFound ? "text-green-400" : "text-yellow-400"}>
+                                                        {verificationProgress.verificationSteps.transactionFound ? "✓" : "○"}
+                                                    </span>
+                                                    <span className="dashboard-text-secondary">
+                                                        {verificationProgress.stepMessages.transactionFound}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            
+                                            {/* Transaction Included */}
+                                            {verificationProgress.stepMessages.transactionIncluded && (
+                                                <div className="flex items-center gap-2 text-xs">
+                                                    <span className={verificationProgress.verificationSteps.transactionIncluded ? "text-green-400" : "text-yellow-400"}>
+                                                        {verificationProgress.verificationSteps.transactionIncluded ? "✓" : "○"}
+                                                    </span>
+                                                    <span className="dashboard-text-secondary">
+                                                        {verificationProgress.stepMessages.transactionIncluded}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            
+                                            {/* Contract Verified */}
+                                            {verificationProgress.stepMessages.contractVerified && (
+                                                <div className="flex items-center gap-2 text-xs">
+                                                    <span className={verificationProgress.verificationSteps.contractVerified ? "text-green-400" : "text-yellow-400"}>
+                                                        {verificationProgress.verificationSteps.contractVerified ? "✓" : "○"}
+                                                    </span>
+                                                    <span className="dashboard-text-secondary">
+                                                        {verificationProgress.stepMessages.contractVerified}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            
+                                            {/* Wallet Verified */}
+                                            {verificationProgress.stepMessages.walletVerified && (
+                                                <div className="flex items-center gap-2 text-xs">
+                                                    <span className={verificationProgress.verificationSteps.walletVerified ? "text-green-400" : "text-yellow-400"}>
+                                                        {verificationProgress.verificationSteps.walletVerified ? "✓" : "○"}
+                                                    </span>
+                                                    <span className="dashboard-text-secondary">
+                                                        {verificationProgress.stepMessages.walletVerified}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            
+                                            {/* Session ID Verified */}
+                                            {verificationProgress.stepMessages.sessionIdVerified && (
+                                                <div className="flex items-center gap-2 text-xs">
+                                                    <span className={verificationProgress.verificationSteps.sessionIdVerified ? "text-green-400" : "text-yellow-400"}>
+                                                        {verificationProgress.verificationSteps.sessionIdVerified ? "✓" : "○"}
+                                                    </span>
+                                                    <span className="dashboard-text-secondary">
+                                                        {verificationProgress.stepMessages.sessionIdVerified}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            
+                                            {/* Amount Verified */}
+                                            {verificationProgress.stepMessages.amountVerified && (
+                                                <div className="flex items-center gap-2 text-xs">
+                                                    <span className={verificationProgress.verificationSteps.amountVerified ? "text-green-400" : "text-yellow-400"}>
+                                                        {verificationProgress.verificationSteps.amountVerified ? "✓" : "○"}
+                                                    </span>
+                                                    <span className="dashboard-text-secondary">
+                                                        {verificationProgress.stepMessages.amountVerified}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Block Confirmations */}
+                                <div className="pt-2 border-t border-white/20">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <p className="text-sm dashboard-text-secondary">Block Confirmations:</p>
+                                        <p className="text-sm font-semibold text-white">
+                                            {verificationProgress.confirmations} / {verificationProgress.requiredConfirmations}
+                                        </p>
+                                    </div>
+                                    <div className="w-full bg-white/20 rounded-full h-2 mb-2">
+                                        <div 
+                                            className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                                            style={{ 
+                                                width: `${Math.min((verificationProgress.confirmations / verificationProgress.requiredConfirmations) * 100, 100)}%` 
+                                            }}
+                                        />
+                                    </div>
+                                    {verificationProgress.stepMessages?.confirmationsComplete && (
+                                        <p className="text-xs dashboard-text-secondary">
+                                            {verificationProgress.stepMessages.confirmationsComplete}
+                                        </p>
+                                    )}
+                                </div>
+                                
+                                {txHash && (
+                                    <a
+                                        href={`https://celo-sepolia.blockscout.com/tx/${txHash}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-blue-400 hover:underline mt-2 inline-block"
+                                    >
+                                        View on Explorer →
+                                    </a>
+                                )}
+                            </div>
+                        )}
+                        
                         <p className="text-sm dashboard-text-secondary">
                             {paymentStatus === 'switching'
                                 ? 'Please approve the network switch in your wallet'
@@ -740,7 +1025,9 @@
                                 : paymentStatus === 'paying'
                                 ? `Sending payment of ${selectedCard ? `$${selectedCard.amountUSD.toFixed(2)} cUSD` : 'cUSD'}...`
                                 : paymentStatus === 'confirming'
-                                ? 'Waiting for confirmation...'
+                                ? verificationProgress 
+                                    ? `Verifying transaction... (${verificationProgress.confirmations}/${verificationProgress.requiredConfirmations} confirmations)`
+                                    : 'Waiting for transaction to be included in a block...'
                                 : 'This usually takes 3-10 seconds.'}
                         </p>
                     </>
@@ -752,6 +1039,13 @@
         const formattedGiftCard = selectedCard ? formatAmountWithConversion(selectedCard.amountUSD) : null
         const purchaseUSD = conversionRate ? purchaseDetails.amount * conversionRate.rate : (purchaseDetails.currency === 'USD' ? purchaseDetails.amount : purchaseDetails.amount)
         const formattedPurchase = formatAmountWithConversion(purchaseUSD)
+        
+        // Get formatAmount function for USD and cUSD formatting
+        const { formatAmount } = useCurrencyStore.getState()
+        const totalChargeUSD = selectedCard ? selectedCard.amountUSD : 0
+        const formattedTotalUSD = formatAmount(totalChargeUSD, 'USD')
+        // Format cUSD (since cUSD is pegged to USD, use the same value)
+        const formattedTotalCUSD = `$${totalChargeUSD.toFixed(2)} cUSD`
 
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
@@ -765,21 +1059,40 @@
                 <div className="space-y-3">
                     <div className="flex justify-between items-center pb-3 border-b border-gray-300">
                     <span className="text-sm text-gray-600">Gift Card Value</span>
-                    <span className="font-bold text-gray-900">
-                        {formattedGiftCard ? formattedGiftCard.display : '$0.00'}
-                    </span>
+                    <div className="text-right">
+                        <span className="font-bold text-gray-900 block">
+                            {formattedGiftCard ? formattedGiftCard.display : '$0.00'}
+                        </span>
+                        {formattedGiftCard && formattedGiftCard.usdEquivalent && (
+                            <span className="text-xs text-gray-500">
+                                {formattedGiftCard.usdEquivalent} USD
+                            </span>
+                        )}
+                    </div>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-gray-300">
                     <span className="text-sm text-gray-600">Purchase Amount</span>
-                    <span className="font-bold text-gray-900">
-                        {formattedPurchase.display}
-                    </span>
+                    <div className="text-right">
+                        <span className="font-bold text-gray-900 block">
+                            {formattedPurchase.display}
+                        </span>
+                        {formattedPurchase.usdEquivalent && (
+                            <span className="text-xs text-gray-500">
+                                {formattedPurchase.usdEquivalent} USD
+                            </span>
+                        )}
+                    </div>
                     </div>
                     <div className="flex justify-between items-center">
                     <span className="text-sm font-semibold text-gray-700">Total Charge</span>
-                    <span className="text-2xl font-bold text-blue-600">
-                        {formattedGiftCard ? formattedGiftCard.display : '$0.00'} cUSD
-                    </span>
+                    <div className="text-right">
+                        <span className="text-2xl font-bold text-blue-600 block">
+                            {formattedTotalCUSD}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                            {formattedTotalUSD} USD
+                        </span>
+                    </div>
                     </div>
                 </div>
                 </div>
@@ -798,11 +1111,6 @@
             >
                 {isProcessing ? 'Processing...' : 'Pay Now'}
             </button>
-            {paymentError && paymentStatus === 'idle' && (
-                <p className="text-sm text-red-600 text-center">
-                    {paymentError}
-                </p>
-            )}
             </div>
         )
         }

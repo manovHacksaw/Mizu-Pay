@@ -57,3 +57,4 @@
 - Landing page is NOT affected (as requested)
 - Currency selection modal appears on first dashboard visit if currency not set
 
+

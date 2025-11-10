@@ -3,6 +3,7 @@
 import { formatDateForTable } from '@/lib/dateUtils';
 import { useCurrencyStore } from '@/lib/currencyStore';
 import { formatAmountWithConversion } from '@/lib/currencyUtils';
+import { useEffect, useState } from 'react';
 
 interface Transaction {
   sessionId: string;
@@ -34,6 +35,42 @@ interface TableProps {
 
 export function Table({ transactions = [], showPagination = true }: TableProps) {
   const { selectedDisplayCurrency, convertUSDToUserCurrency, formatAmount } = useCurrencyStore();
+  const [confirmations, setConfirmations] = useState<Record<string, number | null>>({});
+
+  // Fetch confirmations for transactions with txHash
+  useEffect(() => {
+    const fetchConfirmations = async () => {
+      const txHashes = transactions
+        .filter(tx => tx.payment?.txHash)
+        .map(tx => tx.payment!.txHash!);
+
+      if (txHashes.length === 0) return;
+
+      // Fetch confirmations for all transactions in parallel
+      const confirmationPromises = txHashes.map(async (txHash) => {
+        try {
+          const response = await fetch(`/api/payments/verify-progress?txHash=${txHash}`);
+          if (response.ok) {
+            const data = await response.json();
+            return { txHash, confirmations: data.confirmations || 0 };
+          }
+        } catch (error) {
+          console.error(`Error fetching confirmations for ${txHash}:`, error);
+        }
+        return { txHash, confirmations: null };
+      });
+
+      const results = await Promise.all(confirmationPromises);
+      const confirmationsMap: Record<string, number | null> = {};
+      results.forEach(({ txHash, confirmations }) => {
+        confirmationsMap[txHash] = confirmations;
+      });
+      setConfirmations(confirmationsMap);
+    };
+
+    // Fetch confirmations once when component mounts or transactions change
+    fetchConfirmations();
+  }, [transactions]);
 
   // Calculate extra paid amount and percentage
   const calculateExtraPaid = (transaction: Transaction) => {
@@ -285,14 +322,32 @@ export function Table({ transactions = [], showPagination = true }: TableProps) 
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {transaction.payment?.txHash ? (
-                    <a
-                      href={`https://celo-sepolia.blockscout.com/tx/${transaction.payment.txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-mono"
-                    >
-                      {transaction.payment.txHash.slice(0, 8)}...{transaction.payment.txHash.slice(-6)}
-                    </a>
+                    <div className="flex flex-col gap-1">
+                      <a
+                        href={`https://celo-sepolia.blockscout.com/tx/${transaction.payment.txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-mono"
+                      >
+                        {transaction.payment.txHash.slice(0, 8)}...{transaction.payment.txHash.slice(-6)}
+                      </a>
+                      {confirmations[transaction.payment.txHash] !== undefined ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs dashboard-text-secondary">
+                            {confirmations[transaction.payment.txHash] !== null 
+                              ? `${confirmations[transaction.payment.txHash]} confirmations`
+                              : '—'}
+                          </span>
+                          {confirmations[transaction.payment.txHash] !== null && confirmations[transaction.payment.txHash]! >= 5 && (
+                            <span className="text-xs text-green-600 dark:text-green-400" title="Transaction confirmed">
+                              ✓
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs dashboard-text-muted">Loading...</span>
+                      )}
+                    </div>
                   ) : (
                     <span className="text-xs dashboard-text-muted">—</span>
                   )}
