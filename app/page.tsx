@@ -3,6 +3,11 @@ import { PreLoader } from "@/components/PreLoader";
 import { Navbar } from "@/components/layout/Navbar";
 import { Hero } from "@/components/sections/Hero";
 import { FeatureClarity } from "@/components/sections/FeatureClarity";
+import { ProductSpotlight } from "@/components/sections/ProductSpotlight";
+import { PaymentFlow } from "@/components/sections/PaymentFlow";
+import { FAQ } from "@/components/sections/FAQ";
+import { Footer7 } from "@/components/ui/footer-7";
+import { StackFeature } from "@/components/sections/StackFeature";
 import { Waves } from "@/components/decorative/Waves";
 import { Watermark } from "@/components/decorative/Watermark";
 import { LightStreaks } from "@/components/decorative/LightStreaks";
@@ -20,6 +25,11 @@ export default function Home() {
         <Hero />
       </div>
       <FeatureClarity />
+      <StackFeature />
+      <ProductSpotlight />
+      <PaymentFlow />
+      <FAQ />
+      <Footer7 />
     </>
   );
 }
