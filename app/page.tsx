@@ -5,6 +5,8 @@ import { Hero } from "@/components/sections/Hero";
 import { FeatureClarity } from "@/components/sections/FeatureClarity";
 import { ProductSpotlight } from "@/components/sections/ProductSpotlight";
 import { PaymentFlow } from "@/components/sections/PaymentFlow";
+import { Integrations } from "@/components/sections/Integrations";
+import { HowItWorks } from "@/components/sections/HowItWorks";
 import { FAQ } from "@/components/sections/FAQ";
 import { Footer7 } from "@/components/ui/footer-7";
 import { StackFeature } from "@/components/sections/StackFeature";
@@ -28,6 +30,8 @@ export default function Home() {
       <StackFeature />
       <ProductSpotlight />
       <PaymentFlow />
+      <Integrations />
+      <HowItWorks />
       <FAQ />
       <Footer7 />
     </>
