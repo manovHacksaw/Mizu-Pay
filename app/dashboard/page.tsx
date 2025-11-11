@@ -55,15 +55,31 @@ export default function DashboardPage() {
         setLoading(true);
         // Use email to find user since database users are identified by email
         const response = await fetch(`/api/payments/history?email=${encodeURIComponent(user.email.address)}`);
-        const data = await response.json();
-
+        
         if (!response.ok) {
-          console.error('Payment history API error:', data);
+          const errorData = await response.json().catch(() => ({}));
+          // User not found is expected for new users - don't log as error
+          if (response.status === 404 && errorData.error === 'User not found') {
+            setPayments([]);
+            setStats({
+              totalBalance: 0,
+              totalTransactions: 0,
+              successfulTransactions: 0,
+              pendingTransactions: 0,
+              emailFailedTransactions: 0,
+            });
+            return;
+          }
+          // Only log actual errors
+          if (response.status !== 404) {
+            console.error('Payment history API error:', errorData.error || errorData.details || 'Unknown error');
+          }
           return;
         }
 
+        const data = await response.json();
+
         if (data.success && data.payments) {
-          console.log('Fetched payments:', data.payments.length);
           setPayments(data.payments);
 
           // Calculate stats
