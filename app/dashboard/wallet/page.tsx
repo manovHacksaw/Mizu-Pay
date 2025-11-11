@@ -5,6 +5,10 @@ import { useEffect, useState } from 'react';
 import { createPublicClient, http, formatUnits, defineChain, getContract } from 'viem';
 import { erc20Abi } from 'viem';
 import { MOCK_CUSD_ADDRESS } from '@/lib/contracts';
+import { ReceiveModal } from '@/components/modals/ReceiveModal';
+import { SendWalletInfoModal } from '@/components/modals/SendWalletInfoModal';
+import { SendModal } from '@/components/modals/SendModal';
+import { TransactionHistory } from '@/components/wallet/TransactionHistory';
 
 export default function WalletPage() {
   const { user } = usePrivy();
@@ -12,68 +16,81 @@ export default function WalletPage() {
   const [balances, setBalances] = useState<{ celo: string; cusd: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
+  const [isSendInfoModalOpen, setIsSendInfoModalOpen] = useState(false);
+  const [isSendModalOpen, setIsSendModalOpen] = useState(false);
+  const [transactionRefreshTrigger, setTransactionRefreshTrigger] = useState(0);
 
-  const activeWallet = wallets?.[0];
+  // Only show Mizu Pay (embedded) wallets, not external wallets
+  // Note: Only one embedded wallet per user is allowed in the database
+  const embeddedWallets = wallets?.filter(w => 
+    w.walletClientType === 'privy' || 
+    w.walletClientType === 'embedded' ||
+    w.connectorType === 'privy'
+  ) || [];
+
+  // Use the first embedded wallet (should be the only one)
+  const activeWallet = embeddedWallets[0];
+
+  const fetchBalances = async () => {
+    if (!activeWallet?.address) return;
+    
+    setLoading(true);
+    try {
+      const celoSepolia = defineChain({
+        id: 11142220,
+        name: 'Celo Sepolia',
+        nativeCurrency: {
+          decimals: 18,
+          name: 'CELO',
+          symbol: 'CELO',
+        },
+        rpcUrls: {
+          default: {
+            http: ['https://rpc.ankr.com/celo_sepolia'],
+          },
+        },
+        blockExplorers: {
+          default: {
+            name: 'Celo Sepolia Explorer',
+            url: 'https://celo-sepolia.blockscout.com',
+          },
+        },
+        testnet: true,
+      });
+
+      const publicClient = createPublicClient({
+        chain: celoSepolia,
+        transport: http(),
+      });
+
+      // Get CELO balance
+      const celoBalance = await publicClient.getBalance({
+        address: activeWallet.address as `0x${string}`,
+      });
+
+      // Get cUSD balance
+      const contract = getContract({
+        address: MOCK_CUSD_ADDRESS,
+        abi: erc20Abi,
+        client: publicClient,
+      });
+
+      const cusdBalance = await contract.read.balanceOf([activeWallet.address as `0x${string}`]);
+
+      setBalances({
+        celo: parseFloat(formatUnits(celoBalance, 18)).toFixed(4),
+        cusd: parseFloat(formatUnits(cusdBalance as bigint, 18)).toFixed(4),
+      });
+    } catch (error) {
+      console.error('Error fetching balances:', error);
+      setBalances({ celo: '0.0000', cusd: '0.0000' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!activeWallet?.address) return;
-
-    const fetchBalances = async () => {
-      setLoading(true);
-      try {
-        const celoSepolia = defineChain({
-          id: 11142220,
-          name: 'Celo Sepolia',
-          nativeCurrency: {
-            decimals: 18,
-            name: 'CELO',
-            symbol: 'CELO',
-          },
-          rpcUrls: {
-            default: {
-              http: ['https://rpc.ankr.com/celo_sepolia'],
-            },
-          },
-          blockExplorers: {
-            default: {
-              name: 'Celo Sepolia Explorer',
-              url: 'https://celo-sepolia.blockscout.com',
-            },
-          },
-          testnet: true,
-        });
-
-        const publicClient = createPublicClient({
-          chain: celoSepolia,
-          transport: http(),
-        });
-
-        // Get CELO balance
-        const celoBalance = await publicClient.getBalance({
-          address: activeWallet.address as `0x${string}`,
-        });
-
-        // Get cUSD balance
-        const contract = getContract({
-          address: MOCK_CUSD_ADDRESS,
-          abi: erc20Abi,
-          client: publicClient,
-        });
-
-        const cusdBalance = await contract.read.balanceOf([activeWallet.address as `0x${string}`]);
-
-        setBalances({
-          celo: parseFloat(formatUnits(celoBalance, 18)).toFixed(4),
-          cusd: parseFloat(formatUnits(cusdBalance as bigint, 18)).toFixed(4),
-        });
-      } catch (error) {
-        console.error('Error fetching balances:', error);
-        setBalances({ celo: '0.0000', cusd: '0.0000' });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchBalances();
   }, [activeWallet?.address]);
 
@@ -88,13 +105,34 @@ export default function WalletPage() {
     }
   };
 
+  // Show message if no embedded wallet found
+  if (!activeWallet) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold dashboard-text-primary">Wallet</h1>
+          <p className="text-sm dashboard-text-secondary mt-1">
+            Manage your Mizu Pay wallet balances and transactions
+          </p>
+        </div>
+        <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
+          <div className="text-center py-8">
+            <p className="text-sm dashboard-text-secondary">
+              No Mizu Pay wallet found. Please ensure you're logged in with a Mizu Pay managed wallet.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold dashboard-text-primary">Wallet</h1>
+        <h1 className="text-2xl font-bold dashboard-text-primary">Mizu Pay Wallet</h1>
         <p className="text-sm dashboard-text-secondary mt-1">
-          Manage your wallet balances and transactions
+          Manage your Mizu Pay wallet balances and transactions
         </p>
       </div>
 
@@ -180,13 +218,19 @@ export default function WalletPage() {
 
       {/* Action Buttons */}
       <div className="flex items-center gap-4">
-        <button className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2">
+        <button
+          onClick={() => setIsSendInfoModalOpen(true)}
+          className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
           </svg>
           Send
         </button>
-        <button className="flex-1 px-6 py-3 dashboard-card-bg dashboard-text-secondary border dashboard-card-border rounded-lg dashboard-hover transition-colors font-medium flex items-center justify-center gap-2">
+        <button
+          onClick={() => setIsReceiveModalOpen(true)}
+          className="flex-1 px-6 py-3 dashboard-card-bg dashboard-text-secondary border dashboard-card-border rounded-lg dashboard-hover transition-colors font-medium flex items-center justify-center gap-2"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7l-7 7-7-7" />
           </svg>
@@ -202,6 +246,48 @@ export default function WalletPage() {
           Copy Address
         </button>
       </div>
+
+      {/* Transaction History */}
+      {activeWallet?.address && (
+        <TransactionHistory 
+          walletAddress={activeWallet.address}
+          refreshTrigger={transactionRefreshTrigger}
+        />
+      )}
+
+      {/* Receive Modal */}
+      {activeWallet?.address && (
+        <ReceiveModal
+          isOpen={isReceiveModalOpen}
+          onClose={() => setIsReceiveModalOpen(false)}
+          walletAddress={activeWallet.address}
+        />
+      )}
+
+      {/* Send Info Modal */}
+      <SendWalletInfoModal
+        isOpen={isSendInfoModalOpen}
+        onClose={() => setIsSendInfoModalOpen(false)}
+        onContinue={() => {
+          setIsSendInfoModalOpen(false);
+          setIsSendModalOpen(true);
+        }}
+      />
+
+      {/* Send Modal */}
+      {activeWallet?.address && (
+        <SendModal
+          isOpen={isSendModalOpen}
+          onClose={() => {
+            setIsSendModalOpen(false);
+            // Refresh balances and transaction history after closing (in case a transaction was successful)
+            fetchBalances();
+            setTransactionRefreshTrigger(prev => prev + 1);
+          }}
+          walletAddress={activeWallet.address}
+          balances={balances}
+        />
+      )}
     </div>
   );
 }

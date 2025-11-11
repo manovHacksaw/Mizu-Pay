@@ -6,6 +6,13 @@ export default function SettingsPage() {
   const { user } = usePrivy();
   const { wallets } = useWallets();
 
+  // Only show Mizu Pay (embedded) wallets, not external wallets
+  const embeddedWallets = wallets?.filter(w => 
+    w.walletClientType === 'privy' || 
+    w.walletClientType === 'embedded' ||
+    w.connectorType === 'privy'
+  ) || [];
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -45,14 +52,14 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Wallet Connection Section */}
+      {/* Mizu Pay Wallet Section */}
       <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
         <h2 className="text-lg font-semibold dashboard-text-primary mb-4">
-          Wallet Connections
+          Mizu Pay Wallet
         </h2>
         <div className="space-y-3">
-          {wallets && wallets.length > 0 ? (
-            wallets.map((wallet, index) => (
+          {embeddedWallets.length > 0 ? (
+            embeddedWallets.map((wallet, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between p-4 dashboard-input-bg rounded-lg border dashboard-card-border"
@@ -75,15 +82,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium dashboard-text-primary">
-                      {wallet.walletClientType === 'privy' || wallet.walletClientType === 'embedded'
-                        ? 'Mizu Pay Wallet'
-                        : wallet.walletClientType === 'metamask'
-                          ? 'MetaMask'
-                          : wallet.walletClientType === 'coinbase_wallet'
-                            ? 'Coinbase Wallet'
-                            : wallet.walletClientType === 'wallet_connect'
-                              ? 'WalletConnect'
-                              : 'External Wallet'}
+                      Mizu Pay Wallet
                     </p>
                     <p className="text-xs dashboard-text-muted font-mono">
                       {wallet.address
@@ -98,7 +97,7 @@ export default function SettingsPage() {
               </div>
             ))
           ) : (
-            <p className="text-sm dashboard-text-secondary">No wallets connected</p>
+            <p className="text-sm dashboard-text-secondary">No Mizu Pay wallet found</p>
           )}
         </div>
       </div>

@@ -29,7 +29,7 @@ export function Navbar({ showLogout = false, onLogout }: NavbarProps) {
             href="#pricing"
             className="text-sm font-medium text-primary nav-link transition-colors hover:text-gradient"
           >
-            Pricing
+            About
           </a>
           <a href="#docs" className="text-sm font-medium text-primary nav-link transition-colors hover:text-gradient">
             Docs
@@ -38,7 +38,7 @@ export function Navbar({ showLogout = false, onLogout }: NavbarProps) {
             href="#projects"
             className="text-sm font-medium text-primary nav-link transition-colors hover:text-gradient"
           >
-            Projects
+            Socials
           </a>
         </div>
 

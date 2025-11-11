@@ -2,6 +2,7 @@
 
 import { usePrivy } from "@privy-io/react-auth";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 export function Hero() {
   const pathname = usePathname()
@@ -28,8 +29,14 @@ export function Hero() {
       {/* Badge */}
       <div className={isLandingPage ? "animate-badge hidden lg:flex items-center justify-center gap-2 mb-8" : "hidden lg:flex items-center justify-center gap-2 mb-8"}>
         <div className="flex items-center gap-2 nav-badge px-4 py-2 rounded-full text-sm">
-          <div className="w-4 h-4 nav-badge-dot rounded-full"></div>
-          <span>Trusted by +20k people</span>
+          <Image 
+            src="/celo-logo.svg" 
+            alt="Celo" 
+            width={16} 
+            height={16}
+            className="w-4 h-4 rounded-full"
+          />
+          <span>Powered by Celo blockchain</span>
         </div>
       </div>
 

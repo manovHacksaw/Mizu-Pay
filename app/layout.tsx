@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ui/ThemeProvider";
 import Providers from "@/components/Providers";
+import { Toaster } from "@/lib/toast";
 
 const jakartaSans = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700"],
@@ -26,6 +27,7 @@ export default function RootLayout({
         <Providers>
           <ThemeProvider>
             {children}
+            <Toaster />
           </ThemeProvider>
         </Providers>
       </body>

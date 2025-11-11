@@ -4,6 +4,8 @@ import { checkAndExpireSession } from "@/lib/sessionUtils";
 import { verifyPaymentTransaction } from "@/lib/paymentVerification";
 import { decrypt } from "@/lib/giftCardUtils";
 import { sendGiftCardEmail } from "@/lib/emailService";
+import { validateSessionId, validateTxHash, validateAmount, validateGiftCardId, sanitizeString } from "@/lib/validation";
+import { checkRateLimit, getRemainingRequests } from "@/lib/rateLimit";
 
 /**
  * POST /api/payments/create
@@ -21,8 +23,34 @@ import { sendGiftCardEmail } from "@/lib/emailService";
  */
 export async function POST(req: Request) {
   try {
+    // Rate limiting: 5 requests per minute per IP
+    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    if (!checkRateLimit(`payment-create:${clientIp}`, 5, 60000)) {
+      return NextResponse.json(
+        { 
+          error: "Too many requests. Please wait before trying again.",
+          retryAfter: 60
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': '60',
+            'X-RateLimit-Remaining': '0'
+          }
+        }
+      );
+    }
+
     const body = await req.json();
-    const { sessionId, txHash, amountCrypto, token, giftCardId } = body;
+    let { sessionId, txHash, amountCrypto, token, giftCardId } = body;
+
+    // Sanitize inputs
+    sessionId = sanitizeString(sessionId, 50);
+    txHash = sanitizeString(txHash, 100);
+    token = sanitizeString(token, 10);
+    if (giftCardId) {
+      giftCardId = sanitizeString(giftCardId, 50);
+    }
 
     // Validate required fields
     if (!sessionId || !txHash || amountCrypto === undefined || !token) {
@@ -30,6 +58,41 @@ export async function POST(req: Request) {
         { error: "Missing required fields: sessionId, txHash, amountCrypto, token" },
         { status: 400 }
       );
+    }
+
+    // Validate formats
+    const sessionIdValidation = validateSessionId(sessionId);
+    if (!sessionIdValidation.valid) {
+      return NextResponse.json(
+        { error: sessionIdValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const txHashValidation = validateTxHash(txHash);
+    if (!txHashValidation.valid) {
+      return NextResponse.json(
+        { error: txHashValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const amountValidation = validateAmount(amountCrypto);
+    if (!amountValidation.valid) {
+      return NextResponse.json(
+        { error: amountValidation.error },
+        { status: 400 }
+      );
+    }
+
+    if (giftCardId) {
+      const giftCardValidation = validateGiftCardId(giftCardId);
+      if (!giftCardValidation.valid) {
+        return NextResponse.json(
+          { error: giftCardValidation.error },
+          { status: 400 }
+        );
+      }
     }
 
     // Check and expire session if needed
