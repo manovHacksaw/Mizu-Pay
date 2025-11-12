@@ -1,12 +1,12 @@
 "use client"
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useLoginWithEmail, usePrivy } from '@privy-io/react-auth'
 import { Waves } from '@/components/decorative/Waves'
 import { Watermark } from '@/components/decorative/Watermark'
 import { LightStreaks } from '@/components/decorative/LightStreaks'
 
-export default function LoginWithEmail() {
+function LoginWithEmailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnUrl = searchParams.get('returnUrl') || '/dashboard'
@@ -262,5 +262,36 @@ export default function LoginWithEmail() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginWithEmail() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen hero-bg relative overflow-hidden text-primary transition-colors duration-300">
+        <LightStreaks />
+        <Waves />
+        <Watermark />
+        <div className="relative z-10 flex items-center justify-center min-h-screen px-5 py-20">
+          <div className="w-full max-w-md">
+            <div className="login-glass-card">
+              <div className="text-center mb-10">
+                <h1 className="text-3xl md:text-4xl font-bold text-primary mb-3">
+                  Welcome Back
+                </h1>
+                <p className="text-secondary text-base md:text-lg">
+                  Loading...
+                </p>
+              </div>
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-current border-t-transparent"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <LoginWithEmailContent />
+    </Suspense>
   )
 }
