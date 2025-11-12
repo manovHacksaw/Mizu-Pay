@@ -1,7 +1,6 @@
 'use client';
 
 import { Sidebar } from '@/components/dashboard/Sidebar';
-import { Topbar } from '@/components/dashboard/Topbar';
 import { ThemeInit } from '@/components/ThemeInit';
 import { CurrencySelectionModal } from '@/components/CurrencySelectionModal';
 import { useRouter, usePathname } from 'next/navigation';
@@ -9,6 +8,19 @@ import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useEffect, useState } from 'react';
 import { useCurrencyStore } from '@/lib/currencyStore';
 import { syncUserToDatabase, extractWalletData } from '@/lib/syncUser';
+import { Poppins, Roboto } from 'next/font/google';
+
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-poppins',
+});
+
+const roboto = Roboto({
+  weight: ['400', '500', '700'],
+  subsets: ['latin'],
+  variable: '--font-roboto',
+});
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -36,11 +48,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const checkUserCurrency = async () => {
       try {
-        const response = await fetch(`/api/users/currency?email=${encodeURIComponent(user.email.address)}`);
+        const response = await fetch(`/api/users/currency?email=${encodeURIComponent(user.email?.address || '')}`);
         if (response.ok) {
           const data = await response.json();
-          if (data.defaultCurrency && (data.defaultCurrency === 'INR' || data.defaultCurrency === 'USD')) {
-            setUserDefaultCurrency(data.defaultCurrency as 'INR' | 'USD');
+          if (data.defaultCurrency) {
+            setUserDefaultCurrency(data.defaultCurrency);
             setCurrencyChecked(true);
           } else {
             // User hasn't set currency preference - show modal
@@ -115,7 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     checkAndSyncWallet();
   }, [ready, authenticated, user?.id, wallets, walletsReady, walletSynced, pathname, router]);
 
-  const handleCurrencySelect = async (currency: 'INR' | 'USD') => {
+  const handleCurrencySelect = async (currency: string) => {
     if (user?.email?.address) {
       try {
         const response = await fetch('/api/users/currency', {
@@ -130,7 +142,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         });
 
         if (response.ok) {
-          setUserDefaultCurrency(currency);
+          setUserDefaultCurrency(currency as any);
           setShowCurrencyModal(false);
           setCurrencyChecked(true);
         }
@@ -167,10 +179,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         isOpen={showCurrencyModal}
         onSelect={handleCurrencySelect}
       />
-      <div className="min-h-screen dashboard-page-bg">
+      <div className={`min-h-screen dashboard-page-bg ${poppins.variable} ${roboto.variable}`} style={{ fontFamily: 'var(--font-poppins), sans-serif' }}>
         <Sidebar onLogout={handleLogout} />
-        <Topbar onLogout={handleLogout} />
-        <main className="ml-64 mt-16 p-6">
+     
+        <main className="ml-72 p-6" style={{ fontFamily: 'var(--font-roboto), sans-serif' }}>
           {children}
         </main>
       </div>

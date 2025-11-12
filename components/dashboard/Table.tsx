@@ -119,15 +119,15 @@ export function Table({ transactions = [], showPagination = true }: TableProps) 
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      paid: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
-      fulfilled: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
-      succeeded: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
-      pending: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
-      processing: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
-      confirming: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
-      email_failed: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
-      expired: 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400',
-      failed: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+      paid: 'bg-green-100 text-green-700',
+      fulfilled: 'bg-green-100 text-green-700',
+      succeeded: 'bg-green-100 text-green-700',
+      pending: 'bg-yellow-100 text-yellow-700',
+      processing: 'bg-blue-100 text-blue-700',
+      confirming: 'bg-blue-100 text-blue-700',
+      email_failed: 'bg-orange-100 text-orange-700',
+      expired: 'bg-gray-100 text-gray-700',
+      failed: 'bg-red-100 text-red-700',
     };
 
     const statusLabels: Record<string, string> = {
@@ -340,7 +340,7 @@ export function Table({ transactions = [], showPagination = true }: TableProps) 
                         href={`https://celo-sepolia.blockscout.com/tx/${transaction.payment.txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-mono"
+                        className="text-xs text-blue-600 hover:underline font-mono"
                       >
                         {transaction.payment.txHash.slice(0, 8)}...{transaction.payment.txHash.slice(-6)}
                       </a>
@@ -352,7 +352,7 @@ export function Table({ transactions = [], showPagination = true }: TableProps) 
                               : '—'}
                           </span>
                           {confirmations[transaction.payment.txHash] !== null && confirmations[transaction.payment.txHash]! >= 5 && (
-                            <span className="text-xs text-green-600 dark:text-green-400" title="Transaction confirmed">
+                            <span className="text-xs text-green-600" title="Transaction confirmed">
                               ✓
                             </span>
                           )}

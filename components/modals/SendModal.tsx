@@ -203,51 +203,62 @@ export function SendModal({ isOpen, onClose, walletAddress, balances }: SendModa
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md"
       onClick={handleBackdropClick}
     >
-      <div className="dashboard-card-bg rounded-xl border dashboard-card-border shadow-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h2 className="text-xl font-semibold dashboard-text-primary mb-1">
-              Send {token.toUpperCase()}
-            </h2>
-            <p className="text-sm dashboard-text-secondary">
-              Send funds to another wallet address
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg dashboard-hover transition-colors ml-4"
-            aria-label="Close modal"
-          >
-            <svg
-              className="w-5 h-5 dashboard-text-secondary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden">
+        {/* Header with gradient background */}
+        <div 
+          className="px-8 py-6"
+          style={{
+            background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+          }}
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-white mb-1">
+                Send {token.toUpperCase()}
+              </h2>
+              <p className="text-sm text-white/90">
+                Send funds to another wallet address
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white"
+              aria-label="Close modal"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
+        {/* Content */}
+        <div className="px-8 py-6">
         {success ? (
           /* Success State */
-          <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30">
-              <div className="flex items-center gap-3">
-                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+          <div className="space-y-6">
+            <div className="p-6 rounded-xl bg-green-50 border border-green-200">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-200 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
                 <div>
-                  <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                  <p className="text-sm font-semibold text-green-900 mb-1">
                     Transaction successful!
                   </p>
                   {txHash && (
@@ -255,47 +266,47 @@ export function SendModal({ isOpen, onClose, walletAddress, balances }: SendModa
                       href={`https://celo-sepolia.blockscout.com/tx/${txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-green-600 dark:text-green-400 hover:underline mt-1 block"
+                      className="text-xs text-green-700 hover:underline font-medium"
                     >
-                      View on explorer
+                      View on explorer →
                     </a>
                   )}
                 </div>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Close
-            </button>
           </div>
         ) : (
           /* Send Form */
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Token Selection */}
             <div>
-              <label className="block text-sm font-medium dashboard-text-secondary mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Select Token
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button
                   onClick={() => setToken('cusd')}
-                  className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
+                  className={`flex-1 px-5 py-3 rounded-xl border-2 transition-all font-medium ${
                     token === 'cusd'
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'dashboard-card-bg dashboard-text-secondary border dashboard-card-border dashboard-hover'
+                      ? 'border-blue-600 text-white'
+                      : 'border-gray-300 text-gray-700 hover:border-gray-400 bg-white'
                   }`}
+                  style={token === 'cusd' ? {
+                    background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+                  } : {}}
                 >
                   cUSD
                 </button>
                 <button
                   onClick={() => setToken('celo')}
-                  className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
+                  className={`flex-1 px-5 py-3 rounded-xl border-2 transition-all font-medium ${
                     token === 'celo'
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'dashboard-card-bg dashboard-text-secondary border dashboard-card-border dashboard-hover'
+                      ? 'border-blue-600 text-white'
+                      : 'border-gray-300 text-gray-700 hover:border-gray-400 bg-white'
                   }`}
+                  style={token === 'celo' ? {
+                    background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+                  } : {}}
                 >
                   CELO
                 </button>
@@ -303,10 +314,10 @@ export function SendModal({ isOpen, onClose, walletAddress, balances }: SendModa
             </div>
 
             {/* Balance Display */}
-            <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border dashboard-card-border">
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
               <div className="flex items-center justify-between">
-                <span className="text-sm dashboard-text-secondary">Available Balance</span>
-                <span className="text-sm font-medium dashboard-text-primary">
+                <span className="text-sm font-medium text-gray-600">Available Balance</span>
+                <span className="text-sm font-semibold text-gray-900">
                   {currentBalance} {token.toUpperCase()}
                 </span>
               </div>
@@ -314,7 +325,7 @@ export function SendModal({ isOpen, onClose, walletAddress, balances }: SendModa
 
             {/* Recipient Address */}
             <div>
-              <label className="block text-sm font-medium dashboard-text-secondary mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Recipient Address
               </label>
               <input
@@ -322,17 +333,17 @@ export function SendModal({ isOpen, onClose, walletAddress, balances }: SendModa
                 value={recipientAddress}
                 onChange={(e) => setRecipientAddress(e.target.value)}
                 placeholder="0x..."
-                className="w-full px-4 py-2 dashboard-input-bg dashboard-card-border border rounded-lg dashboard-text-primary font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 disabled={loading}
               />
             </div>
 
             {/* Amount */}
             <div>
-              <label className="block text-sm font-medium dashboard-text-secondary mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Amount
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <input
                   type="number"
                   step="0.0001"
@@ -340,12 +351,12 @@ export function SendModal({ isOpen, onClose, walletAddress, balances }: SendModa
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="flex-1 px-4 py-2 dashboard-input-bg dashboard-card-border border rounded-lg dashboard-text-primary focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   disabled={loading}
                 />
                 <button
                   onClick={handleMaxClick}
-                  className="px-4 py-2 dashboard-card-bg dashboard-text-secondary border dashboard-card-border rounded-lg dashboard-hover transition-colors text-sm font-medium"
+                  className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors font-medium"
                   disabled={loading}
                 >
                   Max
@@ -355,17 +366,42 @@ export function SendModal({ isOpen, onClose, walletAddress, balances }: SendModa
 
             {/* Error Message */}
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30">
-                <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+              <div className="p-4 rounded-xl bg-red-50 border border-red-200">
+                <div className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-sm text-red-800 font-medium">{error}</p>
+                </div>
               </div>
             )}
+          </div>
+        )}
+        </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-3 pt-2">
+        {/* Footer */}
+        <div className="px-8 py-5 border-t border-gray-200 bg-gray-50 flex gap-3">
+          {success ? (
+            <button
+              onClick={onClose}
+              className="w-full px-5 py-3 rounded-xl font-semibold text-white transition-all"
+              style={{
+                background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+              }}
+            >
+              Close
+            </button>
+          ) : (
+            <>
               <button
                 onClick={handleSend}
                 disabled={loading || !recipientAddress || !amount}
-                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                className="flex-1 px-5 py-3 rounded-xl font-semibold text-white transition-all disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                style={{
+                  background: loading || !recipientAddress || !amount 
+                    ? '#9ca3af' 
+                    : 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+                }}
               >
                 {loading ? (
                   <>
@@ -382,13 +418,13 @@ export function SendModal({ isOpen, onClose, walletAddress, balances }: SendModa
               <button
                 onClick={onClose}
                 disabled={loading}
-                className="w-full px-4 py-3 dashboard-card-bg dashboard-text-secondary border dashboard-card-border rounded-lg dashboard-hover transition-colors font-medium disabled:opacity-50"
+                className="flex-1 px-5 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
               >
                 Cancel
               </button>
-            </div>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

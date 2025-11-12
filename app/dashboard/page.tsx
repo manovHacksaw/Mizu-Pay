@@ -1,13 +1,18 @@
 'use client';
 
-import { StatsCard } from '@/components/dashboard/StatsCard';
+import Link from 'next/link';
 import { Chart } from '@/components/dashboard/Chart';
 import { Table } from '@/components/dashboard/Table';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useEffect, useState } from 'react';
 import { formatDateForChart } from '@/lib/dateUtils';
 import { useCurrencyStore } from '@/lib/currencyStore';
 import { formatAmountWithConversion } from '@/lib/currencyUtils';
+// Updated imports: Replaced Leaf with PiggyBank
+import { TrendingDown, Wallet, PiggyBank } from 'lucide-react';
+import { createPublicClient, http, formatUnits, defineChain, getContract } from 'viem';
+import { erc20Abi } from 'viem';
+import { MOCK_CUSD_ADDRESS } from '@/lib/contracts';
 
 interface PaymentData {
   sessionId: string;
@@ -36,16 +41,98 @@ interface PaymentData {
 
 export default function DashboardPage() {
   const { user, ready, authenticated } = usePrivy();
+  const { wallets } = useWallets();
   const [payments, setPayments] = useState<PaymentData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [walletBalance, setWalletBalance] = useState<{ cusd: number; celo: number }>({ cusd: 0, celo: 0 });
+  const [loadingBalance, setLoadingBalance] = useState(true);
   const [stats, setStats] = useState({
     totalBalance: 0,
-    totalTransactions: 0,
-    successfulTransactions: 0,
-    pendingTransactions: 0,
-    emailFailedTransactions: 0,
+    totalDeposits: 0,
+    totalSpent: 0,
+    refiContribution: 0,
   });
+  const [activeWalletAddress, setActiveWalletAddress] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const { selectedDisplayCurrency } = useCurrencyStore();
+
+  // Fetch wallet balance
+  useEffect(() => {
+    const fetchWalletBalance = async () => {
+      const embeddedWallet = wallets?.find(
+        (w) =>
+          w.walletClientType === 'privy' ||
+          w.walletClientType === 'embedded' ||
+          w.connectorType === 'privy',
+      );
+
+      if (!embeddedWallet?.address) {
+        setActiveWalletAddress(null);
+        setLoadingBalance(false);
+        return;
+      }
+
+      try {
+        setLoadingBalance(true);
+        const celoSepolia = defineChain({
+          id: 11142220,
+          name: 'Celo Sepolia',
+          nativeCurrency: {
+            decimals: 18,
+            name: 'CELO',
+            symbol: 'CELO',
+          },
+          rpcUrls: {
+            default: {
+              http: ['https://rpc.ankr.com/celo_sepolia'],
+            },
+          },
+          blockExplorers: {
+            default: {
+              name: 'Celo Sepolia Explorer',
+              url: 'https://celo-sepolia.blockscout.com',
+            },
+          },
+          testnet: true,
+        });
+
+        const publicClient = createPublicClient({
+          chain: celoSepolia,
+          transport: http(),
+        });
+
+        // Get CELO balance
+        const celoBalance = await publicClient.getBalance({
+          address: embeddedWallet.address as `0x${string}`,
+        });
+
+        // Get cUSD balance
+        const contract = getContract({
+          address: MOCK_CUSD_ADDRESS,
+          abi: erc20Abi,
+          client: publicClient,
+        });
+
+        const cusdBalance = await contract.read.balanceOf([embeddedWallet.address as `0x${string}`]);
+
+        setWalletBalance({
+          celo: parseFloat(formatUnits(celoBalance, 18)),
+          cusd: parseFloat(formatUnits(cusdBalance as bigint, 18)),
+        });
+        setActiveWalletAddress(embeddedWallet.address);
+      } catch (error) {
+        console.error('Error fetching wallet balance:', error);
+        setWalletBalance({ cusd: 0, celo: 0 });
+        setActiveWalletAddress(null);
+      } finally {
+        setLoadingBalance(false);
+      }
+    };
+
+    if (wallets && wallets.length > 0) {
+      fetchWalletBalance();
+    }
+  }, [wallets]);
 
   useEffect(() => {
     if (!ready || !authenticated || !user?.email?.address) return;
@@ -53,24 +140,20 @@ export default function DashboardPage() {
     const fetchPayments = async () => {
       try {
         setLoading(true);
-        // Use email to find user since database users are identified by email
-        const response = await fetch(`/api/payments/history?email=${encodeURIComponent(user.email.address)}`);
-        
+        const response = await fetch(`/api/payments/history?email=${encodeURIComponent(user.email?.address || '')}`);
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          // User not found is expected for new users - don't log as error
           if (response.status === 404 && errorData.error === 'User not found') {
             setPayments([]);
             setStats({
               totalBalance: 0,
-              totalTransactions: 0,
-              successfulTransactions: 0,
-              pendingTransactions: 0,
-              emailFailedTransactions: 0,
+              totalDeposits: 0,
+              totalSpent: 0,
+              refiContribution: 0,
             });
             return;
           }
-          // Only log actual errors
           if (response.status !== 404) {
             console.error('Payment history API error:', errorData.error || errorData.details || 'Unknown error');
           }
@@ -82,31 +165,25 @@ export default function DashboardPage() {
         if (data.success && data.payments) {
           setPayments(data.payments);
 
-          // Calculate stats
-          const totalBalance = data.payments.reduce(
-            (sum: number, p: PaymentData) => sum + (p.payment ? p.amountUSD : 0),
-            0
-          );
-          const totalTransactions = data.payments.length;
-          const successfulTransactions = data.payments.filter(
-            (p: PaymentData) => p.status === 'paid' || p.status === 'fulfilled'
-          ).length;
-          const pendingTransactions = data.payments.filter(
-            (p: PaymentData) => p.status === 'pending' || p.status === 'processing' || (p.payment && p.payment.status === 'confirming')
-          ).length;
-          const emailFailedTransactions = data.payments.filter(
-            (p: PaymentData) => p.status === 'email_failed' || (p.payment && p.payment.status === 'email_failed')
-          ).length;
+          // Calculate total deposits (all payments made)
+          const totalDeposits = data.payments
+            .filter((p: PaymentData) => p.payment)
+            .reduce((sum: number, p: PaymentData) => sum + (p.payment?.amountCrypto || 0), 0);
+
+          // Calculate total spent (fulfilled payments only)
+          const totalSpent = data.payments
+            .filter((p: PaymentData) => p.status === 'fulfilled' && p.payment)
+            .reduce((sum: number, p: PaymentData) => sum + (p.payment?.amountCrypto || 0), 0);
+
+          // ReFi contribution is 0.75% of total spent
+          const refiContribution = totalSpent * 0.0075;
 
           setStats({
-            totalBalance,
-            totalTransactions,
-            successfulTransactions,
-            pendingTransactions,
-            emailFailedTransactions,
+            totalBalance: 0, // Will be calculated from wallet balance
+            totalDeposits,
+            totalSpent,
+            refiContribution,
           });
-        } else {
-          console.log('No payments found or API returned:', data);
         }
       } catch (error) {
         console.error('Error fetching payments:', error);
@@ -118,19 +195,29 @@ export default function DashboardPage() {
     fetchPayments();
   }, [ready, authenticated, user?.email?.address]);
 
-  // Calculate chart data from payments - group by date
+  const handleCopyAddress = async () => {
+    if (!activeWalletAddress) return;
+    try {
+      await navigator.clipboard.writeText(activeWalletAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy address:', error);
+    }
+  };
+
   const chartDataMap = new Map<string, { volume: number; transactions: number; date: Date }>();
-  
+
   payments
     .filter((p) => p.payment)
     .forEach((payment) => {
       const date = new Date(payment.createdAt);
-      const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD format
-      
+      const dateKey = date.toISOString().split('T')[0];
+
       if (!chartDataMap.has(dateKey)) {
         chartDataMap.set(dateKey, { volume: 0, transactions: 0, date });
       }
-      
+
       const entry = chartDataMap.get(dateKey)!;
       entry.volume += payment.amountUSD;
       entry.transactions += 1;
@@ -144,173 +231,193 @@ export default function DashboardPage() {
       transactions: data.transactions,
     }))
     .sort((a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime())
-    .slice(-6) // Last 6 data points
-    .map(({ dateKey, ...rest }) => rest); // Remove dateKey from final output
+    .slice(-6)
+    .map(({ dateKey, ...rest }) => rest);
 
-  // Calculate percentage changes (comparing last 7 days vs previous 7 days)
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-  const recentPayments = payments.filter(
-    (p) => new Date(p.createdAt) >= sevenDaysAgo
-  );
-  const previousPayments = payments.filter(
-    (p) => {
-      const date = new Date(p.createdAt);
-      return date >= fourteenDaysAgo && date < sevenDaysAgo;
-    }
-  );
-
-  const recentTotal = recentPayments.reduce((sum, p) => sum + p.amountUSD, 0);
-  const previousTotal = previousPayments.reduce((sum, p) => sum + p.amountUSD, 0);
-  const balanceChange = previousTotal > 0 
-    ? ((recentTotal - previousTotal) / previousTotal * 100).toFixed(1)
-    : '0';
-
-  const recentTransactions = recentPayments.length;
-  const previousTransactions = previousPayments.length;
-  const transactionChange = previousTransactions > 0
-    ? ((recentTransactions - previousTransactions) / previousTransactions * 100).toFixed(1)
-    : '0';
-
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold dashboard-text-primary">Dashboard</h1>
-        <p className="text-sm dashboard-text-secondary mt-1">
-          Welcome back! Here's an overview of your account.
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm"
-            >
-              <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+      <div className="grid gap-6 xl:grid-cols-3">
+        <div className="space-y-6 xl:col-span-2">
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                  <div className="h-20 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {(() => {
-            const formattedBalance = formatAmountWithConversion(stats.totalBalance);
-            return (
-              <StatsCard
-                title="Total Balance"
-                value={formattedBalance.display}
-                subtitle={formattedBalance.showUSDEquivalent ? formattedBalance.usdEquivalent : undefined}
-                change={{
-                  value: `${balanceChange}%`,
-                  isPositive: parseFloat(balanceChange) >= 0,
-                }}
-                icon={
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                }
-              />
-            );
-          })()}
-          <StatsCard
-            title="Total Transactions"
-            value={stats.totalTransactions.toLocaleString()}
-            change={{
-              value: `${transactionChange}%`,
-              isPositive: parseFloat(transactionChange) >= 0,
-            }}
-            icon={
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-            }
-          />
-          <StatsCard
-            title="Successful Payments"
-            value={stats.successfulTransactions.toLocaleString()}
-            subtitle={`${stats.totalTransactions > 0 ? ((stats.successfulTransactions / stats.totalTransactions) * 100).toFixed(1) : 0}% success rate`}
-            icon={
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            }
-          />
-          <StatsCard
-            title="Pending Payments"
-            value={stats.pendingTransactions.toLocaleString()}
-            icon={
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            }
-          />
-          {stats.emailFailedTransactions > 0 && (
-            <StatsCard
-              title="Email Failed"
-              value={stats.emailFailedTransactions.toLocaleString()}
-              subtitle="Requires attention"
-              icon={
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-              }
-            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {(() => {
+                const celoToUsdRate = 0.5;
+                const totalBalanceUSD = walletBalance.cusd + walletBalance.celo * celoToUsdRate;
+                const formattedBalance = formatAmountWithConversion(totalBalanceUSD);
+                return (
+                  <div className="dashboard-card-bg rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <Wallet className="w-6 h-6 text-green-700" />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Balance</p>
+                      {loadingBalance ? (
+                        <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
+                      ) : (
+                        <>
+                          <p className="text-2xl font-bold text-gray-900">{formattedBalance.display}</p>
+                          {formattedBalance.showUSDEquivalent && (
+                            <p className="text-xs text-gray-500 mt-1">{formattedBalance.usdEquivalent}</p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {(() => {
+                const formattedSpent = formatAmountWithConversion(stats.totalSpent);
+                return (
+                  <div className="dashboard-card-bg rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                        <TrendingDown className="w-6 h-6 text-orange-700" />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Total Spent</p>
+                      <p className="text-2xl font-bold text-gray-900">{formattedSpent.display}</p>
+                      {formattedSpent.showUSDEquivalent && (
+                        <p className="text-xs text-gray-500 mt-1">{formattedSpent.usdEquivalent}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {(() => {
+                const formattedRefi = formatAmountWithConversion(stats.refiContribution);
+                return (
+                  <div className="dashboard-card-bg rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <PiggyBank className="w-6 h-6 text-purple-700" />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Savings</p>
+                      <p className="text-2xl font-bold text-gray-900">{formattedRefi.display}</p>
+                      {formattedRefi.showUSDEquivalent && (
+                        <p className="text-xs text-gray-500 mt-1">{formattedRefi.usdEquivalent}</p>
+                      )}
+                      <p className="text-xs text-purple-600 mt-1">Contributed to ReFi</p>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+              <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          ) : (
+            <Chart title="Payment Volume" data={chartDataArray} />
           )}
         </div>
-      )}
 
-      {/* Chart */}
-      {loading ? (
-        <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
-          <div className="h-80 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+        <div>
+          <div
+            className="relative rounded-2xl text-white shadow-xl overflow-hidden h-full"
+            style={{ background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)' }}
+          >
+            <div className="absolute top-0 right-0 w-48 h-48 bg-white/15 rounded-full -mt-24 -mr-16"></div>
+            <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full -mb-20 -ml-10"></div>
+            <div className="relative z-10 flex flex-col gap-6 p-8 h-full">
+              <div>
+                <p className="text-xs uppercase tracking-widest text-white/70">Wallet Overview</p>
+                <h3 className="text-2xl font-bold text-white mt-2">Mizu Pay Wallet</h3>
+              </div>
+
+              {loadingBalance ? (
+                <div className="space-y-3">
+                  <div className="h-6 bg-white/20 rounded animate-pulse"></div>
+                  <div className="h-6 bg-white/20 rounded animate-pulse"></div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-white/70 uppercase">cUSD Balance</p>
+                    <p className="text-xl font-semibold text-white mt-1">{walletBalance.cusd.toFixed(2)} cUSD</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-white/70 uppercase">CELO Balance</p>
+                    <p className="text-xl font-semibold text-white mt-1">{walletBalance.celo.toFixed(4)} CELO</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <p className="text-xs text-white/70 uppercase">Wallet Address</p>
+                <p className="text-sm font-mono text-white/90">
+                  {activeWalletAddress 
+                    ? `${activeWalletAddress.slice(0, 6)}...${activeWalletAddress.slice(-4)}`
+                    : 'No wallet connected'}
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+                <Link
+                  href="/dashboard/wallet"
+                  className="flex-1 px-4 py-3 bg-white text-blue-600 font-semibold rounded-xl text-center shadow-sm hover:bg-white/90 transition-colors"
+                >
+                  Deposit
+                </Link>
+                <button
+                  onClick={handleCopyAddress}
+                  disabled={!activeWalletAddress}
+                  className={`flex-1 px-4 py-3 border border-white/40 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 ${
+                    activeWalletAddress ? 'hover:bg-white/10' : 'opacity-60 cursor-not-allowed'
+                  }`}
+                >
+                  {copied ? (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Copy Address
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      ) : (
-        <Chart title="Payment Volume" data={chartDataArray} />
-      )}
+      </div>
 
-      {/* Recent Transactions */}
       <div>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold dashboard-text-primary">
-            Recent Transactions
-          </h2>
-          <p className="text-sm dashboard-text-secondary mt-1">
-            Your latest payment activity
-          </p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Recent Transactions</h2>
+            <p className="text-sm text-gray-500 mt-1">Your latest payment activity</p>
+          </div>
         </div>
         {loading ? (
-          <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
-            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
           </div>
         ) : (
           <Table transactions={payments.slice(0, 5)} showPagination={false} />

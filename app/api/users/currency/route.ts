@@ -57,9 +57,10 @@ export async function POST(req: Request) {
       );
     }
 
-    if (defaultCurrency !== 'INR' && defaultCurrency !== 'USD') {
+    // Validate currency code (basic check - should be a 3-letter uppercase code)
+    if (!defaultCurrency || typeof defaultCurrency !== 'string' || defaultCurrency.length !== 3) {
       return NextResponse.json(
-        { error: 'Invalid currency. Supported: INR, USD' },
+        { error: 'Invalid currency code. Must be a 3-letter currency code (e.g., USD, INR, EUR)' },
         { status: 400 }
       );
     }

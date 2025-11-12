@@ -170,7 +170,7 @@ export function TransactionHistory({ walletAddress, refreshTrigger }: Transactio
         <h2 className="text-lg font-semibold dashboard-text-primary mb-4">Transaction History</h2>
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -195,68 +195,66 @@ export function TransactionHistory({ walletAddress, refreshTrigger }: Transactio
           <p className="text-sm dashboard-text-secondary">No transactions found</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {transactions.map((tx) => (
             <a
               key={tx.hash}
               href={`https://celo-sepolia.blockscout.com/tx/${tx.hash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between p-4 rounded-lg border dashboard-card-border dashboard-hover transition-colors group"
+              className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50/50 transition-all group"
             >
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                {/* Transaction Type Icon */}
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    tx.type === 'deposit'
-                      ? 'bg-green-100 dark:bg-green-900/30'
-                      : tx.type === 'payment'
-                      ? 'bg-blue-100 dark:bg-blue-900/30'
-                      : 'bg-red-100 dark:bg-red-900/30'
-                  }`}
-                >
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                {/* Transaction Type Icon - More Subtle */}
+                <div className="flex-shrink-0">
                   {tx.type === 'deposit' ? (
-                    <svg
-                      className="w-5 h-5 text-green-600 dark:text-green-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                    <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                         strokeWidth={2}
-                        d="M12 5v14m7-7l-7 7-7-7"
-                      />
-                    </svg>
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 5v14m7-7l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
                   ) : tx.type === 'payment' ? (
-                    <svg
-                      className="w-5 h-5 text-blue-600 dark:text-blue-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                    <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                         strokeWidth={2}
-                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                      />
-                    </svg>
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                        />
+                      </svg>
+                    </div>
                   ) : (
-                    <svg
-                      className="w-5 h-5 text-red-600 dark:text-red-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                    <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-red-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                         strokeWidth={2}
-                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                      />
-                    </svg>
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                        />
+                      </svg>
+                    </div>
                   )}
                 </div>
 
@@ -266,54 +264,56 @@ export function TransactionHistory({ walletAddress, refreshTrigger }: Transactio
                     <span
                       className={`text-sm font-medium ${
                         tx.type === 'deposit'
-                          ? 'text-green-600 dark:text-green-400'
+                          ? 'text-green-700'
                           : tx.type === 'payment'
-                          ? 'text-blue-600 dark:text-blue-400'
-                          : 'text-red-600 dark:text-red-400'
+                          ? 'text-blue-700'
+                          : 'text-red-700'
                       }`}
                     >
                       {tx.type === 'deposit' ? 'Deposit' : tx.type === 'payment' ? 'Payment' : 'Withdrawal'}
                     </span>
-                    <span className="text-xs dashboard-text-secondary px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800">
+                    <span className="text-xs text-gray-500 px-2 py-0.5 rounded bg-gray-100 font-medium">
                       {tx.tokenSymbol}
                     </span>
                   </div>
-                  <p className="text-xs dashboard-text-secondary truncate">
+                  <p className="text-xs text-gray-500 truncate">
                     {tx.type === 'deposit'
                       ? `From: ${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`
                       : tx.type === 'payment'
                       ? `Payment to Mizu Pay`
                       : `To: ${tx.to.slice(0, 6)}...${tx.to.slice(-4)}`}
                   </p>
-                  <p className="text-xs dashboard-text-secondary mt-1">
+                  <p className="text-xs text-gray-400 mt-0.5">
                     {formatDate(tx.timestamp)}
                   </p>
                 </div>
 
                 {/* Amount */}
-                <div className="text-right flex-shrink-0 ml-4">
-                  <p
-                    className={`text-sm font-semibold ${
-                      tx.type === 'deposit'
-                        ? 'text-green-600 dark:text-green-400'
-                        : tx.type === 'payment'
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-red-600 dark:text-red-400'
-                    }`}
-                  >
-                    {tx.type === 'deposit' ? '+' : '-'}
-                    {formatAmount(tx.value)} {tx.tokenSymbol}
-                  </p>
+                <div className="text-right flex-shrink-0 ml-4 flex items-center gap-2">
+                  <div>
+                    <p
+                      className={`text-sm font-semibold ${
+                        tx.type === 'deposit'
+                          ? 'text-green-700'
+                          : tx.type === 'payment'
+                          ? 'text-blue-700'
+                          : 'text-red-700'
+                      }`}
+                    >
+                      {tx.type === 'deposit' ? '+' : '-'}
+                      {formatAmount(tx.value)} {tx.tokenSymbol}
+                    </p>
+                  </div>
                   <svg
-                    className="w-4 h-4 dashboard-text-secondary opacity-0 group-hover:opacity-100 transition-opacity mt-1 ml-auto"
+                    className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    strokeWidth={2}
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
                       d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                     />
                   </svg>

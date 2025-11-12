@@ -198,8 +198,8 @@ export default function CheckoutPage() {
         <div className="max-w-2xl mx-auto">
           {/* Header Skeleton */}
           <div className="mb-8">
-            <div className="h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse mb-3"></div>
-            <div className="h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+            <div className="h-8 w-64 bg-gray-200 rounded-lg animate-pulse mb-3"></div>
+            <div className="h-4 w-48 bg-gray-200 rounded-lg animate-pulse"></div>
           </div>
           
           {/* Main Card Skeleton */}
@@ -208,42 +208,42 @@ export default function CheckoutPage() {
               {/* Status Message */}
               <div className="flex items-center gap-3 pb-4 border-b dashboard-border">
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
                     <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent"></div>
                   </div>
                 </div>
                 <div className="flex-1">
-                  <div className="h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
-                  <div className="h-4 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  <div className="h-5 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-4 w-64 bg-gray-200 rounded animate-pulse"></div>
                 </div>
               </div>
               
               {/* Purchase Details Skeleton */}
               <div className="space-y-4">
-                <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-3"></div>
+                <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-3"></div>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                    <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-5 w-32 bg-gray-200 rounded animate-pulse"></div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                    <div className="h-6 w-28 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-6 w-28 bg-gray-200 rounded animate-pulse"></div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                    <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
                   </div>
                 </div>
               </div>
               
               {/* Progress Steps Skeleton */}
               <div className="pt-4 border-t dashboard-border">
-                <div className="h-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse mb-2"></div>
+                <div className="h-3 w-full bg-gray-200 rounded-full animate-pulse mb-2"></div>
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
-                  <div className="h-3 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  <div className="h-3 w-40 bg-gray-200 rounded animate-pulse"></div>
                 </div>
               </div>
             </div>
@@ -252,11 +252,11 @@ export default function CheckoutPage() {
           {/* Status Message */}
           <div className="text-center">
             {status === 'error' ? (
-              <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
+              <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+                <p className="text-sm font-medium text-red-800 mb-2">
                   {statusMessages[status]}
                 </p>
-                <p className="text-xs text-red-700 dark:text-red-300">
+                <p className="text-xs text-red-700">
                   {errorMessage || 'An error occurred'}
                 </p>
                 <button

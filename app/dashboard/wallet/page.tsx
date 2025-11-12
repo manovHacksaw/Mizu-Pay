@@ -10,10 +10,12 @@ import { SendWalletInfoModal } from '@/components/modals/SendWalletInfoModal';
 import { SendModal } from '@/components/modals/SendModal';
 import { TransactionHistory } from '@/components/wallet/TransactionHistory';
 import { syncUserToDatabase, extractWalletData } from '@/lib/syncUser';
+import { useCurrencyStore } from '@/lib/currencyStore';
 
 export default function WalletPage() {
   const { user, createWallet } = usePrivy();
   const { wallets, ready: walletsReady } = useWallets();
+  const { convertCryptoToUSD, fetchExchangeRates } = useCurrencyStore();
   const [balances, setBalances] = useState<{ celo: string; cusd: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -218,6 +220,11 @@ export default function WalletPage() {
     }
   };
 
+  // Fetch exchange rates on mount
+  useEffect(() => {
+    fetchExchangeRates();
+  }, [fetchExchangeRates]);
+
   useEffect(() => {
     fetchBalances();
   }, [activeWallet?.address]);
@@ -257,8 +264,8 @@ export default function WalletPage() {
               </>
             ) : (
               <>
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </div>
@@ -306,85 +313,105 @@ export default function WalletPage() {
         </p>
       </div>
 
-      {/* Wallet Address Card */}
-      <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium dashboard-text-secondary mb-2">
-              Wallet Address
-            </p>
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-mono dashboard-text-primary">
-                {activeWallet?.address
-                  ? `${activeWallet.address.slice(0, 6)}...${activeWallet.address.slice(-4)}`
-                  : 'No wallet connected'}
-              </p>
-              {activeWallet?.address && (
+      {/* Wallet Credit Card */}
+      {activeWallet?.address && (
+        <div 
+          className="relative rounded-2xl p-8 text-white shadow-xl overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+            minHeight: '220px',
+          }}
+        >
+          {/* Decorative Elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24"></div>
+          
+          {/* Card Content */}
+          <div className="relative z-10 flex flex-col justify-between h-full min-h-[180px]">
+           
+            
+            {/* Middle Section - Balance */}
+            <div className="mb-8">
+              {loading ? (
+                <div className="h-10 w-48 bg-white/20 rounded-lg animate-pulse"></div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-4xl font-bold mb-1">
+                      {(() => {
+                        const cusd = parseFloat(balances?.cusd || '0');
+                        return cusd.toFixed(2);
+                      })()}
+                    </h2>
+                    <p className="text-lg text-white/90 font-medium">cUSD Balance</p>
+                    <p className="text-sm text-white/70 mt-1">
+                      ≈ ${(() => {
+                        const cusd = parseFloat(balances?.cusd || '0');
+                        const usdValue = convertCryptoToUSD(cusd, 'cUSD');
+                        return usdValue.toFixed(2);
+                      })()} USD
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-white/70 uppercase tracking-wider mb-1">CELO Balance</p>
+                    <p className="text-2xl font-semibold text-white mb-1">
+                      {(() => {
+                        const celo = parseFloat(balances?.celo || '0');
+                        return celo.toFixed(4);
+                      })()}{' '}
+                      CELO
+                    </p>
+                    <p className="text-sm text-white/70">
+                      ≈ ${(() => {
+                        const celo = parseFloat(balances?.celo || '0');
+                        const usdValue = convertCryptoToUSD(celo, 'CELO');
+                        return usdValue.toFixed(2);
+                      })()} USD
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Section - Wallet Address */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-white/70 uppercase tracking-wider font-medium">Wallet Address</p>
                 <button
                   onClick={copyAddress}
-                  className="p-1.5 rounded-lg dashboard-hover transition-colors"
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm"
                   title="Copy address"
                 >
                   {copied ? (
-                    <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
-                    <svg className="w-4 h-4 dashboard-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
                   )}
                 </button>
-              )}
+              </div>
+              <p className="text-base font-mono tracking-wider text-white/90 break-all">
+                {activeWallet.address || 'No wallet connected'}
+              </p>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Balance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* cUSD Balance */}
-        <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm font-medium dashboard-text-secondary mb-1">cUSD</p>
-              {loading ? (
-                <div className="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-              ) : (
-                <h3 className="text-2xl font-bold dashboard-text-primary">
-                  {balances?.cusd || '0.0000'}
-                </h3>
-              )}
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
+      {/* Copy Success Toast */}
+      {copied && (
+        <div className="fixed bottom-6 right-6 z-50 animate-fadeIn">
+          <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-sm font-medium">Address copied to clipboard</span>
           </div>
         </div>
-
-        {/* CELO Balance */}
-        <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm font-medium dashboard-text-secondary mb-1">CELO</p>
-              {loading ? (
-                <div className="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-              ) : (
-                <h3 className="text-2xl font-bold dashboard-text-primary">
-                  {balances?.celo || '0.0000'}
-                </h3>
-              )}
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-              <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex items-center gap-4">
@@ -392,8 +419,8 @@ export default function WalletPage() {
           onClick={() => setIsSendInfoModalOpen(true)}
           className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
           </svg>
           Send
         </button>
@@ -401,8 +428,8 @@ export default function WalletPage() {
           onClick={() => setIsReceiveModalOpen(true)}
           className="flex-1 px-6 py-3 dashboard-card-bg dashboard-text-secondary border dashboard-card-border rounded-lg dashboard-hover transition-colors font-medium flex items-center justify-center gap-2"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7l-7 7-7-7" />
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m7-7l-7 7-7-7" />
           </svg>
           Receive
         </button>
@@ -410,8 +437,8 @@ export default function WalletPage() {
           onClick={copyAddress}
           className="px-6 py-3 dashboard-card-bg dashboard-text-secondary border dashboard-card-border rounded-lg dashboard-hover transition-colors font-medium flex items-center justify-center gap-2"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
           </svg>
           Copy Address
         </button>

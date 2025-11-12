@@ -40,16 +40,14 @@ export function Chart({ data, title = 'Monthly Volume' }: ChartProps) {
       </div>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-800" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
             dataKey="date"
             stroke="#6b7280"
-            className="dark:stroke-gray-500"
             style={{ fontSize: '12px' }}
           />
           <YAxis
             stroke="#6b7280"
-            className="dark:stroke-gray-500"
             style={{ fontSize: '12px' }}
             tickFormatter={(value) => `$${value.toLocaleString()}`}
           />

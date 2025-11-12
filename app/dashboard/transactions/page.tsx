@@ -149,7 +149,7 @@ export default function TransactionsPage() {
       {/* Transactions Table */}
       {loading ? (
         <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
-          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
         </div>
       ) : (
         <Table transactions={filteredPayments} showPagination={true} />
