@@ -53,7 +53,7 @@ async function main() {
       
       giftCards.push({
         store: store,
-        currency: "INR",
+      currency: "INR",
         amountMinor: amount * 100, // Convert to paise
         amountUSD: calculateUSD(amount),
         validityDays: store === "Flipkart" ? 180 : 365, // Flipkart has 180 days, others 365

@@ -56,36 +56,36 @@ export function SendWalletInfoModal({ isOpen, onClose, onContinue }: SendWalletI
           }}
         >
           <div className="flex items-start justify-between">
-            <div className="flex-1">
+          <div className="flex-1">
               <h2 className="text-2xl font-bold text-white mb-1">
-                About Your Mizu Pay Wallet
-              </h2>
-            </div>
-            <button
-              onClick={onClose}
+              About Your Mizu Pay Wallet
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white"
-              aria-label="Close modal"
-            >
-              <svg
+            aria-label="Close modal"
+          >
+            <svg
                 className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
           </div>
         </div>
 
         {/* Content */}
         <div className="px-8 py-6">
-          {/* Info Message */}
+        {/* Info Message */}
           <div className="p-6 rounded-xl bg-blue-50 border border-blue-200">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-200 flex items-center justify-center">
@@ -95,14 +95,14 @@ export function SendWalletInfoModal({ isOpen, onClose, onContinue }: SendWalletI
               </div>
               <div className="space-y-3">
                 <p className="text-sm text-blue-900 leading-relaxed">
-                  This wallet is managed securely for you by Mizu Pay using Privy.{' '}
-                  It is designed primarily for purchases and payments within the Mizu Pay ecosystem.
+              This wallet is managed securely for you by Mizu Pay using Privy.{' '}
+              It is designed primarily for purchases and payments within the Mizu Pay ecosystem.
                 </p>
                 <p className="text-sm text-blue-900 leading-relaxed">
-                  You can still send or withdraw funds to an external wallet if needed.{' '}
-                  However, please note that maintaining and securing embedded wallets incurs infrastructure fees,{' '}
-                  so a small withdrawal fee may apply when sending funds outside Mizu Pay.
-                </p>
+              You can still send or withdraw funds to an external wallet if needed.{' '}
+              However, please note that maintaining and securing embedded wallets incurs infrastructure fees,{' '}
+              so a small withdrawal fee may apply when sending funds outside Mizu Pay.
+            </p>
               </div>
             </div>
           </div>

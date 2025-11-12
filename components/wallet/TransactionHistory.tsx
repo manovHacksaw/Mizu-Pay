@@ -256,18 +256,18 @@ export function TransactionHistory({ walletAddress, refreshTrigger }: Transactio
                 {/* Amount */}
                 <div className="text-right flex-shrink-0 ml-4 flex items-center gap-2">
                   <div>
-                    <p
-                      className={`text-sm font-semibold ${
-                        tx.type === 'deposit'
+                  <p
+                    className={`text-sm font-semibold ${
+                      tx.type === 'deposit'
                           ? 'text-green-700'
-                          : tx.type === 'payment'
+                        : tx.type === 'payment'
                           ? 'text-blue-700'
                           : 'text-red-700'
-                      }`}
-                    >
-                      {tx.type === 'deposit' ? '+' : '-'}
-                      {formatAmount(tx.value)} {tx.tokenSymbol}
-                    </p>
+                    }`}
+                  >
+                    {tx.type === 'deposit' ? '+' : '-'}
+                    {formatAmount(tx.value)} {tx.tokenSymbol}
+                  </p>
                   </div>
                   <svg
                     className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"

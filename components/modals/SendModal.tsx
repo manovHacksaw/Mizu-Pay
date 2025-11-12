@@ -215,33 +215,33 @@ export function SendModal({ isOpen, onClose, walletAddress, balances }: SendModa
           }}
         >
           <div className="flex items-start justify-between">
-            <div className="flex-1">
+          <div className="flex-1">
               <h2 className="text-2xl font-bold text-white mb-1">
-                Send {token.toUpperCase()}
-              </h2>
+              Send {token.toUpperCase()}
+            </h2>
               <p className="text-sm text-white/90">
-                Send funds to another wallet address
-              </p>
-            </div>
-            <button
-              onClick={onClose}
+              Send funds to another wallet address
+            </p>
+          </div>
+          <button
+            onClick={onClose}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white"
-              aria-label="Close modal"
-            >
-              <svg
+            aria-label="Close modal"
+          >
+            <svg
                 className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
           </div>
         </div>
 
@@ -254,8 +254,8 @@ export function SendModal({ isOpen, onClose, walletAddress, balances }: SendModa
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-200 flex items-center justify-center">
                   <svg className="w-6 h-6 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-green-900 mb-1">
@@ -424,7 +424,7 @@ export function SendModal({ isOpen, onClose, walletAddress, balances }: SendModa
               </button>
             </>
           )}
-        </div>
+          </div>
       </div>
     </div>
   );

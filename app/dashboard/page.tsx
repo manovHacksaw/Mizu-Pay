@@ -8,7 +8,7 @@
   import { useEffect, useState } from 'react';
   import { formatDateForChart } from '@/lib/dateUtils';
   import { useCurrencyStore } from '@/lib/currencyStore';
-import { formatAmountWithConversion } from '@/lib/currencyUtils';
+  import { formatAmountWithConversion } from '@/lib/currencyUtils';
 import { Coins, ArrowDownCircle, Leaf, ArrowRight, Copy } from 'lucide-react';
   import { createPublicClient, http, formatUnits, defineChain, getContract } from 'viem';
   import { erc20Abi } from 'viem';
@@ -99,7 +99,7 @@ import { Coins, ArrowDownCircle, Leaf, ArrowRight, Copy } from 'lucide-react';
           const publicClient = createPublicClient({
             chain: celoSepolia,
             transport: http(),
-          });
+    });
 
           // Get CELO balance
           const celoBalance = await publicClient.getBalance({
@@ -141,7 +141,7 @@ import { Coins, ArrowDownCircle, Leaf, ArrowRight, Copy } from 'lucide-react';
         try {
           setLoading(true);
           const response = await fetch(`/api/payments/history?email=${encodeURIComponent(user.email?.address || '')}`);
-
+          
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             if (response.status === 404 && errorData.error === 'User not found') {
@@ -213,17 +213,17 @@ import { Coins, ArrowDownCircle, Leaf, ArrowRight, Copy } from 'lucide-react';
 
     // Calculate volume chart data
     const volumeMap = new Map<string, { volume: number; transactions: number; date: Date }>();
-
+    
     payments
       .filter((p) => p.payment)
       .forEach((payment) => {
         const date = new Date(payment.createdAt);
         const dateKey = date.toISOString().split('T')[0];
-
+        
         if (!volumeMap.has(dateKey)) {
           volumeMap.set(dateKey, { volume: 0, transactions: 0, date });
         }
-
+        
         const entry = volumeMap.get(dateKey)!;
         entry.volume += payment.amountUSD;
         entry.transactions += 1;
@@ -272,11 +272,11 @@ import { Coins, ArrowDownCircle, Leaf, ArrowRight, Copy } from 'lucide-react';
         <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <ArrowDownCircle className="w-8 h-8 dashboard-text-primary" strokeWidth={2.5} />
-          </div>
+                    </div>
           <h3 className="text-xs font-semibold uppercase tracking-wide dashboard-text-secondary mb-3">Total Spent</h3>
           {loading ? (
             <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
-          ) : (
+                      ) : (
             <>
               <p className="text-2xl font-bold dashboard-text-primary">{spentFormatted.display}</p>
               {spentFormatted.showUSDEquivalent && (
@@ -284,13 +284,13 @@ import { Coins, ArrowDownCircle, Leaf, ArrowRight, Copy } from 'lucide-react';
               )}
             </>
           )}
-        </div>
+                    </div>
 
         {/* ReFi Contribution Card */}
         <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <Leaf className="w-8 h-8 dashboard-text-primary" strokeWidth={2.5} />
-          </div>
+                  </div>
           <h3 className="text-xs font-semibold uppercase tracking-wide dashboard-text-secondary mb-3">
             ReFi Contribution
           </h3>
@@ -303,8 +303,8 @@ import { Coins, ArrowDownCircle, Leaf, ArrowRight, Copy } from 'lucide-react';
                 <p className="text-sm dashboard-text-muted mt-1.5">{refiFormatted.usdEquivalent}</p>
               )}
             </>
-          )}
-        </div>
+                    )}
+                  </div>
 
         <div
  className="relative rounded-2xl text-white shadow-xl overflow-hidden lg:col-span-2"
@@ -315,13 +315,13 @@ style={{ background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)' }}
         <div className="relative z-10 flex flex-col gap-4 p-6 md:p-8">
           <div>
             <p className="text-xs uppercase tracking-widest text-white/70">Wallet Overview</p>
-          </div>
+                </div>
 
           {loadingBalance ? (
             <div className="space-y-2">
               <div className="h-6 bg-white/20 rounded animate-pulse"></div>
               <div className="h-6 bg-white/20 rounded animate-pulse"></div>
-            </div>
+                </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -368,9 +368,9 @@ style={{ background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)' }}
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
         </div>
 
         {/* Second Section: Charts and Transaction History */}
@@ -380,7 +380,7 @@ style={{ background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)' }}
 
           {/* CELO to USD Trend Chart */}
           <CeloUsdChart />
-        </div>
+          </div>
 
         {/* Transaction History */}
         <div>
@@ -400,4 +400,4 @@ style={{ background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)' }}
         </div>
       </div>
     );
-  }
+  }   

@@ -5,6 +5,15 @@ import { expireOldSessions } from "@/lib/sessionUtils";
 export async function POST(req: Request) {
   console.log("API HIT SUCCESSFULLY - /api/sessions/create");
   
+  // Verify database connection is available
+  if (!process.env.DATABASE_URL) {
+    console.error("DATABASE_URL environment variable is not set");
+    return NextResponse.json(
+      { error: "Database configuration error", details: "DATABASE_URL not configured" },
+      { status: 500 }
+    );
+  }
+  
   try {
     const body = await req.json();
     console.log("Request body:", body);
@@ -235,11 +244,28 @@ export async function POST(req: Request) {
     return NextResponse.json(response);
   } catch (err) {
     console.error("SESSION CREATE ERROR:", err);
-    const errorResponse = {
-      error: "Internal Server Error",
-      details: err instanceof Error ? err.message : String(err),
-      stack: err instanceof Error ? err.stack : undefined,
+    
+    // Check for common database connection errors
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const isDatabaseError = 
+      errorMessage.includes('P1001') || // Can't reach database server
+      errorMessage.includes('P1000') || // Authentication failed
+      errorMessage.includes('P2002') || // Unique constraint violation
+      errorMessage.includes('connection') ||
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('ECONNREFUSED') ||
+      errorMessage.includes('ENOTFOUND');
+    
+    const errorResponse: any = {
+      error: isDatabaseError ? "Database connection error" : "Internal Server Error",
+      details: errorMessage,
     };
+    
+    // Include stack trace in development or if it's a known error type
+    if (process.env.NODE_ENV === 'development' || isDatabaseError) {
+      errorResponse.stack = err instanceof Error ? err.stack : undefined;
+    }
+    
     console.error("Returning error response:", errorResponse);
     return NextResponse.json(errorResponse, { status: 500 });
   }

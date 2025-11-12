@@ -221,31 +221,31 @@ function CheckoutPageContent() {
               <p className="text-sm text-gray-600 mb-6">
                 We're verifying the store and initializing your checkout securely.
               </p>
-              
-              {/* Status Message */}
-              {status === 'error' ? (
+          
+          {/* Status Message */}
+            {status === 'error' ? (
                 <div className="mt-6 p-4 rounded-lg bg-red-50 border border-red-200">
                   <p className="text-sm font-medium text-red-800 mb-2">
-                    {statusMessages[status]}
-                  </p>
+                  {statusMessages[status]}
+                </p>
                   <p className="text-xs text-red-700 mb-3">
-                    {errorMessage || 'An error occurred'}
-                  </p>
-                  <button
-                    onClick={() => router.push('/dashboard')}
+                  {errorMessage || 'An error occurred'}
+                </p>
+                <button
+                  onClick={() => router.push('/dashboard')}
                     className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                  >
-                    Go Home
-                  </button>
-                </div>
-              ) : (
+                >
+                  Go Home
+                </button>
+              </div>
+            ) : (
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
+                <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
                   <span>{statusMessages[status]}</span>
                 </div>
-              )}
+            )}
             </div>
           </div>
         </div>

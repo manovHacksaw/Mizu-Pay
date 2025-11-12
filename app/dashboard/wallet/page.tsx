@@ -352,7 +352,7 @@ export default function WalletPage() {
                       })()} USD
                     </p>
                   </div>
-                  <div>
+          <div>
                     <p className="text-sm text-white/70 uppercase tracking-wider mb-1">CELO Balance</p>
                     <p className="text-2xl font-semibold text-white mb-1">
                       {(() => {
@@ -407,7 +407,7 @@ export default function WalletPage() {
           <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+              </svg>
             <span className="text-sm font-medium">Address copied to clipboard</span>
           </div>
         </div>

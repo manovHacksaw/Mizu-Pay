@@ -383,13 +383,13 @@
                                 <div className="flex justify-between items-center">
                                     <span className="text-amber-800 font-medium">USD:</span>
                                     <span className="font-bold text-amber-900">{formatAmount(extraPaymentUSD, 'USD')}</span>
-                                </div>
-                                {extraPaymentCELO > 0 && (
+                        </div>
+                        {extraPaymentCELO > 0 && (
                                     <div className="flex justify-between items-center">
                                         <span className="text-amber-800 font-medium">CELO:</span>
                                         <span className="font-bold text-amber-900">{extraPaymentCELO.toFixed(4)} CELO</span>
-                                    </div>
-                                )}
+                            </div>
+                        )}
                             </div>
                         </div>
                     </div>
@@ -423,7 +423,7 @@
                         </div>
                         {isSelected && (
                         <div className="animate-in zoom-in duration-200">
-                            <CheckCircle className="w-6 h-6 text-blue-600" />
+                        <CheckCircle className="w-6 h-6 text-blue-600" />
                         </div>
                         )}
                     </div>
@@ -1202,12 +1202,12 @@
                             <div className="relative w-20 h-20 mx-auto">
                                 <div className="absolute inset-0 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
                                 <div className="absolute inset-2 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-                                <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="absolute inset-0 flex items-center justify-center">
                                     <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                </div>
                             </div>
+                        </div>
                         </div>
                         <h2 className="text-2xl font-bold text-gray-900 mb-3">
                             {statusMessages[paymentStatus] || 'Processing Payment'}

@@ -38,18 +38,18 @@ export default function SettingsPage() {
               Email Address
             </label>
             <div className="relative">
-              <input
-                type="email"
-                value={user?.email?.address || ''}
-                disabled
+            <input
+              type="email"
+              value={user?.email?.address || ''}
+              disabled
                 className="w-full px-4 py-3 dashboard-input-bg dashboard-card-border border rounded-lg dashboard-text-primary cursor-not-allowed bg-gray-50"
-              />
+            />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 <svg className="w-5 h-5 dashboard-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-            </div>
+          </div>
             <p className="text-xs dashboard-text-muted mt-1.5">
               Your email address is used for account verification and notifications
             </p>
@@ -62,7 +62,7 @@ export default function SettingsPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold dashboard-text-primary">
             Wallet
-          </h2>
+        </h2>
         </div>
         <div className="space-y-3">
           {embeddedWallets.length > 0 ? (
@@ -105,7 +105,7 @@ export default function SettingsPage() {
             ))
           ) : (
             <div className="p-5 text-center border dashboard-card-border rounded-xl">
-              <p className="text-sm dashboard-text-secondary">No Mizu Pay wallet found</p>
+            <p className="text-sm dashboard-text-secondary">No Mizu Pay wallet found</p>
             </div>
           )}
         </div>
@@ -162,8 +162,8 @@ export default function SettingsPage() {
                               : 'dashboard-text-primary hover:bg-gray-50'
                           }`}
                         >
-                          <div className="flex items-center justify-between">
-                            <div>
+          <div className="flex items-center justify-between">
+            <div>
                               <p className="text-sm font-medium">{currency.name}</p>
                               <p className="text-xs dashboard-text-muted">{currency.code}</p>
                             </div>
