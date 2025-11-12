@@ -26,6 +26,55 @@ Millions of users hold cryptocurrency but struggle to use it for real-world purc
 
 ---
 
+## 🔗 Smart Contracts (Celo Sepolia Testnet)
+
+### Contract Addresses
+
+#### MizuPay Contract
+- **Address**: `0x18042d3C48d7f09E863A5e18Ef3562E4827638aA`
+- **Explorer**: [View on Blockscout](https://celo-sepolia.blockscout.com/address/0x18042d3C48d7f09E863A5e18Ef3562E4827638aA)
+- **Network**: Celo Sepolia Testnet
+- **Chain ID**: 11142220
+
+#### MockCUSD Contract
+- **Address**: `0x967DBe52B9b4133B18A91bDC4F800063D205704A`
+- **Explorer**: [View on Blockscout](https://celo-sepolia.blockscout.com/address/0x967DBe52B9b4133B18A91bDC4F800063D205704A)
+- **Network**: Celo Sepolia Testnet
+- **Chain ID**: 11142220
+
+### Contract Functions
+
+#### MizuPay Contract
+- `payForSession(string sessionId, uint256 amount)` - Pay for a payment session
+- `getPaymentInfo(string sessionId)` - Retrieve payment details for a session
+- `getBalance()` - Get contract's cUSD balance
+- `withdraw(address to, uint256 amount)` - Withdraw funds (owner only)
+- `setCusdToken(address _newToken)` - Update token address (owner only)
+
+**Events:**
+- `PaymentReceived(string indexed sessionId, address indexed payer, uint256 amount, uint256 timestamp)`
+- `PaymentWithdrawn(address indexed to, uint256 amount, uint256 timestamp)`
+
+#### MockCUSD Contract
+- `mint(address _to, uint256 _amount)` - Mint tokens (owner only)
+- `transfer(address _to, uint256 _value)` - Transfer tokens
+- `approve(address _spender, uint256 _value)` - Approve spending
+- `transferFrom(address _from, address _to, uint256 _value)` - Transfer on behalf
+- `balanceOf(address account)` - Get token balance
+
+**Events:**
+- `Transfer(address indexed from, address indexed to, uint256 value)`
+- `Approval(address indexed owner, address indexed spender, uint256 value)`
+
+### Network Configuration
+- **RPC URL**: `https://rpc.ankr.com/celo_sepolia`
+- **Block Explorer**: `https://celo-sepolia.blockscout.com`
+- **Native Currency**: CELO (18 decimals)
+- **Test Token**: MockCUSD (18 decimals)
+
+---
+
+
 ## 💡 Solution
 
 Mizu Pay solves this problem by creating a seamless, secure, and instant bridge between cryptocurrency and e-commerce:
@@ -114,53 +163,6 @@ Receives gift card via email → Uses gift card to complete purchase
 
 ---
 
-## 🔗 Smart Contracts (Celo Sepolia Testnet)
-
-### Contract Addresses
-
-#### MizuPay Contract
-- **Address**: `0x18042d3C48d7f09E863A5e18Ef3562E4827638aA`
-- **Explorer**: [View on Blockscout](https://celo-sepolia.blockscout.com/address/0x18042d3C48d7f09E863A5e18Ef3562E4827638aA)
-- **Network**: Celo Sepolia Testnet
-- **Chain ID**: 11142220
-
-#### MockCUSD Contract
-- **Address**: `0x967DBe52B9b4133B18A91bDC4F800063D205704A`
-- **Explorer**: [View on Blockscout](https://celo-sepolia.blockscout.com/address/0x967DBe52B9b4133B18A91bDC4F800063D205704A)
-- **Network**: Celo Sepolia Testnet
-- **Chain ID**: 11142220
-
-### Contract Functions
-
-#### MizuPay Contract
-- `payForSession(string sessionId, uint256 amount)` - Pay for a payment session
-- `getPaymentInfo(string sessionId)` - Retrieve payment details for a session
-- `getBalance()` - Get contract's cUSD balance
-- `withdraw(address to, uint256 amount)` - Withdraw funds (owner only)
-- `setCusdToken(address _newToken)` - Update token address (owner only)
-
-**Events:**
-- `PaymentReceived(string indexed sessionId, address indexed payer, uint256 amount, uint256 timestamp)`
-- `PaymentWithdrawn(address indexed to, uint256 amount, uint256 timestamp)`
-
-#### MockCUSD Contract
-- `mint(address _to, uint256 _amount)` - Mint tokens (owner only)
-- `transfer(address _to, uint256 _value)` - Transfer tokens
-- `approve(address _spender, uint256 _value)` - Approve spending
-- `transferFrom(address _from, address _to, uint256 _value)` - Transfer on behalf
-- `balanceOf(address account)` - Get token balance
-
-**Events:**
-- `Transfer(address indexed from, address indexed to, uint256 value)`
-- `Approval(address indexed owner, address indexed spender, uint256 value)`
-
-### Network Configuration
-- **RPC URL**: `https://rpc.ankr.com/celo_sepolia`
-- **Block Explorer**: `https://celo-sepolia.blockscout.com`
-- **Native Currency**: CELO (18 decimals)
-- **Test Token**: MockCUSD (18 decimals)
-
----
 
 ## 🚀 Getting Started
 
