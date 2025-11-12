@@ -4,7 +4,12 @@
   "framework": "nextjs",
   "functions": {
     "app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "node_modules/.prisma/client/**"
+    },
+    "app/api/**/*.js": {
+      "maxDuration": 30,
+      "includeFiles": "node_modules/.prisma/client/**"
     }
   }
 }
