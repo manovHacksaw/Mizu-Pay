@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 
@@ -8,7 +8,7 @@ import { usePrivy, useWallets } from '@privy-io/react-auth'
  * When extension is clicked, this page creates a unique session ID with status "pending"
  * and redirects to /checkout/{sessionId}
  */
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { ready, authenticated, user } = usePrivy()
@@ -251,6 +251,47 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen hero-bg relative overflow-hidden transition-colors duration-300">
+        <div className="relative z-10 px-5 py-16">
+          <div className="max-w-2xl mx-auto">
+            <div className="dashboard-modal-card mb-6">
+              <div className="text-center py-12">
+                <div className="mb-6 flex justify-center">
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg animate-pulse">
+                      <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
+                    <div className="absolute inset-0 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" style={{ animationDuration: '2s' }}></div>
+                  </div>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                  Creating a secure session...
+                </h2>
+                <p className="text-sm text-gray-600 mb-6">
+                  We're verifying the store and initializing your checkout securely.
+                </p>
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Loading...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <CheckoutPageContent />
+    </Suspense>
   )
 }
 
