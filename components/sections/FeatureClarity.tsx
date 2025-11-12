@@ -207,7 +207,7 @@ export function FeatureClarity() {
   ]
 
   return (
-    <section ref={sectionRef} className="relative py-20 md:py-32 px-5" style={{ backgroundColor: "var(--background)" }}>
+    <section ref={sectionRef} className="relative py-12 md:py-16 px-5" style={{ backgroundColor: "var(--background)" }}>
       <div className="max-w-6xl mx-auto">
         {/* Tagline */}
         <div className="text-center mb-4">
@@ -230,14 +230,14 @@ export function FeatureClarity() {
 
         {/* One-sentence clarifier */}
         <p
-          className="text-base md:text-lg text-center mb-12 md:mb-16 max-w-2xl mx-auto"
+          className="text-base md:text-lg text-center mb-6 md:mb-8 max-w-2xl mx-auto"
           style={{ color: "var(--content-text-secondary)" }}
         >
           Transform your cUSD and CELO into real purchases on any e-commerce site.
         </p>
 
         {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {features.map((feature, index) => {
             // Only use stagger delays on landing page
             const cardStaggerDelay = isLandingPage ? index * 0.9 : 0
@@ -246,7 +246,7 @@ export function FeatureClarity() {
             return (
               <div
                 key={index}
-                className="card-bg rounded-xl p-6 md:p-8 hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]"
+                className="card-bg rounded-xl p-5 md:p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]"
                 style={{
                   opacity: isAnimated ? 1 : 0,
                   transform: isAnimated ? "translateY(0)" : "translateY(15px)",

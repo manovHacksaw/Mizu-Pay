@@ -429,7 +429,7 @@ const MetadataDisplay = memo(function MetadataDisplay({ metadata }: MetadataDisp
           className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 rounded-lg border border-gray-200/40 bg-white/95 p-2.5 shadow-lg backdrop-blur"
         >
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full" style={{ backgroundColor: "#0A4DFF" }}>
               <DollarSign className="h-3 w-3 text-white" />
             </div>
             <div>
@@ -446,12 +446,12 @@ const MetadataDisplay = memo(function MetadataDisplay({ metadata }: MetadataDisp
           className="absolute right-0 top-1/2 translate-x-full -translate-y-1/2 rounded-lg border border-indigo-200/40 bg-gradient-to-br from-indigo-50 to-blue-50 p-3 shadow-lg backdrop-blur"
         >
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-blue-500">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: "#0A4DFF" }}>
               <span className="text-xs font-bold text-white">$</span>
             </div>
             <div>
-              <div className="text-xs font-medium text-indigo-600">Pay with</div>
-              <div className="text-sm font-bold text-indigo-900">Celo/USDC</div>
+              <div className="text-xs font-medium" style={{ color: "#0A4DFF" }}>Pay with</div>
+              <div className="text-sm font-bold" style={{ color: "#0A4DFF" }}>Celo/USDC</div>
             </div>
           </div>
         </motion.div>

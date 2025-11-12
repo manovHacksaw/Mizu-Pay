@@ -9,7 +9,7 @@ export function Hero() {
   const {ready} = usePrivy();
 
   return (
-    <div className="relative z-10 text-center px-5 pt-32 md:pt-40 pb-24 md:pb-32 max-w-[1100px] mx-auto">
+    <div className="relative z-10 text-center px-5 pt-32 md:pt-40 pb-12 md:pb-16 max-w-[1100px] mx-auto">
       {/* Main Headline */}
       <h1 className={isLandingPage ? "animate-headline text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-primary" : "text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-primary"}>
         Make Use of{' '}

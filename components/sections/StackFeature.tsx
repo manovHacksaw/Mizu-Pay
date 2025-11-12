@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Image from "next/image"
 
 const iconAssets = [
@@ -16,35 +17,65 @@ const iconSequence = [0, 3, 1, 4, 2, 5, 0, 4, 1, 3, 2, 5, 4, 0, 2, 3, 1] as cons
 const iconConfigs = iconSequence.map((index) => iconAssets[index])
 
 export function StackFeature() {
+  const [isVisible, setIsVisible] = useState(false)
   const orbitCount = 3
-  const orbitGap = 8 // rem between orbits
+  const orbitGap = 8 // r                         em between orbits
   const iconsPerOrbit = Math.ceil(iconConfigs.length / orbitCount)
   const formatPercent = (value: number) => `${value.toFixed(6)}%`
 
+  useEffect(() => {
+    setIsVisible(true)
+  }, [])
+
   return (
-    <section className="relative my-32 w-full overflow-hidden px-6 py-20">
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-12 lg:flex-row lg:justify-between">
-        {/* Left side: Orbit animation cropped to 1/4 */}
-        <div className="relative flex h-[360px] w-full items-center justify-start overflow-hidden lg:h-[420px] lg:w-1/2">
+    <section 
+      className="relative w-full overflow-hidden px-6 py-16 md:py-24" 
+      style={{ backgroundColor: "var(--background)" }}
+    >
+      {/* Background gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-indigo-50/20 pointer-events-none" />
+      
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-8 lg:gap-16 lg:flex-row lg:justify-between relative z-10">
+        {/* Left side: Enhanced Orbit animation */}
+        <div className="relative flex h-[360px] w-full items-center justify-start overflow-hidden lg:h-[480px] lg:w-1/2">
           <div className="relative flex h-[46rem] w-[46rem] -translate-x-[40%] items-center justify-center lg:-translate-x-[45%]">
-            {/* Center Circle */}
-            <div className="flex h-28 w-28 items-center justify-center rounded-full bg-white shadow-xl ring-8 ring-indigo-100">
-              <Image src="/logo.png" alt="Mizu Pay" width={56} height={56} className="h-14 w-14 object-contain" />
+            {/* Enhanced Center Circle with glow effect */}
+            <div 
+              className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-white to-blue-50 shadow-2xl ring-4 ring-blue-100/50 transition-all duration-1000"
+              style={{
+                opacity: isVisible ? 1 : 0,
+                transform: isVisible ? "scale(1)" : "scale(0.8)",
+                boxShadow: "0 20px 60px rgba(10, 77, 255, 0.15), 0 0 40px rgba(10, 77, 255, 0.1)",
+              }}
+            >
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400/20 to-indigo-400/20 blur-xl animate-pulse" />
+              <Image 
+                src="/logo.png" 
+                alt="Mizu Pay" 
+                width={64} 
+                height={64} 
+                className="h-16 w-16 object-contain relative z-10 drop-shadow-lg" 
+              />
             </div>
 
-            {/* Generate Orbits */}
+            {/* Generate Enhanced Orbits */}
             {[...Array(orbitCount)].map((_, orbitIdx) => {
-              const size = `${12 + orbitGap * (orbitIdx + 1)}rem` // equal spacing
+              const size = `${12 + orbitGap * (orbitIdx + 1)}rem`
               const angleStep = (2 * Math.PI) / iconsPerOrbit
+              const animationDuration = 12 + orbitIdx * 6
+              const reverseDirection = orbitIdx % 2 === 1
 
               return (
                 <div
                   key={orbitIdx}
-                  className="absolute rounded-full border-2 border-dotted border-slate-200"
+                  className="absolute rounded-full border-2 border-dotted transition-opacity duration-1000"
                   style={{
                     width: size,
                     height: size,
-                    animation: `spin ${12 + orbitIdx * 6}s linear infinite`,
+                    borderColor: `rgba(10, 77, 255, ${0.15 - orbitIdx * 0.03})`,
+                    animation: `spin${reverseDirection ? 'Reverse' : ''} ${animationDuration}s linear infinite`,
+                    opacity: isVisible ? 1 : 0,
+                    transitionDelay: `${orbitIdx * 0.2}s`,
                   }}
                 >
                   {iconConfigs
@@ -57,19 +88,22 @@ export function StackFeature() {
                       return (
                         <div
                           key={iconIdx}
-                          className="absolute rounded-full bg-white p-1 shadow-md ring-2 ring-white/80"
+                          className="absolute rounded-full bg-white p-1.5 shadow-lg ring-2 ring-white/90 transition-all duration-300 hover:scale-125 hover:shadow-xl hover:ring-blue-200 group"
                           style={{
                             left: formatPercent(x),
                             top: formatPercent(y),
                             transform: "translate(-50%, -50%)",
+                            opacity: isVisible ? 1 : 0,
+                            transitionDelay: `${(orbitIdx * 0.3) + (iconIdx * 0.1)}s`,
                           }}
                         >
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                           <Image
                             src={cfg.src}
                             alt={cfg.alt}
-                            width={32}
-                            height={32}
-                            className="h-8 w-8 rounded-full object-contain bg-white"
+                            width={40}
+                            height={40}
+                            className="h-10 w-10 rounded-full object-contain bg-white relative z-10 transition-transform duration-300 group-hover:scale-110"
                             loading="lazy"
                           />
                         </div>
@@ -81,15 +115,38 @@ export function StackFeature() {
           </div>
         </div>
 
-        {/* Right side: Heading and Text */}
-        <div className="w-full max-w-lg space-y-6 text-center lg:text-left">
-          <div className="space-y-4">
-            <h2 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
-            One Wallet. Every Store.
+        {/* Right side: Enhanced Heading and Text */}
+        <div 
+          className="w-full max-w-lg space-y-6 text-center lg:text-left"
+          style={{
+            opacity: isVisible ? 1 : 0,
+            transform: isVisible ? "translateY(0)" : "translateY(20px)",
+            transition: "opacity 0.8s ease-out, transform 0.8s ease-out",
+            transitionDelay: "0.3s",
+          }}
+        >
+          <div className="space-y-5">
+          
+            
+            <h2 
+              className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl leading-tight"
+              style={{ color: "var(--foreground)" }}
+            >
+              One Wallet.{' '}
+              <span style={{ color: "#0A4DFF" }}>
+                Every Store.
+              </span>
             </h2>
-            <p className="text-base text-slate-600 sm:text-lg">
+            
+            <p 
+              className="text-base sm:text-lg leading-relaxed"
+              style={{ color: "var(--content-text-secondary)" }}
+            >
               With Mizu Pay, enjoy unified crypto payments across your favorite online marketplaces — simple, fast, and secure.
             </p>
+
+           
+          
           </div>
         </div>
       </div>
@@ -101,6 +158,15 @@ export function StackFeature() {
           }
           to {
             transform: rotate(360deg);
+          }
+        }
+        
+        @keyframes spinReverse {
+          from {
+            transform: rotate(360deg);
+          }
+          to {
+            transform: rotate(0deg);
           }
         }
       `}</style>
