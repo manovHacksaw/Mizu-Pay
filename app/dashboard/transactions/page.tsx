@@ -9,14 +9,14 @@ interface PaymentData {
   sessionId: string;
   store: string;
   amountUSD: number;
-  status: 'pending' | 'paid' | 'fulfilled' | 'expired' | 'failed';
+  status: 'pending' | 'processing' | 'paid' | 'email_failed' | 'fulfilled' | 'expired' | 'failed';
   createdAt: string;
   expiresAt: string | null;
   payment: {
     txHash: string | null;
     amountCrypto: number;
     token: string;
-    status: string;
+    status: 'pending' | 'confirming' | 'succeeded' | 'email_failed' | 'failed';
     createdAt: string;
   } | null;
   giftCard: {
@@ -39,11 +39,12 @@ export default function TransactionsPage() {
   useEffect(() => {
     if (!ready || !authenticated || !user?.email?.address) return;
 
+    const email = user.email.address; // Store email to ensure type narrowing
     const fetchPayments = async () => {
       try {
         setLoading(true);
         // Use email to find user since database users are identified by email
-        const response = await fetch(`/api/payments/history?email=${encodeURIComponent(user.email.address)}`);
+        const response = await fetch(`/api/payments/history?email=${encodeURIComponent(email)}`);
         const data = await response.json();
 
         if (data.success && data.payments) {

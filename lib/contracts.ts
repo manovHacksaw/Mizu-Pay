@@ -11,8 +11,8 @@ export const MIZU_PAY_CONTRACT = '0x18042d3C48d7f09E863A5e18Ef3562E4827638aA' as
 import MockCUSD_ABI from './abis/MockCUSD.json'
 import MizuPay_ABI from './abis/MizuPay.json'
 
-export const MockCUSD_ABI_typed = MockCUSD_ABI as const
-export const MizuPay_ABI_typed = MizuPay_ABI as const
+export const MockCUSD_ABI_typed = MockCUSD_ABI
+export const MizuPay_ABI_typed = MizuPay_ABI
 
 // Network configuration
 export const CELO_SEPOLIA_CHAIN_ID = 11142220

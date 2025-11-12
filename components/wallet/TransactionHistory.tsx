@@ -55,7 +55,7 @@ export function TransactionHistory({ walletAddress, refreshTrigger }: Transactio
               // Skip zero-value transactions (but allow them if they're deposits)
               // Zero-value might be contract interactions, but we want to show actual transfers
               const value = BigInt(tx.value || '0');
-              if (value === 0n) return;
+              if (value === BigInt(0)) return;
 
               const isDeposit = tx.to.toLowerCase() === walletAddressLower;
               const isOutgoing = tx.from.toLowerCase() === walletAddressLower;

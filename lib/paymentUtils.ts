@@ -141,7 +141,7 @@ export async function executePayment(
     })
 
     // Step 1: Check current allowance
-    const currentAllowance = await mockCusd.read.allowance([account, MIZU_PAY_CONTRACT])
+    const currentAllowance = await mockCusd.read.allowance([account, MIZU_PAY_CONTRACT]) as bigint
     
     // Step 2: Approve if needed (or if allowance is less than amount)
     if (currentAllowance < amountWei) {
@@ -161,7 +161,7 @@ export async function executePayment(
       }
       
       // Double-check allowance after approval
-      const newAllowance = await mockCusd.read.allowance([account, MIZU_PAY_CONTRACT])
+      const newAllowance = await mockCusd.read.allowance([account, MIZU_PAY_CONTRACT]) as bigint
       
       if (newAllowance < amountWei) {
         throw new Error('Approval amount insufficient after transaction')
@@ -196,7 +196,8 @@ export async function executePayment(
     // Verify payment on-chain
     try {
       // Use encoded bytes32 sessionId for getPaymentInfo as well
-      const [paid, payer, amount, timestamp] = await mizuPay.read.getPaymentInfo([sessionIdBytes32])
+      const result = await mizuPay.read.getPaymentInfo([sessionIdBytes32]) as [boolean, `0x${string}`, bigint, bigint]
+      const [paid, payer, amount, timestamp] = result
       
       if (!paid) {
         throw new Error('Payment not recorded on-chain')
@@ -258,7 +259,8 @@ export async function checkPaymentStatus(sessionId: string) {
     // Encode sessionId to bytes32 using ethers.encodeBytes32String
     const sessionIdBytes32 = encodeBytes32String(sessionId) as `0x${string}`
     
-    const [paid, payer, amount, timestamp] = await mizuPay.read.getPaymentInfo([sessionIdBytes32])
+    const result = await mizuPay.read.getPaymentInfo([sessionIdBytes32]) as [boolean, `0x${string}`, bigint, bigint]
+    const [paid, payer, amount, timestamp] = result
     
     return {
       paid,
@@ -289,7 +291,7 @@ export async function getCusdBalance(address: string): Promise<string> {
   })
 
   try {
-    const balance = await mockCusd.read.balanceOf([address as `0x${string}`])
+    const balance = await mockCusd.read.balanceOf([address as `0x${string}`]) as bigint
     return formatUnits(balance, 18)
   } catch (error) {
     throw error

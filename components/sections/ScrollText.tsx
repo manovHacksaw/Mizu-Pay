@@ -13,7 +13,7 @@ export function ScrollText() {
       <div ref={containerRef} className="w-full max-w-6xl mx-auto text-center">
         <div ref={firstTextRef} className="min-h-[50vh] flex items-center justify-center">
           <ScrollFloat
-            scrollContainerRef={containerRef}
+            scrollContainerRef={containerRef as React.RefObject<HTMLElement>}
             containerClassName="mb-8"
             textClassName="font-bold text-slate-900"
             scrollStart="center bottom+=50%"
@@ -25,7 +25,7 @@ export function ScrollText() {
 
         <div ref={secondTextRef} className="min-h-[50vh] flex items-center justify-center">
           <ScrollFloat
-            scrollContainerRef={containerRef}
+            scrollContainerRef={containerRef as React.RefObject<HTMLElement>}
             containerClassName="mt-8"
             textClassName="font-bold text-slate-900"
             scrollStart="center bottom+=50%"
