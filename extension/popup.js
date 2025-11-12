@@ -188,7 +188,7 @@ async function handlePayment(checkout) {
 
     try {
         // Build checkout URL with query parameters
-        const checkoutUrl = 'https://mizu-pay.vercel.app/checkout?' + new URLSearchParams({
+        const checkoutUrl = 'http://localhost:3000/checkout?' + new URLSearchParams({
             storeName: checkout.storeName || '',
             amount: checkout.totalAmount || '',
             currency: checkout.currency || '',
