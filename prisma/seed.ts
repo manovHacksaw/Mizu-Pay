@@ -1,5 +1,9 @@
 import { PrismaClient } from "../app/generated/prisma/client"
 import crypto from "crypto"
+import { config } from "dotenv"
+
+// Load environment variables
+config()
 
 const prisma = new PrismaClient()
 
@@ -22,107 +26,42 @@ async function main() {
   // Clear existing for clean testing
   await prisma.giftCard.deleteMany()
 
-  const giftCards = [
-    {
-      store: "Amazon",
-      currency: "INR",
-      amountMinor: 50000, // ₹500.00
-      amountUSD: 6.10,
-      validityDays: 365,
-      number: "AMZ-TEST-500-12345",
-      pin: "1234"
-    },
-    {
-      store: "Amazon",
-      currency: "INR",
-      amountMinor: 100000, // ₹1000.00
-      amountUSD: 12.20,
-      validityDays: 365,
-      number: "AMZ-TEST-1000-67890",
-      pin: "5678",
-    },
-    {
-      store: "Amazon",
-      currency: "INR",
-      amountMinor: 250000, // ₹2500.00
-      amountUSD: 30.50,
-      validityDays: 365,
-      number: "AMZ-TEST-2500-99999",
-      pin: "9999",
-    },
-    {
-      store: "Flipkart",
-      currency: "INR",
-      amountMinor: 25000, // ₹250.00
-      amountUSD: 3.05,
-      validityDays: 180,
-      number: "FLPK-TEST-250-55555",
-      pin: "1111",
-    },
-    {
-      store: "Flipkart",
-      currency: "INR",
-      amountMinor: 200000, // ₹2000.00
-      amountUSD: 24.40,
-      validityDays: 180,
-      number: "FLPK-TEST-2000-77777",
-      pin: "7777",
-    },
-    {
-      store: "Myntra",
-      currency: "INR",
-      amountMinor: 200000, // ₹2000.00
-      amountUSD: 24.40,
-      validityDays: 365,
-      number: "MYN-TEST-2000-11111",
-      pin: "2222",
-    },
-    {
-      store: "Myntra",
-      currency: "INR",
-      amountMinor: 500000, // ₹5000.00
-      amountUSD: 61.00,
-      validityDays: 365,
-      number: "MYN-TEST-5000-33333",
-      pin: "3333",
-    },
-    {
-      store: "Make My Trip",
-      currency: "INR",
-      amountMinor: 100000, // ₹1000.00
-      amountUSD: 12.20,
-      validityDays: 365,
-      number: "MMT-TEST-1000-AAAAA",
-      pin: "4444",
-    },
-    {
-      store: "Make My Trip",
-      currency: "INR",
-      amountMinor: 250000, // ₹2500.00
-      amountUSD: 30.50,
-      validityDays: 365,
-      number: "MMT-TEST-2500-BBBBB",
-      pin: "5555",
-    },
-    {
-      store: "Make My Trip",
-      currency: "INR",
-      amountMinor: 500000, // ₹5000.00
-      amountUSD: 61.00,
-      validityDays: 365,
-      number: "MMT-TEST-5000-CCCCC",
-      pin: "6666",
-    },
-    {
-      store: "Make My Trip",
-      currency: "INR",
-      amountMinor: 1000000, // ₹10000.00
-      amountUSD: 122.00,
-      validityDays: 365,
-      number: "MMT-TEST-10000-DDDDD",
-      pin: "8888",
-    }
-  ]
+  // Helper function to calculate USD amount (approximate: 1 USD = 82 INR)
+  const calculateUSD = (inr: number) => parseFloat((inr / 82).toFixed(2));
+
+  // Generate gift cards for Myntra, Flipkart, and Amazon
+  // Amounts: 100, 200, 250, 500, 750, 1000 (in INR)
+  const stores = ["Myntra", "Flipkart", "Amazon"];
+  const amounts = [100, 200, 250, 500, 750, 1000];
+  
+  const giftCards: Array<{
+    store: string;
+    currency: string;
+    amountMinor: number;
+    amountUSD: number;
+    validityDays: number;
+    number: string;
+    pin: string;
+  }> = [];
+
+  // Generate gift cards for each store and amount combination
+  stores.forEach((store, storeIndex) => {
+    amounts.forEach((amount, amountIndex) => {
+      const storePrefix = store === "Myntra" ? "MYN" : store === "Flipkart" ? "FLPK" : "AMZ";
+      const cardNumber = `${storePrefix}-GC-${amount}-${String(storeIndex).padStart(2, '0')}${String(amountIndex).padStart(2, '0')}`;
+      const pin = String(Math.floor(Math.random() * 9000) + 1000); // Random 4-digit PIN
+      
+      giftCards.push({
+        store: store,
+        currency: "INR",
+        amountMinor: amount * 100, // Convert to paise
+        amountUSD: calculateUSD(amount),
+        validityDays: store === "Flipkart" ? 180 : 365, // Flipkart has 180 days, others 365
+        number: cardNumber,
+        pin: pin,
+      });
+    });
+  });
 
   for (const card of giftCards) {
     // Use the same IV for both number and pin so we can decrypt both with the same IV/tag

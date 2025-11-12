@@ -14,6 +14,13 @@ const jakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Mizu Pay - Advanced Finance Technology",
   description: "A smart all-in-one solution for making seamless payments on any e-commerce site using cUSD or CELO on the Celo blockchain.",
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({

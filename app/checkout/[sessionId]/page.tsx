@@ -90,6 +90,7 @@
         const [isLoadingConversion, setIsLoadingConversion] = useState(false)
         const [storeSupported, setStoreSupported] = useState<boolean | null>(null)
         const [isCheckingStore, setIsCheckingStore] = useState(true)
+        const [giftCardConfirmed, setGiftCardConfirmed] = useState(false)
         const { selectedDisplayCurrency } = useCurrencyStore()
 
         useEffect(() => {
@@ -176,8 +177,8 @@
                     {isCheckingStore ? (
                     <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
                     ) : storeSupported !== false ? (
-                    <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-md">
-                        Verified
+                    <span className="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs font-bold rounded-full shadow-md animate-pulse">
+                        ✓ Verified
                     </span>
                     ) : null}
                 </div>
@@ -213,7 +214,24 @@
                     <p className="text-sm text-blue-600">{usdEquivalentFormatted}</p>
                     )}
                 </div>
+                <p className="text-xs text-blue-600 mt-2">
+                    Any extra balance on the gift card can be used for future purchases.
+                </p>
                 </div>
+            </div>
+            
+            {/* Gift Card Support Confirmation Checkbox */}
+            <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <input
+                    type="checkbox"
+                    id="giftCardConfirm"
+                    checked={giftCardConfirmed}
+                    onChange={(e) => setGiftCardConfirmed(e.target.checked)}
+                    className="mt-1 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label htmlFor="giftCardConfirm" className="text-sm text-gray-700 cursor-pointer">
+                    I confirm that this store supports gift card payments.
+                </label>
             </div>
 
             {/* Warning if store not supported */}
@@ -235,7 +253,7 @@
             
             <button
                 onClick={onContinue}
-                disabled={storeSupported === false}
+                disabled={storeSupported === false || !giftCardConfirmed}
                 className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 Continue to Gift Card Selection
@@ -347,23 +365,33 @@
 
             {/* Extra Payment Display */}
             {selectedCard && extraPaymentUSD > 0 && (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                    <p className="text-sm font-semibold text-yellow-800 mb-2">Extra Amount You're Paying:</p>
-                    <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                            <span className="text-yellow-700">cUSD:</span>
-                            <span className="font-semibold text-yellow-900">{formatAmount(extraPaymentCUSD, 'USD')} cUSD</span>
+                <div className="p-5 bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-xl shadow-sm">
+                    <div className="flex items-start gap-3 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                         </div>
-                        <div className="flex justify-between">
-                            <span className="text-yellow-700">USD:</span>
-                            <span className="font-semibold text-yellow-900">{formatAmount(extraPaymentUSD, 'USD')}</span>
-                        </div>
-                        {extraPaymentCELO > 0 && (
-                            <div className="flex justify-between">
-                                <span className="text-yellow-700">CELO:</span>
-                                <span className="font-semibold text-yellow-900">{extraPaymentCELO.toFixed(4)} CELO</span>
+                        <div className="flex-1">
+                            <p className="text-sm font-bold text-amber-900 mb-2">Extra Amount You're Paying</p>
+                            <p className="text-xs text-amber-700 mb-3">This extra balance will remain on your gift card for future purchases.</p>
+                            <div className="space-y-2 text-sm bg-white/60 rounded-lg p-3">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-amber-800 font-medium">cUSD:</span>
+                                    <span className="font-bold text-amber-900">{formatAmount(extraPaymentCUSD, 'USD')} cUSD</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-amber-800 font-medium">USD:</span>
+                                    <span className="font-bold text-amber-900">{formatAmount(extraPaymentUSD, 'USD')}</span>
+                                </div>
+                                {extraPaymentCELO > 0 && (
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-amber-800 font-medium">CELO:</span>
+                                        <span className="font-bold text-amber-900">{extraPaymentCELO.toFixed(4)} CELO</span>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -378,10 +406,10 @@
                     <button
                     key={card.id}
                     onClick={() => onSelect(card)}
-                    className={`p-6 rounded-xl border-2 text-left transition-all duration-200 ${
+                    className={`p-6 rounded-xl border-2 text-left transition-all duration-300 ${
                         isSelected
-                        ? 'border-blue-600 bg-blue-50 shadow-lg scale-105'
-                        : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
+                        ? 'border-blue-600 bg-blue-50 shadow-lg scale-[1.02] ring-2 ring-blue-200'
+                        : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md hover:scale-[1.01]'
                     }`}
                     >
                     <div className="flex items-start justify-between mb-3">
@@ -394,7 +422,9 @@
                         )}
                         </div>
                         {isSelected && (
-                        <CheckCircle className="w-6 h-6 text-blue-600" />
+                        <div className="animate-in zoom-in duration-200">
+                            <CheckCircle className="w-6 h-6 text-blue-600" />
+                        </div>
                         )}
                     </div>
                     <p className="text-xs text-gray-500">Valid for {card.validityDays} days</p>
@@ -688,7 +718,7 @@
         const [isProcessing, setIsProcessing] = useState(false)
         const [conversionRate, setConversionRate] = useState<{ rate: number } | null>(null)
         const [paymentError, setPaymentError] = useState<string | null>(null)
-        const [paymentStatus, setPaymentStatus] = useState<'idle' | 'switching' | 'approving' | 'paying' | 'confirming' | 'success' | 'error'>('idle')
+        const [paymentStatus, setPaymentStatus] = useState<'idle' | 'switching' | 'approving' | 'paying' | 'confirming' | 'success' | 'error' | 'sending_email' | 'email_failed' | 'email_timeout'>('idle')
         const [verificationProgress, setVerificationProgress] = useState<{
             confirmations: number
             requiredConfirmations: number
@@ -1017,13 +1047,34 @@
             }
         }
 
+        // Dynamic message state for confirming status
+        const [dynamicMessage, setDynamicMessage] = useState('Verifying transaction on-chain...')
+        
+        useEffect(() => {
+            if (paymentStatus === 'confirming') {
+                const messages = [
+                    'Verifying transaction on-chain...',
+                    'Waiting for block confirmations...',
+                    'Almost done! Explorer might take a few seconds to update.',
+                ]
+                let messageIndex = 0
+                const interval = setInterval(() => {
+                    messageIndex = (messageIndex + 1) % messages.length
+                    setDynamicMessage(messages[messageIndex])
+                }, 3000)
+                return () => clearInterval(interval)
+            } else {
+                setDynamicMessage('Verifying transaction on-chain...')
+            }
+        }, [paymentStatus])
+
         if (isProcessing || paymentStatus !== 'idle') {
             const statusMessages: Record<string, string> = {
                 idle: 'Ready to pay',
                 switching: 'Switching to Celo Sepolia network...',
                 approving: 'Approving cUSD spending...',
                 paying: 'Processing payment...',
-                confirming: 'Confirming transaction...',
+                confirming: dynamicMessage,
                 success: 'Payment successful!',
                 error: 'Payment failed',
             }
@@ -1033,33 +1084,33 @@
                 {paymentStatus === 'success' ? (
                     <>
                         <div className="mb-8">
-                            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
                         </div>
-                        <h2 className="text-2xl font-bold text-green-600 dark:text-green-400 mb-3">
+                        <h2 className="text-2xl font-bold text-green-600 mb-3">
                             Payment Successful!
                         </h2>
-                        <p className="text-sm dashboard-text-secondary">
+                        <p className="text-sm text-gray-600">
                             Gift card sent to your email. Redirecting...
                         </p>
                     </>
                 ) : paymentStatus === 'sending_email' ? (
                     <>
                         <div className="mb-8">
-                            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-blue-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
                             </div>
                         </div>
                         <p className="text-lg font-semibold mb-2">Payment Verified!</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        <p className="text-sm text-gray-600 mb-4">
                             Your payment has been confirmed. We're now sending your gift card to your email...
                         </p>
-                        <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -1070,14 +1121,14 @@
                 ) : paymentStatus === 'email_failed' ? (
                     <>
                         <div className="mb-8">
-                            <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                             </div>
                         </div>
-                        <p className="text-lg font-semibold mb-2 text-orange-600 dark:text-orange-400">Payment Verified, Email Failed</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        <p className="text-lg font-semibold mb-2 text-orange-600">Payment Verified, Email Failed</p>
+                        <p className="text-sm text-gray-600 mb-4">
                             Your payment was successfully verified, but we couldn't send the email. Please contact support to receive your gift card.
                         </p>
                         <div className="mt-4">
@@ -1092,30 +1143,30 @@
                 ) : paymentStatus === 'email_timeout' ? (
                     <>
                         <div className="mb-8">
-                            <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
                         </div>
                         <p className="text-lg font-semibold mb-2">Payment Verified</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        <p className="text-sm text-gray-600 mb-4">
                             Your payment has been confirmed. We're checking the email status. You'll be redirected to see the final status.
                         </p>
                     </>
                 ) : paymentStatus === 'error' ? (
                     <>
                         <div className="mb-8">
-                            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </div>
                         </div>
-                        <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-3">
+                        <h2 className="text-2xl font-bold text-red-600 mb-3">
                             Payment Failed
                         </h2>
-                        <p className="text-sm dashboard-text-secondary mb-4 whitespace-pre-line">
+                        <p className="text-sm text-gray-600 mb-4 whitespace-pre-line">
                             {paymentError || 'An error occurred during payment'}
                         </p>
                         <button
@@ -1133,20 +1184,39 @@
                     </>
                 ) : (
                     <>
+                        {/* Blockchain-style loading animation */}
                         <div className="relative mb-8">
-                            <div className="animate-spin rounded-full h-16 w-16 border-4 border-white/20 dark:border-white/20 border-t-white mx-auto"></div>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-8 h-8 bg-white rounded-full animate-pulse"></div>
+                            <div className="flex items-center justify-center gap-2 mb-4">
+                                {/* Network nodes animation */}
+                                {[0, 1, 2].map((i) => (
+                                    <div
+                                        key={i}
+                                        className="w-3 h-3 rounded-full bg-blue-600 animate-pulse"
+                                        style={{
+                                            animationDelay: `${i * 0.2}s`,
+                                            animationDuration: '1.5s'
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                            <div className="relative w-20 h-20 mx-auto">
+                                <div className="absolute inset-0 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
+                                <div className="absolute inset-2 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
                             </div>
                         </div>
-                        <h2 className="text-2xl font-bold dashboard-text-primary mb-3">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-3">
                             {statusMessages[paymentStatus] || 'Processing Payment'}
                         </h2>
                         {/* Show amount being paid */}
                         {selectedCard && (paymentStatus === 'approving' || paymentStatus === 'paying' || paymentStatus === 'confirming') && (
-                            <div className="mb-4 p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
-                                <p className="text-xs dashboard-text-secondary mb-1">Amount to pay:</p>
-                                <p className="text-xl font-bold text-white">
+                            <div className="mb-4 p-4 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
+                                <p className="text-xs text-blue-700 mb-1 font-semibold">Amount to pay:</p>
+                                <p className="text-xl font-bold text-blue-900">
                                     ${selectedCard.amountUSD.toFixed(2)} cUSD
                                 </p>
                             </div>
@@ -1154,19 +1224,19 @@
                         
                         {/* Show verification progress */}
                         {paymentStatus === 'confirming' && verificationProgress && (
-                            <div className="mb-4 p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 space-y-4">
+                            <div className="mb-4 p-5 rounded-xl bg-gradient-to-br from-gray-50 to-blue-50 border-2 border-blue-200 space-y-4">
                                 {/* Verification Steps */}
                                 {verificationProgress.verificationSteps && verificationProgress.stepMessages && (
                                     <div className="space-y-2">
-                                        <p className="text-sm font-semibold text-white mb-2">Verification Progress:</p>
-                                        <div className="space-y-1.5">
+                                        <p className="text-sm font-bold text-gray-900 mb-3">Verification Progress:</p>
+                                        <div className="space-y-2">
                                             {/* Transaction Found */}
                                             {verificationProgress.stepMessages.transactionFound && (
-                                                <div className="flex items-center gap-2 text-xs">
-                                                    <span className={verificationProgress.verificationSteps.transactionFound ? "text-green-400" : "text-yellow-400"}>
+                                                <div className="flex items-center gap-3 text-sm">
+                                                    <span className={`text-lg ${verificationProgress.verificationSteps.transactionFound ? "text-green-600" : "text-yellow-500"}`}>
                                                         {verificationProgress.verificationSteps.transactionFound ? "✓" : "○"}
                                                     </span>
-                                                    <span className="dashboard-text-secondary">
+                                                    <span className="text-gray-700">
                                                         {verificationProgress.stepMessages.transactionFound}
                                                     </span>
                                                 </div>
@@ -1174,11 +1244,11 @@
                                             
                                             {/* Transaction Included */}
                                             {verificationProgress.stepMessages.transactionIncluded && (
-                                                <div className="flex items-center gap-2 text-xs">
-                                                    <span className={verificationProgress.verificationSteps.transactionIncluded ? "text-green-400" : "text-yellow-400"}>
+                                                <div className="flex items-center gap-3 text-sm">
+                                                    <span className={`text-lg ${verificationProgress.verificationSteps.transactionIncluded ? "text-green-600" : "text-yellow-500"}`}>
                                                         {verificationProgress.verificationSteps.transactionIncluded ? "✓" : "○"}
                                                     </span>
-                                                    <span className="dashboard-text-secondary">
+                                                    <span className="text-gray-700">
                                                         {verificationProgress.stepMessages.transactionIncluded}
                                                     </span>
                                                 </div>
@@ -1186,11 +1256,11 @@
                                             
                                             {/* Contract Verified */}
                                             {verificationProgress.stepMessages.contractVerified && (
-                                                <div className="flex items-center gap-2 text-xs">
-                                                    <span className={verificationProgress.verificationSteps.contractVerified ? "text-green-400" : "text-yellow-400"}>
+                                                <div className="flex items-center gap-3 text-sm">
+                                                    <span className={`text-lg ${verificationProgress.verificationSteps.contractVerified ? "text-green-600" : "text-yellow-500"}`}>
                                                         {verificationProgress.verificationSteps.contractVerified ? "✓" : "○"}
                                                     </span>
-                                                    <span className="dashboard-text-secondary">
+                                                    <span className="text-gray-700">
                                                         {verificationProgress.stepMessages.contractVerified}
                                                     </span>
                                                 </div>
@@ -1198,11 +1268,11 @@
                                             
                                             {/* Wallet Verified */}
                                             {verificationProgress.stepMessages.walletVerified && (
-                                                <div className="flex items-center gap-2 text-xs">
-                                                    <span className={verificationProgress.verificationSteps.walletVerified ? "text-green-400" : "text-yellow-400"}>
+                                                <div className="flex items-center gap-3 text-sm">
+                                                    <span className={`text-lg ${verificationProgress.verificationSteps.walletVerified ? "text-green-600" : "text-yellow-500"}`}>
                                                         {verificationProgress.verificationSteps.walletVerified ? "✓" : "○"}
                                                     </span>
-                                                    <span className="dashboard-text-secondary">
+                                                    <span className="text-gray-700">
                                                         {verificationProgress.stepMessages.walletVerified}
                                                     </span>
                                                 </div>
@@ -1210,11 +1280,11 @@
                                             
                                             {/* Session ID Verified */}
                                             {verificationProgress.stepMessages.sessionIdVerified && (
-                                                <div className="flex items-center gap-2 text-xs">
-                                                    <span className={verificationProgress.verificationSteps.sessionIdVerified ? "text-green-400" : "text-yellow-400"}>
+                                                <div className="flex items-center gap-3 text-sm">
+                                                    <span className={`text-lg ${verificationProgress.verificationSteps.sessionIdVerified ? "text-green-600" : "text-yellow-500"}`}>
                                                         {verificationProgress.verificationSteps.sessionIdVerified ? "✓" : "○"}
                                                     </span>
-                                                    <span className="dashboard-text-secondary">
+                                                    <span className="text-gray-700">
                                                         {verificationProgress.stepMessages.sessionIdVerified}
                                                     </span>
                                                 </div>
@@ -1222,11 +1292,11 @@
                                             
                                             {/* Amount Verified */}
                                             {verificationProgress.stepMessages.amountVerified && (
-                                                <div className="flex items-center gap-2 text-xs">
-                                                    <span className={verificationProgress.verificationSteps.amountVerified ? "text-green-400" : "text-yellow-400"}>
+                                                <div className="flex items-center gap-3 text-sm">
+                                                    <span className={`text-lg ${verificationProgress.verificationSteps.amountVerified ? "text-green-600" : "text-yellow-500"}`}>
                                                         {verificationProgress.verificationSteps.amountVerified ? "✓" : "○"}
                                                     </span>
-                                                    <span className="dashboard-text-secondary">
+                                                    <span className="text-gray-700">
                                                         {verificationProgress.stepMessages.amountVerified}
                                                     </span>
                                                 </div>
@@ -1236,23 +1306,23 @@
                                 )}
                                 
                                 {/* Block Confirmations */}
-                                <div className="pt-2 border-t border-white/20">
+                                <div className="pt-3 border-t border-blue-200">
                                     <div className="flex items-center justify-between mb-2">
-                                        <p className="text-sm dashboard-text-secondary">Block Confirmations:</p>
-                                        <p className="text-sm font-semibold text-white">
+                                        <p className="text-sm font-semibold text-gray-900">Block Confirmations:</p>
+                                        <p className="text-sm font-bold text-blue-700">
                                             {verificationProgress.confirmations} / {verificationProgress.requiredConfirmations}
                                         </p>
                                     </div>
-                                    <div className="w-full bg-white/20 rounded-full h-2 mb-2">
+                                    <div className="w-full bg-blue-100 rounded-full h-3 mb-2 overflow-hidden">
                                         <div 
-                                            className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                                            className="bg-gradient-to-r from-blue-600 to-indigo-600 h-3 rounded-full transition-all duration-500 shadow-sm"
                                             style={{ 
                                                 width: `${Math.min((verificationProgress.confirmations / verificationProgress.requiredConfirmations) * 100, 100)}%` 
                                             }}
                                         />
                                     </div>
                                     {verificationProgress.stepMessages?.confirmationsComplete && (
-                                        <p className="text-xs dashboard-text-secondary">
+                                        <p className="text-xs text-gray-600">
                                             {verificationProgress.stepMessages.confirmationsComplete}
                                         </p>
                                     )}
@@ -1263,15 +1333,22 @@
                                         href={`https://celo-sepolia.blockscout.com/tx/${txHash}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-xs text-blue-400 hover:underline mt-2 inline-block"
+                                        className="text-sm text-blue-600 hover:text-blue-700 hover:underline mt-2 inline-flex items-center gap-1 font-medium"
                                     >
                                         View on Explorer →
                                     </a>
                                 )}
+                                
+                                {/* Reassurance message */}
+                                <div className="pt-3 border-t border-blue-200">
+                                    <p className="text-xs text-gray-600 italic">
+                                        Your transaction might already be confirmed on-chain, please wait while we verify with the blockchain API.
+                                    </p>
+                                </div>
                             </div>
                         )}
                         
-                        <p className="text-sm dashboard-text-secondary">
+                        <p className="text-sm text-gray-600">
                             {paymentStatus === 'switching'
                                 ? 'Please approve the network switch in your wallet'
                                 : paymentStatus === 'approving' 
@@ -1280,7 +1357,7 @@
                                 ? `Sending payment of ${selectedCard ? `$${selectedCard.amountUSD.toFixed(2)} cUSD` : 'cUSD'}...`
                                 : paymentStatus === 'confirming'
                                 ? verificationProgress 
-                                    ? `Verifying transaction... (${verificationProgress.confirmations}/${verificationProgress.requiredConfirmations} confirmations)`
+                                    ? `Waiting for block confirmations (${verificationProgress.confirmations}/${verificationProgress.requiredConfirmations})`
                                     : 'Waiting for transaction to be included in a block...'
                                 : 'This usually takes 3-10 seconds.'}
                         </p>

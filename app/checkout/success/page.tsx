@@ -86,20 +86,20 @@ export default function CheckoutSuccessPage() {
             {/* Status Icon */}
             <div className="mb-6 flex justify-center">
               {sessionData?.status === 'fulfilled' ? (
-                <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
               ) : sessionData?.status === 'email_failed' ? (
-                <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
               ) : (
-                <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -123,13 +123,13 @@ export default function CheckoutSuccessPage() {
             </p>
             
             {loading ? (
-              <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm dashboard-text-secondary">Loading payment details...</p>
               </div>
             ) : sessionData ? (
               <div className="mb-6 space-y-4 text-left">
                 {/* Session ID */}
-                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-xs dashboard-text-secondary mb-1">Session ID</p>
                   <p className="text-sm font-mono dashboard-text-primary break-all">{sessionData.sessionId}</p>
                 </div>
@@ -139,7 +139,7 @@ export default function CheckoutSuccessPage() {
                   <>
                     {/* Transaction Hash */}
                     {sessionData.payment.txHash && (
-                      <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                      <div className="p-4 bg-gray-50 rounded-lg">
                         <p className="text-xs dashboard-text-secondary mb-1">Transaction Hash</p>
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-mono dashboard-text-primary break-all flex-1">
@@ -149,7 +149,7 @@ export default function CheckoutSuccessPage() {
                             href={getExplorerUrl(sessionData.payment.txHash)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 dark:text-blue-400 hover:underline text-xs whitespace-nowrap"
+                            className="text-blue-600 hover:underline text-xs whitespace-nowrap"
                           >
                             View on Explorer
                           </a>
@@ -158,7 +158,7 @@ export default function CheckoutSuccessPage() {
                     )}
 
                     {/* Payment Amount */}
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                    <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-xs dashboard-text-secondary mb-1">Payment Amount</p>
                       <p className="text-sm font-semibold dashboard-text-primary">
                         {formatAmount(sessionData.payment.amountCrypto, 'USD')} {sessionData.payment.token}
@@ -169,19 +169,19 @@ export default function CheckoutSuccessPage() {
                     </div>
 
                     {/* Payment Status */}
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                    <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-xs dashboard-text-secondary mb-1">Payment Status</p>
                       <div className="flex items-center gap-2">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                           sessionData.payment.status === 'succeeded' 
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                            ? 'bg-green-100 text-green-700'
                             : sessionData.payment.status === 'email_failed'
-                            ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                            ? 'bg-orange-100 text-orange-700'
                             : sessionData.payment.status === 'confirming'
-                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                            ? 'bg-blue-100 text-blue-700'
                             : sessionData.payment.status === 'failed'
-                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                            : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-yellow-100 text-yellow-700'
                         }`}>
                           {sessionData.payment.status === 'succeeded' && '✓ '}
                           {sessionData.payment.status === 'email_failed' && '✉ '}
@@ -197,7 +197,7 @@ export default function CheckoutSuccessPage() {
                     </div>
 
                     {/* Payment Date */}
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                    <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-xs dashboard-text-secondary mb-1">Payment Date</p>
                       <p className="text-sm dashboard-text-primary">
                         {formatDate(sessionData.payment.createdAt)}
@@ -208,7 +208,7 @@ export default function CheckoutSuccessPage() {
 
                 {/* Store Information */}
                 {sessionData.store && (
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                  <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-xs dashboard-text-secondary mb-1">Store</p>
                     <p className="text-sm font-semibold dashboard-text-primary">{sessionData.store}</p>
                   </div>
@@ -216,7 +216,7 @@ export default function CheckoutSuccessPage() {
 
                 {/* Gift Card Information */}
                 {sessionData.giftCard && (
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                  <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-xs dashboard-text-secondary mb-1">Gift Card</p>
                     <p className="text-sm font-semibold dashboard-text-primary">
                       {formatAmount(sessionData.giftCard.amountUSD, 'USD')} {sessionData.giftCard.currency}
@@ -226,7 +226,7 @@ export default function CheckoutSuccessPage() {
 
                 {/* Wallet Address */}
                 {sessionData.wallet && (
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                  <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-xs dashboard-text-secondary mb-1">Wallet Address</p>
                     <p className="text-sm font-mono dashboard-text-primary break-all">
                       {sessionData.wallet.address}
@@ -235,7 +235,7 @@ export default function CheckoutSuccessPage() {
                 )}
               </div>
             ) : sessionId ? (
-              <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                 <p className="text-xs dashboard-text-secondary mb-1">Session ID</p>
                 <p className="text-sm font-mono dashboard-text-primary break-all">{sessionId}</p>
               </div>
@@ -258,11 +258,11 @@ export default function CheckoutSuccessPage() {
             </div>
             
             {sessionData?.status === 'email_failed' && (
-              <div className="mt-6 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-                <p className="text-sm font-semibold text-orange-800 dark:text-orange-300 mb-2">
+              <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <p className="text-sm font-semibold text-orange-800 mb-2">
                   ⚠️ Email Delivery Failed
                 </p>
-                <p className="text-xs text-orange-700 dark:text-orange-400 mb-3">
+                <p className="text-xs text-orange-700 mb-3">
                   Your payment was successfully verified, but we couldn't send the gift card to your email. 
                   Please contact our support team to receive your gift card details.
                 </p>
@@ -275,7 +275,7 @@ export default function CheckoutSuccessPage() {
                   </a>
                   <button
                     onClick={() => window.location.reload()}
-                    className="inline-flex items-center justify-center px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 text-sm font-medium rounded-lg transition-colors"
+                    className="inline-flex items-center justify-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-lg transition-colors"
                   >
                     Retry Check
                   </button>

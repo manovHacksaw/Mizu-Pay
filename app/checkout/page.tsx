@@ -191,89 +191,62 @@ export default function CheckoutPage() {
     error: 'Error',
   }
   
-  // Show loading state with skeleton UI
+  // Show loading state with professional session creation UI
   return (
     <div className="min-h-screen hero-bg relative overflow-hidden transition-colors duration-300">
       <div className="relative z-10 px-5 py-16">
         <div className="max-w-2xl mx-auto">
-          {/* Header Skeleton */}
-          <div className="mb-8">
-            <div className="h-8 w-64 bg-gray-200 rounded-lg animate-pulse mb-3"></div>
-            <div className="h-4 w-48 bg-gray-200 rounded-lg animate-pulse"></div>
-          </div>
-          
-          {/* Main Card Skeleton */}
+          {/* Main Card */}
           <div className="dashboard-modal-card mb-6">
-            <div className="space-y-6">
-              {/* Status Message */}
-              <div className="flex items-center gap-3 pb-4 border-b dashboard-border">
+            <div className="text-center py-12">
+              {/* Animated Shield/Padlock Icon */}
+              <div className="mb-6 flex justify-center">
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent"></div>
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg animate-pulse">
+                    <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
                   </div>
-                </div>
-                <div className="flex-1">
-                  <div className="h-5 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-4 w-64 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              </div>
-              
-              {/* Purchase Details Skeleton */}
-              <div className="space-y-4">
-                <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-3"></div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="h-5 w-32 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="h-6 w-28 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
+                  {/* Rotating ring animation */}
+                  <div className="absolute inset-0 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" style={{ animationDuration: '2s' }}></div>
                 </div>
               </div>
               
-              {/* Progress Steps Skeleton */}
-              <div className="pt-4 border-t dashboard-border">
-                <div className="h-3 w-full bg-gray-200 rounded-full animate-pulse mb-2"></div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
-                  <div className="h-3 w-40 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Status Message */}
-          <div className="text-center">
-            {status === 'error' ? (
-              <div className="p-4 rounded-lg bg-red-50 border border-red-200">
-                <p className="text-sm font-medium text-red-800 mb-2">
-                  {statusMessages[status]}
-                </p>
-                <p className="text-xs text-red-700">
-                  {errorMessage || 'An error occurred'}
-                </p>
-                <button
-                  onClick={() => router.push('/dashboard')}
-                  className="mt-3 px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                >
-                  Go Home
-                </button>
-              </div>
-            ) : (
-              <p className="text-sm dashboard-text-secondary flex items-center justify-center gap-2">
-                <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                {statusMessages[status]}
+              {/* Main Message */}
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                Creating a secure session...
+              </h2>
+              
+              {/* Subtext */}
+              <p className="text-sm text-gray-600 mb-6">
+                We're verifying the store and initializing your checkout securely.
               </p>
-            )}
+              
+              {/* Status Message */}
+              {status === 'error' ? (
+                <div className="mt-6 p-4 rounded-lg bg-red-50 border border-red-200">
+                  <p className="text-sm font-medium text-red-800 mb-2">
+                    {statusMessages[status]}
+                  </p>
+                  <p className="text-xs text-red-700 mb-3">
+                    {errorMessage || 'An error occurred'}
+                  </p>
+                  <button
+                    onClick={() => router.push('/dashboard')}
+                    className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                  >
+                    Go Home
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>{statusMessages[status]}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

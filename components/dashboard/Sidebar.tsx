@@ -90,7 +90,7 @@ export function Sidebar({ onLogout }: SidebarProps) {
           <img 
             src="/logo.png" 
             alt="Mizu Pay" 
-            className="w-24 h-24 object-contain rounded-lg p-2"
+            className="w-20 h-20 object-contain rounded-lg p-2"
           />
           <span className="font-bold text-white text-xl">Mizu Pay</span>
         </div>
