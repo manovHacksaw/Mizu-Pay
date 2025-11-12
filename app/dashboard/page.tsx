@@ -9,7 +9,7 @@
   import { formatDateForChart } from '@/lib/dateUtils';
   import { useCurrencyStore } from '@/lib/currencyStore';
 import { formatAmountWithConversion } from '@/lib/currencyUtils';
-import { Wallet, TrendingDown, PiggyBank, ArrowRight, Copy } from 'lucide-react';
+import { Coins, ArrowDownCircle, Leaf, ArrowRight, Copy } from 'lucide-react';
   import { createPublicClient, http, formatUnits, defineChain, getContract } from 'viem';
   import { erc20Abi } from 'viem';
   import { MOCK_CUSD_ADDRESS } from '@/lib/contracts';
@@ -253,9 +253,7 @@ import { Wallet, TrendingDown, PiggyBank, ArrowRight, Copy } from 'lucide-react'
         {/* Balance Card */}
         <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-green-600" />
-            </div>
+            <Coins className="w-8 h-8 dashboard-text-primary" strokeWidth={2.5} />
           </div>
           <h3 className="text-xs font-semibold uppercase tracking-wide dashboard-text-secondary mb-3">Balance</h3>
           {loadingBalance ? (
@@ -273,9 +271,7 @@ import { Wallet, TrendingDown, PiggyBank, ArrowRight, Copy } from 'lucide-react'
         {/* Total Spent Card */}
         <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg bg-orange-50 flex items-center justify-center">
-              <TrendingDown className="w-6 h-6 text-orange-600" />
-            </div>
+            <ArrowDownCircle className="w-8 h-8 dashboard-text-primary" strokeWidth={2.5} />
           </div>
           <h3 className="text-xs font-semibold uppercase tracking-wide dashboard-text-secondary mb-3">Total Spent</h3>
           {loading ? (
@@ -293,9 +289,7 @@ import { Wallet, TrendingDown, PiggyBank, ArrowRight, Copy } from 'lucide-react'
         {/* ReFi Contribution Card */}
         <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg bg-purple-50 flex items-center justify-center">
-              <PiggyBank className="w-6 h-6 text-purple-600" />
-            </div>
+            <Leaf className="w-8 h-8 dashboard-text-primary" strokeWidth={2.5} />
           </div>
           <h3 className="text-xs font-semibold uppercase tracking-wide dashboard-text-secondary mb-3">
             ReFi Contribution

@@ -1,10 +1,16 @@
 // Popup script - displays checkout summary and handles payment
 
+const DEFAULT_BUTTON_TEXT = 'Continue with Mizu Pay';
+const PROCESSING_BUTTON_TEXT = 'Redirecting...';
+
 document.addEventListener('DOMContentLoaded', async () => {
     const loading = document.getElementById('loading');
     const emptyState = document.getElementById('emptyState');
     const checkoutSummary = document.getElementById('checkoutSummary');
     const payButton = document.getElementById('payButton');
+    if (payButton) {
+        payButton.textContent = DEFAULT_BUTTON_TEXT;
+    }
 
     // Get checkout details from storage
     try {
@@ -146,6 +152,12 @@ function displayCheckoutSummary(checkout) {
     
     // Update checkout object with detected store name for payment
     checkout.storeName = storeName;
+
+    const payButton = document.getElementById('payButton');
+    if (payButton) {
+        payButton.disabled = false;
+        payButton.textContent = DEFAULT_BUTTON_TEXT;
+    }
 }
 
 function formatCurrency(amount, currency) {
@@ -172,7 +184,7 @@ async function handlePayment(checkout) {
     
     // Disable button and show loading
     payButton.disabled = true;
-    payButton.textContent = 'Redirecting...';
+    payButton.textContent = PROCESSING_BUTTON_TEXT;
 
     try {
         // Build checkout URL with query parameters
@@ -197,7 +209,7 @@ async function handlePayment(checkout) {
         alert('Error initiating payment: ' + error.message);
         
         payButton.disabled = false;
-        payButton.textContent = 'Pay with Mizu Pay';
+        payButton.textContent = DEFAULT_BUTTON_TEXT;
     }
 }
 

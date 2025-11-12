@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { formatUnits } from 'viem';
 import { MOCK_CUSD_ADDRESS, MIZU_PAY_CONTRACT } from '@/lib/contracts';
+import { ArrowDownToLine, Send, ArrowUpRight } from 'lucide-react';
 
 interface Transaction {
   hash: string;
@@ -209,51 +210,15 @@ export function TransactionHistory({ walletAddress, refreshTrigger }: Transactio
                 <div className="flex-shrink-0">
                   {tx.type === 'deposit' ? (
                     <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center">
-                      <svg
-                        className="w-4 h-4 text-green-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 5v14m7-7l-7 7-7-7"
-                        />
-                      </svg>
+                      <ArrowDownToLine className="w-4 h-4 text-green-600" strokeWidth={2.5} />
                     </div>
                   ) : tx.type === 'payment' ? (
                     <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
-                      <svg
-                        className="w-4 h-4 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                        />
-                      </svg>
+                      <Send className="w-4 h-4 text-blue-600" strokeWidth={2.5} />
                     </div>
                   ) : (
                     <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center">
-                      <svg
-                        className="w-4 h-4 text-red-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                        />
-                      </svg>
+                      <ArrowUpRight className="w-4 h-4 text-red-600" strokeWidth={2.5} />
                     </div>
                   )}
                 </div>

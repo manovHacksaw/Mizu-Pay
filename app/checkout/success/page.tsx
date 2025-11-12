@@ -78,7 +78,7 @@ export default function CheckoutSuccessPage() {
   
   return (
     <div className="min-h-screen page-bg relative overflow-hidden transition-colors duration-300">
-      <Navbar />
+
       
       <div className="relative z-10 px-5 py-8 md:py-12">
         <div className="max-w-2xl mx-auto">

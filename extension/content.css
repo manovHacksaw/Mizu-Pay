@@ -1,0 +1,292 @@
+/* Mizu Pay Extension - Content Styles */
+
+/* Payment Card Styles - White card with rounded corners */
+#mizu-pay-button,
+.mizu-pay-payment-card {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 2147483647 !important;
+  margin: 0 !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  padding: 16px !important;
+  min-width: 320px !important;
+  max-width: 400px !important;
+  cursor: pointer !important;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure the card doesn't interfere with page content */
+#mizu-pay-button *,
+.mizu-pay-payment-card * {
+  box-sizing: border-box !important;
+}
+
+.mizu-pay-card-content {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  width: 100% !important;
+}
+
+.mizu-pay-card-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.mizu-pay-logo-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 48px !important;
+  height: 48px !important;
+  flex-shrink: 0 !important;
+  background: linear-gradient(135deg, #0f5ff2, #2b74ff) !important;
+  border-radius: 50% !important;
+  padding: 8px !important;
+}
+
+.mizu-pay-logo {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+.mizu-pay-card-text {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.mizu-pay-card-title {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #111827 !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.mizu-pay-card-amount {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #6b7280 !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.mizu-pay-card-subtitle {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #6b7280 !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.mizu-pay-use-button {
+  background: #14b8a6 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  flex-shrink: 0 !important;
+  transition: background-color 0.2s ease !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.mizu-pay-use-button:hover {
+  background: #0d9488 !important;
+}
+
+.mizu-pay-use-button:active {
+  background: #0f766e !important;
+}
+
+/* High z-index to ensure visibility */
+#mizu-pay-floating-icon {
+  z-index: 2147483647 !important;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  #mizu-pay-button,
+  .mizu-pay-payment-card {
+    bottom: 10px !important;
+    right: 10px !important;
+    left: 10px !important;
+    min-width: auto !important;
+    max-width: none !important;
+    padding: 12px !important;
+  }
+  
+  .mizu-pay-logo-container {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  .mizu-pay-card-title {
+    font-size: 14px !important;
+  }
+  
+  .mizu-pay-card-amount {
+    font-size: 13px !important;
+  }
+  
+  .mizu-pay-card-subtitle {
+    font-size: 12px !important;
+  }
+  
+  .mizu-pay-use-button {
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* Gift card highlight */
+.mizu-highlight-giftcard {
+  position: relative;
+  box-shadow: 0 0 0 3px rgba(15, 95, 242, 0.28), 0 20px 35px rgba(15, 95, 242, 0.18) !important;
+  border-radius: 16px !important;
+  transition: box-shadow 0.3s ease;
+}
+
+.mizu-highlight-giftcard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+
+/* Pointer overlay */
+.mizu-pointer-container {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 2147483647;
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+.mizu-pointer-container .mizu-pointer-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mizu-pointer-container .mizu-pointer-hand {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 24px rgba(15, 95, 242, 0.25);
+  animation: mizuPointerBounce 1.8s ease-in-out infinite;
+}
+
+.mizu-pointer-container .mizu-pointer-hand svg {
+  width: 18px;
+  height: 18px;
+  fill: #0f5ff2;
+}
+
+.mizu-pointer-container .mizu-pointer-pill {
+  position: relative;
+  padding: 10px 16px;
+  background: rgba(15, 95, 242, 0.95);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 95, 242, 0.26);
+  letter-spacing: 0.2px;
+  animation: mizuPointerPulse 2.4s ease-in-out infinite;
+}
+
+.mizu-pointer-container .mizu-pointer-pill::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -6px;
+  transform: translateY(-50%);
+  border-style: solid;
+  border-width: 6px;
+  border-color: transparent rgba(15, 95, 242, 0.95) transparent transparent;
+}
+
+.mizu-pointer-container.mizu-pointer-left .mizu-pointer-content {
+  flex-direction: row-reverse;
+}
+
+.mizu-pointer-container.mizu-pointer-left .mizu-pointer-pill::after {
+  left: auto;
+  right: -6px;
+  border-color: transparent transparent transparent rgba(15, 95, 242, 0.95);
+}
+
+@keyframes mizuPointerBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes mizuPointerPulse {
+  0%, 100% {
+    box-shadow: 0 12px 28px rgba(15, 95, 242, 0.22);
+  }
+  50% {
+    box-shadow: 0 16px 32px rgba(15, 95, 242, 0.32);
+  }
+}
+
+/* Animated cursor */
+#mizu-animated-cursor {
+  filter: drop-shadow(0 4px 8px rgba(15, 95, 242, 0.35));
+  animation: mizuCursorGlow 2s ease-in-out infinite;
+  will-change: filter, transform;
+}
+
+#mizu-animated-cursor svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes mizuCursorGlow {
+  0%, 100% {
+    filter: drop-shadow(0 4px 8px rgba(15, 95, 242, 0.35)) drop-shadow(0 0 8px rgba(15, 95, 242, 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 6px 12px rgba(15, 95, 242, 0.45)) drop-shadow(0 0 12px rgba(15, 95, 242, 0.3));
+  }
+}
