@@ -14,6 +14,13 @@ export async function POST(req: Request) {
     );
   }
   
+  // Check if DATABASE_URL uses Supabase direct connection (port 5432) instead of pooler (port 6543)
+  // For serverless, Supabase requires connection pooling
+  const dbUrl = process.env.DATABASE_URL;
+  if (dbUrl.includes('supabase.co:5432') && !dbUrl.includes('pooler')) {
+    console.warn("⚠️ WARNING: Using Supabase direct connection (port 5432). For serverless (Vercel), use the connection pooler (port 6543) or transaction pooler URL from Supabase dashboard.");
+  }
+  
   try {
     const body = await req.json();
     console.log("Request body:", body);
@@ -247,19 +254,28 @@ export async function POST(req: Request) {
     
     // Check for common database connection errors
     const errorMessage = err instanceof Error ? err.message : String(err);
-    const isDatabaseError = 
+    const isConnectionError = 
       errorMessage.includes('P1001') || // Can't reach database server
       errorMessage.includes('P1000') || // Authentication failed
-      errorMessage.includes('P2002') || // Unique constraint violation
       errorMessage.includes('connection') ||
       errorMessage.includes('timeout') ||
       errorMessage.includes('ECONNREFUSED') ||
-      errorMessage.includes('ENOTFOUND');
+      errorMessage.includes('ENOTFOUND') ||
+      errorMessage.includes("Can't reach database server");
     
-    const errorResponse: any = {
-      error: isDatabaseError ? "Database connection error" : "Internal Server Error",
+    const isDatabaseError = isConnectionError || 
+      errorMessage.includes('P2002') || // Unique constraint violation
+      errorMessage.includes('P2003'); // Foreign key constraint
+    
+    let errorResponse: any = {
+      error: isConnectionError ? "Database connection error" : isDatabaseError ? "Database error" : "Internal Server Error",
       details: errorMessage,
     };
+    
+    // Add helpful message for Supabase connection issues
+    if (isConnectionError && process.env.DATABASE_URL?.includes('supabase.co:5432')) {
+      errorResponse.hint = "For serverless deployments, use Supabase's connection pooler (port 6543) or transaction pooler URL instead of the direct connection (port 5432). Check your Supabase dashboard for the pooled connection string.";
+    }
     
     // Include stack trace in development or if it's a known error type
     if (process.env.NODE_ENV === 'development' || isDatabaseError) {

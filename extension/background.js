@@ -13,7 +13,7 @@ chrome.runtime.onInstalled.addListener(() => {
         "mizuPaySettings": {
             "enabled": true,
             "currency": "usd",
-            "dappUrl": "localhost:3000"
+            "dappUrl": "mizu-pay.vercel.app"
         }
     });
 });
