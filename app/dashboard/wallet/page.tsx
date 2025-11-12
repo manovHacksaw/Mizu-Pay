@@ -5,75 +5,220 @@ import { useEffect, useState } from 'react';
 import { createPublicClient, http, formatUnits, defineChain, getContract } from 'viem';
 import { erc20Abi } from 'viem';
 import { MOCK_CUSD_ADDRESS } from '@/lib/contracts';
+import { ReceiveModal } from '@/components/modals/ReceiveModal';
+import { SendWalletInfoModal } from '@/components/modals/SendWalletInfoModal';
+import { SendModal } from '@/components/modals/SendModal';
+import { TransactionHistory } from '@/components/wallet/TransactionHistory';
+import { syncUserToDatabase, extractWalletData } from '@/lib/syncUser';
 
 export default function WalletPage() {
-  const { user } = usePrivy();
-  const { wallets } = useWallets();
+  const { user, createWallet } = usePrivy();
+  const { wallets, ready: walletsReady } = useWallets();
   const [balances, setBalances] = useState<{ celo: string; cusd: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
+  const [isSendInfoModalOpen, setIsSendInfoModalOpen] = useState(false);
+  const [isSendModalOpen, setIsSendModalOpen] = useState(false);
+  const [transactionRefreshTrigger, setTransactionRefreshTrigger] = useState(0);
+  const [checkingWallet, setCheckingWallet] = useState(true);
+  const [walletSynced, setWalletSynced] = useState(false);
+  const [creatingWallet, setCreatingWallet] = useState(false);
 
-  const activeWallet = wallets?.[0];
+  // Only show Mizu Pay (embedded) wallets, not external wallets
+  // Note: Only one embedded wallet per user is allowed in the database
+  const embeddedWallets = wallets?.filter(w => 
+    w.walletClientType === 'privy' || 
+    w.walletClientType === 'embedded' ||
+    w.connectorType === 'privy'
+  ) || [];
 
+  // Use the first embedded wallet (should be the only one)
+  const activeWallet = embeddedWallets[0];
+
+  // Check for wallet and sync to database immediately if it exists
   useEffect(() => {
-    if (!activeWallet?.address) return;
+    if (!walletsReady || !user?.id) {
+      if (walletsReady && !user?.id) {
+        setCheckingWallet(false);
+      }
+      return;
+    }
 
-    const fetchBalances = async () => {
-      setLoading(true);
-      try {
-        const celoSepolia = defineChain({
-          id: 11142220,
-          name: 'Celo Sepolia',
-          nativeCurrency: {
-            decimals: 18,
-            name: 'CELO',
-            symbol: 'CELO',
-          },
-          rpcUrls: {
-            default: {
-              http: ['https://rpc.ankr.com/celo_sepolia'],
-            },
-          },
-          blockExplorers: {
-            default: {
-              name: 'Celo Sepolia Explorer',
-              url: 'https://celo-sepolia.blockscout.com',
-            },
-          },
-          testnet: true,
-        });
+    const checkAndSyncWallet = async () => {
+      // First, check immediately if wallet exists (user might already have one from Privy)
+      const embeddedWallet = wallets?.find(w => 
+        w.walletClientType === 'privy' || 
+        w.walletClientType === 'embedded' ||
+        w.connectorType === 'privy'
+      );
 
-        const publicClient = createPublicClient({
-          chain: celoSepolia,
-          transport: http(),
-        });
+      if (embeddedWallet?.address) {
+        // Wallet exists - sync to database immediately
+        if (!walletSynced) {
+          try {
+            const walletData = extractWalletData(wallets || []);
+            await syncUserToDatabase({
+              privyUserId: user.id,
+              email: user.email?.address || null,
+              wallets: walletData,
+              activeWalletAddress: embeddedWallet.address,
+            });
+            setWalletSynced(true);
+          } catch (error) {
+            console.error('Error syncing wallet to database:', error);
+          }
+        }
+        setCheckingWallet(false);
+        setCreatingWallet(false);
+        return;
+      }
 
-        // Get CELO balance
-        const celoBalance = await publicClient.getBalance({
-          address: activeWallet.address as `0x${string}`,
-        });
-
-        // Get cUSD balance
-        const contract = getContract({
-          address: MOCK_CUSD_ADDRESS,
-          abi: erc20Abi,
-          client: publicClient,
-        });
-
-        const cusdBalance = await contract.read.balanceOf([activeWallet.address as `0x${string}`]);
-
-        setBalances({
-          celo: parseFloat(formatUnits(celoBalance, 18)).toFixed(4),
-          cusd: parseFloat(formatUnits(cusdBalance as bigint, 18)).toFixed(4),
-        });
-      } catch (error) {
-        console.error('Error fetching balances:', error);
-        setBalances({ celo: '0.0000', cusd: '0.0000' });
-      } finally {
-        setLoading(false);
+      // No wallet found - wait a bit for Privy to potentially create it (configured to create on login)
+      if (checkingWallet) {
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Re-check after waiting
+        const recheckWallet = wallets?.find(w => 
+          w.walletClientType === 'privy' || 
+          w.walletClientType === 'embedded' ||
+          w.connectorType === 'privy'
+        );
+        
+        if (recheckWallet?.address) {
+          // Wallet was created - sync it
+          try {
+            const walletData = extractWalletData(wallets || []);
+            await syncUserToDatabase({
+              privyUserId: user.id,
+              email: user.email?.address || null,
+              wallets: walletData,
+              activeWalletAddress: recheckWallet.address,
+            });
+            setWalletSynced(true);
+            setCheckingWallet(false);
+            setCreatingWallet(false);
+          } catch (error) {
+            console.error('Error syncing wallet to database:', error);
+            setCheckingWallet(false);
+          }
+        } else {
+          // Still no wallet - show create prompt
+          setCheckingWallet(false);
+        }
+      } else {
+        setCheckingWallet(false);
       }
     };
 
+    checkAndSyncWallet();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walletsReady, user?.id, wallets]);
+
+  // Handle wallet creation
+  const handleCreateWallet = async () => {
+    if (!createWallet) {
+      console.error('createWallet function not available');
+      return;
+    }
+
+    setCreatingWallet(true);
+    try {
+      await createWallet();
+      // Wait a moment for wallet to be created and appear in wallets list
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Check if wallet was created
+      const newEmbeddedWallet = wallets?.find(w => 
+        w.walletClientType === 'privy' || 
+        w.walletClientType === 'embedded' ||
+        w.connectorType === 'privy'
+      );
+
+      if (newEmbeddedWallet?.address && user?.id) {
+        // Sync the newly created wallet to database
+        try {
+          const walletData = extractWalletData(wallets || []);
+          await syncUserToDatabase({
+            privyUserId: user.id,
+            email: user.email?.address || null,
+            wallets: walletData,
+            activeWalletAddress: newEmbeddedWallet.address,
+          });
+          setWalletSynced(true);
+        } catch (error) {
+          console.error('Error syncing newly created wallet to database:', error);
+        }
+      }
+      
+      // Force re-check by resetting state
+      setWalletSynced(false);
+      setCheckingWallet(true);
+    } catch (error) {
+      console.error('Error creating wallet:', error);
+      setCreatingWallet(false);
+    }
+  };
+
+  const fetchBalances = async () => {
+    if (!activeWallet?.address) return;
+    
+    setLoading(true);
+    try {
+      const celoSepolia = defineChain({
+        id: 11142220,
+        name: 'Celo Sepolia',
+        nativeCurrency: {
+          decimals: 18,
+          name: 'CELO',
+          symbol: 'CELO',
+        },
+        rpcUrls: {
+          default: {
+            http: ['https://rpc.ankr.com/celo_sepolia'],
+          },
+        },
+        blockExplorers: {
+          default: {
+            name: 'Celo Sepolia Explorer',
+            url: 'https://celo-sepolia.blockscout.com',
+          },
+        },
+        testnet: true,
+      });
+
+      const publicClient = createPublicClient({
+        chain: celoSepolia,
+        transport: http(),
+      });
+
+      // Get CELO balance
+      const celoBalance = await publicClient.getBalance({
+        address: activeWallet.address as `0x${string}`,
+      });
+
+      // Get cUSD balance
+      const contract = getContract({
+        address: MOCK_CUSD_ADDRESS,
+        abi: erc20Abi,
+        client: publicClient,
+      });
+
+      const cusdBalance = await contract.read.balanceOf([activeWallet.address as `0x${string}`]);
+
+      setBalances({
+        celo: parseFloat(formatUnits(celoBalance, 18)).toFixed(4),
+        cusd: parseFloat(formatUnits(cusdBalance as bigint, 18)).toFixed(4),
+      });
+    } catch (error) {
+      console.error('Error fetching balances:', error);
+      setBalances({ celo: '0.0000', cusd: '0.0000' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchBalances();
   }, [activeWallet?.address]);
 
@@ -88,13 +233,76 @@ export default function WalletPage() {
     }
   };
 
+  // Show message if no embedded wallet found
+  if (!activeWallet) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold dashboard-text-primary">Mizu Pay Wallet</h1>
+          <p className="text-sm dashboard-text-secondary mt-1">
+            Manage your Mizu Pay wallet balances and transactions
+          </p>
+        </div>
+        <div className="dashboard-card-bg rounded-xl p-6 border dashboard-card-border shadow-sm">
+          <div className="text-center py-8">
+            {checkingWallet ? (
+              <>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-sm dashboard-text-secondary mb-2">
+                  Creating your Mizu Pay wallet...
+                </p>
+                <p className="text-xs dashboard-text-secondary">
+                  This may take a few moments. Please wait.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold dashboard-text-primary mb-2">
+                  Create Your Mizu Pay Wallet
+                </h3>
+                <p className="text-sm dashboard-text-secondary mb-6 max-w-md mx-auto">
+                  You need a Mizu Pay embedded wallet to manage your balances and make payments. 
+                  Click the button below to create your wallet now.
+                </p>
+                <button
+                  onClick={handleCreateWallet}
+                  disabled={creatingWallet || !createWallet}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+                >
+                  {creatingWallet ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Creating Wallet...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Create Wallet
+                    </>
+                  )}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold dashboard-text-primary">Wallet</h1>
+        <h1 className="text-2xl font-bold dashboard-text-primary">Mizu Pay Wallet</h1>
         <p className="text-sm dashboard-text-secondary mt-1">
-          Manage your wallet balances and transactions
+          Manage your Mizu Pay wallet balances and transactions
         </p>
       </div>
 
@@ -180,13 +388,19 @@ export default function WalletPage() {
 
       {/* Action Buttons */}
       <div className="flex items-center gap-4">
-        <button className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2">
+        <button
+          onClick={() => setIsSendInfoModalOpen(true)}
+          className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
           </svg>
           Send
         </button>
-        <button className="flex-1 px-6 py-3 dashboard-card-bg dashboard-text-secondary border dashboard-card-border rounded-lg dashboard-hover transition-colors font-medium flex items-center justify-center gap-2">
+        <button
+          onClick={() => setIsReceiveModalOpen(true)}
+          className="flex-1 px-6 py-3 dashboard-card-bg dashboard-text-secondary border dashboard-card-border rounded-lg dashboard-hover transition-colors font-medium flex items-center justify-center gap-2"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7l-7 7-7-7" />
           </svg>
@@ -202,6 +416,48 @@ export default function WalletPage() {
           Copy Address
         </button>
       </div>
+
+      {/* Transaction History */}
+      {activeWallet?.address && (
+        <TransactionHistory 
+          walletAddress={activeWallet.address}
+          refreshTrigger={transactionRefreshTrigger}
+        />
+      )}
+
+      {/* Receive Modal */}
+      {activeWallet?.address && (
+        <ReceiveModal
+          isOpen={isReceiveModalOpen}
+          onClose={() => setIsReceiveModalOpen(false)}
+          walletAddress={activeWallet.address}
+        />
+      )}
+
+      {/* Send Info Modal */}
+      <SendWalletInfoModal
+        isOpen={isSendInfoModalOpen}
+        onClose={() => setIsSendInfoModalOpen(false)}
+        onContinue={() => {
+          setIsSendInfoModalOpen(false);
+          setIsSendModalOpen(true);
+        }}
+      />
+
+      {/* Send Modal */}
+      {activeWallet?.address && (
+        <SendModal
+          isOpen={isSendModalOpen}
+          onClose={() => {
+            setIsSendModalOpen(false);
+            // Refresh balances and transaction history after closing (in case a transaction was successful)
+            fetchBalances();
+            setTransactionRefreshTrigger(prev => prev + 1);
+          }}
+          walletAddress={activeWallet.address}
+          balances={balances}
+        />
+      )}
     </div>
   );
 }

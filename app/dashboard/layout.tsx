@@ -4,16 +4,20 @@ import { Sidebar } from '@/components/dashboard/Sidebar';
 import { Topbar } from '@/components/dashboard/Topbar';
 import { ThemeInit } from '@/components/ThemeInit';
 import { CurrencySelectionModal } from '@/components/CurrencySelectionModal';
-import { useRouter } from 'next/navigation';
-import { usePrivy } from '@privy-io/react-auth';
+import { useRouter, usePathname } from 'next/navigation';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useEffect, useState } from 'react';
 import { useCurrencyStore } from '@/lib/currencyStore';
+import { syncUserToDatabase, extractWalletData } from '@/lib/syncUser';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { ready, authenticated, logout, user } = usePrivy();
+  const { wallets, ready: walletsReady } = useWallets();
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [currencyChecked, setCurrencyChecked] = useState(false);
+  const [walletSynced, setWalletSynced] = useState(false);
   const { userDefaultCurrency, setUserDefaultCurrency, fetchExchangeRates } = useCurrencyStore();
 
   // Fetch exchange rates on mount
@@ -62,6 +66,54 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push('/login');
     }
   }, [ready, authenticated, router]);
+
+  // Check for embedded wallet and sync to database (only redirect if not on wallet page)
+  useEffect(() => {
+    if (!ready || !authenticated || !user?.id || !walletsReady || walletSynced) return;
+    // Don't redirect if already on wallet page - let wallet page handle it
+    if (pathname === '/dashboard/wallet') {
+      setWalletSynced(true);
+      return;
+    }
+
+    const checkAndSyncWallet = async () => {
+      // Wait a bit for Privy to potentially create the wallet
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Find embedded wallet
+      const embeddedWallet = wallets?.find(w => 
+        w.walletClientType === 'privy' || 
+        w.walletClientType === 'embedded' ||
+        w.connectorType === 'privy'
+      );
+
+      if (embeddedWallet?.address) {
+        // User has embedded wallet - sync to database
+        try {
+          const walletData = extractWalletData(wallets || []);
+          const activeWalletAddress = embeddedWallet.address;
+          
+          await syncUserToDatabase({
+            privyUserId: user.id,
+            email: user.email?.address || null,
+            wallets: walletData,
+            activeWalletAddress,
+          });
+          
+          setWalletSynced(true);
+        } catch (error) {
+          console.error('Error syncing wallet to database:', error);
+          setWalletSynced(true); // Set to true to prevent retries
+        }
+      } else {
+        // No embedded wallet found - redirect to wallet page
+        router.push('/dashboard/wallet');
+        setWalletSynced(true); // Set to true to prevent infinite redirects
+      }
+    };
+
+    checkAndSyncWallet();
+  }, [ready, authenticated, user?.id, wallets, walletsReady, walletSynced, pathname, router]);
 
   const handleCurrencySelect = async (currency: 'INR' | 'USD') => {
     if (user?.email?.address) {

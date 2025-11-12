@@ -39,7 +39,7 @@ export async function POST(req: Request) {
         where: { id: giftCardId },
       });
 
-      if (!giftCard || giftCard.stock <= 0 || !giftCard.active) {
+      if (!giftCard || !giftCard.active || giftCard.reservedByPaymentId) {
         return NextResponse.json({ error: "Gift card unavailable" }, { status: 400 });
       }
 

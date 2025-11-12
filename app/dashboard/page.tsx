@@ -13,14 +13,14 @@ interface PaymentData {
   sessionId: string;
   store: string;
   amountUSD: number;
-  status: 'pending' | 'paid' | 'fulfilled' | 'expired' | 'failed';
+  status: 'pending' | 'processing' | 'paid' | 'email_failed' | 'fulfilled' | 'expired' | 'failed';
   createdAt: string;
   expiresAt: string | null;
   payment: {
     txHash: string | null;
     amountCrypto: number;
     token: string;
-    status: string;
+    status: 'pending' | 'confirming' | 'succeeded' | 'email_failed' | 'failed';
     createdAt: string;
   } | null;
   giftCard: {
@@ -43,6 +43,7 @@ export default function DashboardPage() {
     totalTransactions: 0,
     successfulTransactions: 0,
     pendingTransactions: 0,
+    emailFailedTransactions: 0,
   });
   const { selectedDisplayCurrency } = useCurrencyStore();
 
@@ -54,15 +55,31 @@ export default function DashboardPage() {
         setLoading(true);
         // Use email to find user since database users are identified by email
         const response = await fetch(`/api/payments/history?email=${encodeURIComponent(user.email.address)}`);
-        const data = await response.json();
-
+        
         if (!response.ok) {
-          console.error('Payment history API error:', data);
+          const errorData = await response.json().catch(() => ({}));
+          // User not found is expected for new users - don't log as error
+          if (response.status === 404 && errorData.error === 'User not found') {
+            setPayments([]);
+            setStats({
+              totalBalance: 0,
+              totalTransactions: 0,
+              successfulTransactions: 0,
+              pendingTransactions: 0,
+              emailFailedTransactions: 0,
+            });
+            return;
+          }
+          // Only log actual errors
+          if (response.status !== 404) {
+            console.error('Payment history API error:', errorData.error || errorData.details || 'Unknown error');
+          }
           return;
         }
 
+        const data = await response.json();
+
         if (data.success && data.payments) {
-          console.log('Fetched payments:', data.payments.length);
           setPayments(data.payments);
 
           // Calculate stats
@@ -75,7 +92,10 @@ export default function DashboardPage() {
             (p: PaymentData) => p.status === 'paid' || p.status === 'fulfilled'
           ).length;
           const pendingTransactions = data.payments.filter(
-            (p: PaymentData) => p.status === 'pending'
+            (p: PaymentData) => p.status === 'pending' || p.status === 'processing' || (p.payment && p.payment.status === 'confirming')
+          ).length;
+          const emailFailedTransactions = data.payments.filter(
+            (p: PaymentData) => p.status === 'email_failed' || (p.payment && p.payment.status === 'email_failed')
           ).length;
 
           setStats({
@@ -83,6 +103,7 @@ export default function DashboardPage() {
             totalTransactions,
             successfulTransactions,
             pendingTransactions,
+            emailFailedTransactions,
           });
         } else {
           console.log('No payments found or API returned:', data);
@@ -248,6 +269,23 @@ export default function DashboardPage() {
               </svg>
             }
           />
+          {stats.emailFailedTransactions > 0 && (
+            <StatsCard
+              title="Email Failed"
+              value={stats.emailFailedTransactions.toLocaleString()}
+              subtitle="Requires attention"
+              icon={
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              }
+            />
+          )}
         </div>
       )}
 

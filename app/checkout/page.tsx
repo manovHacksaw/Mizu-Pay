@@ -51,7 +51,7 @@ export default function CheckoutPage() {
     
     // If we don't have required params, redirect to home
     if (!hasRequiredParams) {
-      router.push('/')
+      router.push('/dashboard')
       return
     }
 
@@ -260,7 +260,7 @@ export default function CheckoutPage() {
                   {errorMessage || 'An error occurred'}
                 </p>
                 <button
-                  onClick={() => router.push('/')}
+                  onClick={() => router.push('/dashboard')}
                   className="mt-3 px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
                 >
                   Go Home

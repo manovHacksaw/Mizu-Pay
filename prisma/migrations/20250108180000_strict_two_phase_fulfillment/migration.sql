@@ -1,0 +1,1 @@
+-- This migration was applied via db push
