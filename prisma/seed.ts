@@ -1,11 +1,25 @@
 import { PrismaClient } from "@prisma/client"
 import crypto from "crypto"
 import { config } from "dotenv"
+import { resolve } from "path"
 
-// Load environment variables
-config()
+// Load environment variables from .env and .env.local
+config({ path: resolve(process.cwd(), '.env.local') })
+config({ path: resolve(process.cwd(), '.env') })
 
 const prisma = new PrismaClient()
+
+// Check for ENCRYPTION_SECRET
+if (!process.env.ENCRYPTION_SECRET) {
+  console.error("❌ ERROR: ENCRYPTION_SECRET is not set in your .env or .env.local file!")
+  console.error("")
+  console.error("Please add this line to your .env.local file:")
+  console.error("ENCRYPTION_SECRET=\"your-random-secret-key-here\"")
+  console.error("")
+  console.error("You can generate a random secret or use any long random string.")
+  console.error("Example: ENCRYPTION_SECRET=\"my-super-secret-encryption-key-12345\"")
+  process.exit(1)
+}
 
 function encrypt(text: string) {
   const key = crypto.createHash("sha256").update(process.env.ENCRYPTION_SECRET!).digest()
@@ -23,16 +37,35 @@ function encrypt(text: string) {
 }
 
 async function main() {
+  console.log("🌱 Starting database seeding...")
+  console.log("📦 Checking database connection...")
+  
+  // Test database connection
+  try {
+    await prisma.$connect()
+    console.log("✅ Database connected successfully")
+  } catch (error) {
+    console.error("❌ Database connection failed!")
+    console.error("Make sure DATABASE_URL is set in your .env.local file")
+    throw error
+  }
+
   // Clear existing for clean testing
-  await prisma.giftCard.deleteMany()
+  console.log("🗑️  Clearing existing gift cards...")
+  const deletedCount = await prisma.giftCard.deleteMany()
+  console.log(`   Deleted ${deletedCount.count} existing gift cards`)
 
   // Helper function to calculate USD amount (approximate: 1 USD = 82 INR)
   const calculateUSD = (inr: number) => parseFloat((inr / 82).toFixed(2));
 
   // Generate gift cards for Myntra, Flipkart, and Amazon
-  // Amounts: 100, 200, 250, 500, 750, 1000 (in INR)
+  // Amounts: 100, 200, 250, 500, 750, 1000, 2000, 3000, 5000 (in INR)
+  // Higher amounts added to support larger purchases
   const stores = ["Myntra", "Flipkart", "Amazon"];
-  const amounts = [100, 200, 250, 500, 750, 1000];
+  const amounts = [100, 200, 250, 500, 750, 1000, 2000, 3000, 5000];
+  
+  console.log(`📝 Generating gift cards for stores: ${stores.join(", ")}`)
+  console.log(`💰 Amounts: ₹${amounts.join(", ₹")}`)
   
   const giftCards: Array<{
     store: string;
@@ -109,7 +142,22 @@ async function main() {
     })
   }
 
-  console.log("✅ Gift cards seeded!")
+  // Verify the seeding
+  const totalCards = await prisma.giftCard.count()
+  const storesCount = await prisma.giftCard.groupBy({
+    by: ['store'],
+    _count: true
+  })
+
+  console.log("")
+  console.log("✅ Gift cards seeded successfully!")
+  console.log(`📊 Total gift cards created: ${totalCards}`)
+  console.log("📦 Cards per store:")
+  storesCount.forEach(({ store, _count }) => {
+    console.log(`   - ${store}: ${_count} cards`)
+  })
+  console.log("")
+  console.log("🎉 You can now use the checkout flow with Myntra, Flipkart, and Amazon!")
 }
 
 main()

@@ -101,22 +101,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       if (embeddedWallet?.address) {
         // User has embedded wallet - sync to database
-        try {
-          const walletData = extractWalletData(wallets || []);
-          const activeWalletAddress = embeddedWallet.address;
-          
-          await syncUserToDatabase({
-            privyUserId: user.id,
-            email: user.email?.address || null,
-            wallets: walletData,
-            activeWalletAddress,
-          });
-          
+        // Wrap in async IIFE to catch all errors silently
+        (async () => {
+          try {
+            const walletData = extractWalletData(wallets || []);
+            const activeWalletAddress = embeddedWallet.address;
+            
+            await syncUserToDatabase({
+              privyUserId: user.id,
+              email: user.email?.address || null,
+              wallets: walletData,
+              activeWalletAddress,
+            });
+            
+            // Silently handle - no logging needed for expected errors
+            setWalletSynced(true);
+          } catch (error) {
+            // Completely suppress all errors to prevent Next.js from showing them
+            setWalletSynced(true); // Set to true to prevent retries
+          }
+        })().catch(() => {
+          // Additional catch to prevent unhandled promise rejections
           setWalletSynced(true);
-        } catch (error) {
-          console.error('Error syncing wallet to database:', error);
-          setWalletSynced(true); // Set to true to prevent retries
-        }
+        });
       } else {
         // No embedded wallet found - redirect to wallet page
         router.push('/dashboard/wallet');

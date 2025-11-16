@@ -1,5 +1,29 @@
 import { PrismaClient } from "@prisma/client";
 
+// Load environment variables explicitly (helps in WSL/development)
+// This ensures DATABASE_URL is available before PrismaClient is initialized
+if (typeof window === 'undefined') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const dotenv = require('dotenv');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path');
+    // Load .env.local first (higher priority), then .env
+    // Only load if DATABASE_URL is not already set (allows override via system env vars)
+    if (!process.env.DATABASE_URL) {
+      dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+      dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+    } else {
+      // Even if DATABASE_URL is set, load other env vars from .env files
+      dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+      dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+    }
+  } catch (error) {
+    // dotenv might not be available, that's okay - Next.js should handle it
+    console.warn('Could not load dotenv in prisma.ts (this is okay if Next.js loads it):', error);
+  }
+}
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };

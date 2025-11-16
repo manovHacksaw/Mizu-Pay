@@ -1,4 +1,10 @@
 import { defineConfig, env } from "prisma/config";
+import { config } from "dotenv";
+import { resolve } from "path";
+
+// Load environment variables from .env and .env.local files
+config({ path: resolve(process.cwd(), ".env") });
+config({ path: resolve(process.cwd(), ".env.local") });
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

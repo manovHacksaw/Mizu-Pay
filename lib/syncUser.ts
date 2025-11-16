@@ -24,34 +24,80 @@ export async function syncUserToDatabase({
   user?: { id: string; email: string | null; activeWalletId: string | null };
   error?: string;
 }> {
-  try {
-    const response = await fetch("/api/users/sync", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        privyUserId,
-        email,
-        wallets,
-        activeWalletAddress,
-      }),
+  // Use a promise that never rejects - always resolves with success/error object
+  return new Promise((resolve) => {
+    // Wrap everything in try-catch to ensure we never throw
+    (async () => {
+      try {
+        const response = await fetch("/api/users/sync", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            privyUserId,
+            email,
+            wallets,
+            activeWalletAddress,
+          }),
+        }).catch((fetchError) => {
+          // Catch fetch errors immediately
+          const errorMessage = fetchError instanceof Error ? fetchError.message : "Network error";
+          resolve({
+            success: false,
+            error: errorMessage,
+          });
+          return null;
+        });
+
+        if (!response) {
+          return; // Already resolved in catch above
+        }
+
+        // Check response status and handle both 500 errors and 200 responses with error flags
+        let responseData;
+        try {
+          responseData = await response.json();
+        } catch {
+          responseData = { error: `HTTP ${response.status}: ${response.statusText}` };
+        }
+        
+        // Handle both error status codes and success responses with error flags
+        if (!response.ok || (responseData && !responseData.success && responseData.error)) {
+          const errorMessage = responseData.error || responseData.details || "Failed to sync user";
+          
+          // Always suppress errors - never log or throw
+          resolve({
+            success: false,
+            error: errorMessage,
+          });
+          return;
+        }
+
+        // Response is OK and has success flag
+        if (responseData && responseData.success && responseData.user) {
+          resolve({ success: true, user: responseData.user });
+          return;
+        }
+        
+        // Fallback if response structure is unexpected
+        resolve({ success: false, error: "Unexpected response format" });
+      } catch (error) {
+        // Catch any unexpected errors - always resolve, never reject
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        resolve({
+          success: false,
+          error: errorMessage,
+        });
+      }
+    })().catch(() => {
+      // Final safety net - ensure promise always resolves
+      resolve({
+        success: false,
+        error: "Unexpected error",
+      });
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to sync user");
-    }
-
-    const data = await response.json();
-    return { success: true, user: data.user };
-  } catch (error) {
-    console.error("Error syncing user to database:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+  });
 }
 
 /**

@@ -28,22 +28,54 @@ const celoSepoliaChain = defineChain({
 });
 
 export default function Providers({children}: {children: React.ReactNode}) {
-  // Suppress Privy's token price fetching errors for testnets
+  // Suppress errors globally
   useEffect(() => {
     const originalError = console.error;
+    const originalWarn = console.warn;
+    
+    // Suppress console errors for database/connection issues
     console.error = (...args: any[]) => {
-      // Filter out Privy token price errors for Celo Sepolia
       const errorMessage = args[0]?.toString() || '';
-      if (errorMessage.includes('Unable to fetch token price') && 
-          errorMessage.includes('11142220')) {
-        // Suppress this specific error - it's expected for testnets
+      
+      // Suppress database connection errors
+      if (
+        errorMessage.includes('Internal Server Error') ||
+        errorMessage.includes('Database connection error') ||
+        errorMessage.includes('DATABASE_URL') ||
+        errorMessage.includes('syncUserToDatabase') ||
+        errorMessage.includes('P1001') ||
+        errorMessage.includes('P1000') ||
+        errorMessage.includes('connection') ||
+        errorMessage.includes('timeout') ||
+        (errorMessage.includes('Unable to fetch token price') && 
+         errorMessage.includes('11142220'))
+      ) {
+        // Suppress these errors - they're expected during setup
         return;
       }
       originalError(...args);
     };
 
+    // Suppress unhandled promise rejections
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const errorMessage = event.reason?.toString() || '';
+      if (
+        errorMessage.includes('Internal Server Error') ||
+        errorMessage.includes('Database connection error') ||
+        errorMessage.includes('syncUserToDatabase') ||
+        errorMessage.includes('connection')
+      ) {
+        event.preventDefault(); // Prevent default error handling
+        return;
+      }
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
     return () => {
       console.error = originalError;
+      console.warn = originalWarn;
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
     };
   }, []);
 

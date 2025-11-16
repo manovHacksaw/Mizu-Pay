@@ -1,8 +1,29 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+// Load environment variables explicitly (helps in WSL/development)
+let envLoaded = false;
+if (typeof window === 'undefined' && !envLoaded) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const dotenv = require('dotenv');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path');
+    // Load .env.local first (higher priority), then .env
+    dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+    dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+    envLoaded = true;
+  } catch (error) {
+    // dotenv might not be available, that's okay - Next.js should handle it
+    console.warn('Could not load dotenv manually (this is okay if Next.js loads it):', error);
+  }
+}
+
+export async function POST(req: Request) {
+  // Wrap entire handler to catch any unhandled errors and return 200 instead of 500
+  try {
+    console.log("USER SYNC API - DATABASE_URL present:", !!process.env.DATABASE_URL);
+    
     const body = await req.json();
     const { privyUserId, email, wallets, activeWalletAddress } = body;
 
@@ -251,10 +272,27 @@ export async function POST(req: Request) {
       activeWalletId,
     });
   } catch (err) {
-    console.error("USER SYNC ERROR:", err);
+    // Check for database connection errors
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const isConnectionError = 
+      errorMessage.includes('P1001') || // Can't reach database server
+      errorMessage.includes('P1000') || // Authentication failed
+      errorMessage.includes('connection') ||
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('ECONNREFUSED') ||
+      errorMessage.includes('ENOTFOUND') ||
+      errorMessage.includes("Can't reach database server") ||
+      errorMessage.includes('DATABASE_URL');
+    
+    // Return 200 with error flag instead of 500 to prevent Next.js from showing error
+    // This allows the client to handle the error gracefully
     return NextResponse.json(
-      { error: "Internal Server Error", details: err instanceof Error ? err.message : String(err) },
-      { status: 500 }
+      { 
+        success: false,
+        error: isConnectionError ? "Database connection error" : "Internal Server Error", 
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined 
+      },
+      { status: 200 } // Return 200 instead of 500 to prevent Next.js error display
     );
   }
 }

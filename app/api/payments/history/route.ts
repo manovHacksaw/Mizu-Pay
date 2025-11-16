@@ -2,6 +2,24 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { checkAndExpireSession } from "@/lib/sessionUtils";
 
+// Load environment variables explicitly (helps in WSL/development)
+let envLoaded = false;
+if (typeof window === 'undefined' && !envLoaded) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const dotenv = require('dotenv');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path');
+    // Load .env.local first (higher priority), then .env
+    dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+    dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+    envLoaded = true;
+  } catch (error) {
+    // dotenv might not be available, that's okay - Next.js should handle it
+    console.warn('Could not load dotenv manually (this is okay if Next.js loads it):', error);
+  }
+}
+
 /**
  * GET /api/payments/history
  * Get payment history for the authenticated user
@@ -10,6 +28,7 @@ import { checkAndExpireSession } from "@/lib/sessionUtils";
  *   - email: User email (optional, used if userId not provided)
  */
 export async function GET(req: Request) {
+  console.log("PAYMENT HISTORY API - DATABASE_URL present:", !!process.env.DATABASE_URL);
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
@@ -153,10 +172,22 @@ export async function GET(req: Request) {
     });
   } catch (err) {
     console.error("PAYMENT HISTORY ERROR:", err);
+    
+    // Check for database connection errors
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const isConnectionError = 
+      errorMessage.includes('P1001') || // Can't reach database server
+      errorMessage.includes('P1000') || // Authentication failed
+      errorMessage.includes('connection') ||
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('ECONNREFUSED') ||
+      errorMessage.includes('ENOTFOUND') ||
+      errorMessage.includes("Can't reach database server");
+    
     return NextResponse.json(
       {
-        error: "Internal Server Error",
-        details: err instanceof Error ? err.message : String(err),
+        error: isConnectionError ? "Database connection error" : "Internal Server Error",
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
       },
       { status: 500 }
     );

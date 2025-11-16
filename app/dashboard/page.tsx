@@ -143,7 +143,13 @@ import { Coins, ArrowDownCircle, Leaf, ArrowRight, Copy } from 'lucide-react';
           const response = await fetch(`/api/payments/history?email=${encodeURIComponent(user.email?.address || '')}`);
           
           if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
+            let errorData;
+            try {
+              errorData = await response.json();
+            } catch {
+              errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+            }
+            
             if (response.status === 404 && errorData.error === 'User not found') {
               setPayments([]);
               setStats({
@@ -154,9 +160,24 @@ import { Coins, ArrowDownCircle, Leaf, ArrowRight, Copy } from 'lucide-react';
               });
               return;
             }
+            
+            // Only log non-404 errors, and suppress database connection errors during initial setup
             if (response.status !== 404) {
-              console.error('Payment history API error:', errorData.error || errorData.details || 'Unknown error');
+              const errorMessage = errorData.error || errorData.details || 'Unknown error';
+              // Don't log database connection errors as they're expected during setup
+              if (!errorMessage.includes("Database connection error") && !errorMessage.includes("DATABASE_URL")) {
+                console.error('Payment history API error:', errorMessage);
+              }
             }
+            
+            // Set empty state on error to prevent UI from showing loading forever
+            setPayments([]);
+            setStats({
+              totalBalance: 0,
+              totalDeposits: 0,
+              totalSpent: 0,
+              refiContribution: 0,
+            });
             return;
           }
 

@@ -401,11 +401,10 @@ body:not(:has(.pre-loader)) {
   }
 }
 
-/* Watermark - Soft fade in */
+/* Watermark - Instant appearance */
 .animate-watermark {
-  opacity: 0;
-  animation: fadeInWatermark 1.5s ease-out forwards;
-  animation-delay: 3.8s;
+  opacity: 1;
+  animation: none;
 }
 
 @keyframes fadeInWatermark {

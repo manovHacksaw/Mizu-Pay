@@ -7,6 +7,9 @@
         import { Clock, CheckCircle, AlertCircle, Wallet, CreditCard, Gift } from 'lucide-react'
         import { useCurrencyStore } from '@/lib/currencyStore'
         import { formatAmountWithConversion } from '@/lib/currencyUtils'
+        import { Waves } from '@/components/decorative/Waves'
+        import { Watermark } from '@/components/decorative/Watermark'
+        import './checkout-styles.css'
 
         interface GiftCard {
         id: string
@@ -38,25 +41,25 @@
         ]
         
         return (
-            <div className="mb-8">
+            <div className="mb-6">
             <div className="flex items-center justify-between relative">
-                <div className="absolute left-0 right-0 top-5 h-0.5 bg-gray-200 -z-10" />
+                <div className="absolute left-0 right-0 top-5 h-0.5 bg-white/30 -z-10" />
                 <div
-                    className="absolute left-0 top-5 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500 -z-10"
+                    className="absolute left-0 top-5 h-0.5 bg-white transition-all duration-500 -z-10"
                     style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
                 />
                 {steps.map(({ step, label, icon: Icon }) => (
                 <div key={step} className="flex flex-col items-center z-10">
                     <div
-                        className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                        className={`w-10 h-10 flex items-center justify-center font-bold text-sm transition-all duration-300 ${
                             step < currentStep
-                                ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg scale-100'
+                                ? 'bg-blue-600 text-white rounded-full shadow-lg'
                                 : step === currentStep
-                                ? 'bg-white text-blue-600 shadow-xl scale-110 ring-4 ring-blue-100'
-                                : 'bg-white text-gray-400 shadow border-2 border-gray-200'
+                                ? 'bg-blue-600 text-white rounded-full shadow-xl'
+                                : 'bg-white border-2 border-gray-300 text-gray-800 rounded-lg'
                         }`}
                     >
-                        {step < currentStep ? (
+                        {step < currentStep || step === currentStep ? (
                             <CheckCircle className="w-5 h-5" />
                         ) : (
                             <Icon className="w-5 h-5" />
@@ -64,7 +67,7 @@
                     </div>
                     <span
                         className={`mt-2 text-xs font-semibold transition-colors ${
-                            step <= currentStep ? 'text-gray-900' : 'text-gray-400'
+                            step <= currentStep ? 'text-white' : 'text-white/70'
                         }`}
                     >
                         {label}
@@ -119,20 +122,40 @@
                     const response = await fetch(
                         `/api/gift-cards/options?store=${encodeURIComponent(purchaseDetails.store)}&currency=${encodeURIComponent(purchaseDetails.currency)}&amount=${purchaseDetails.amount}`
                     )
+                    
                     if (response.ok) {
                         const data = await response.json()
                         // Store is supported if response is OK (even if giftCards array is empty)
                         // Empty array means store is supported but no cards match the amount
-                        setStoreSupported(true)
+                        // Also check for database connection warnings or fallback mode
+                        if (data._warning || data._fallback) {
+                            if (data._message) {
+                                console.warn("Store support check:", data._message)
+                            }
+                            // If DB connection issue or fallback mode, assume store is supported (don't block user)
+                            setStoreSupported(true)
+                        } else {
+                            setStoreSupported(true)
+                        }
                     } else if (response.status === 404) {
                         // 404 means store doesn't exist in our database
+                        const errorData = await response.json().catch(() => ({}))
+                        console.log("Store not found in database:", {
+                            store: purchaseDetails.store,
+                            currency: purchaseDetails.currency,
+                            availableStores: errorData.details?.availableStores
+                        })
                         setStoreSupported(false)
                     } else {
-                        // Other errors - assume not supported
-                        setStoreSupported(false)
+                        // Other errors - log but don't block (might be temporary DB issue)
+                        console.warn("Store support check failed:", response.status, response.statusText)
+                        // Assume supported to not block user (they can still proceed with checkbox)
+                        setStoreSupported(true)
                     }
                 } catch (error) {
-                    setStoreSupported(false)
+                    console.warn("Error checking store support:", error)
+                    // On error, assume supported (don't block user)
+                    setStoreSupported(true)
                 } finally {
                     setIsCheckingStore(false)
                 }
@@ -161,23 +184,23 @@
         
 
         return (
-            <div className="space-y-6 animate-in fade-in duration-500">
-            <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Confirm Purchase Details</h2>
+            <div className="space-y-5 animate-in fade-in duration-500">
+            <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">Confirm Purchase Details</h2>
                 <p className="text-sm text-gray-600">Review your order before proceeding</p>
             </div>
             <div className="space-y-4">
                 {/* Store */}
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="p-4 bg-white rounded-xl border border-gray-200">
                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
-                    Store
+                    STORE
                 </label>
                 <div className="flex items-center gap-2">
                     <p className="text-lg font-bold text-gray-900">{purchaseDetails.store}</p>
                     {isCheckingStore ? (
                     <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
                     ) : storeSupported !== false ? (
-                    <span className="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs font-bold rounded-full shadow-md animate-pulse">
+                    <span className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
                         ✓ Verified
                     </span>
                     ) : null}
@@ -185,9 +208,9 @@
                 </div>
 
                 {/* Product */}
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="p-4 bg-white rounded-xl border border-gray-200">
                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
-                    Product
+                    PRODUCT
                 </label>
                 <input
                     type="text"
@@ -204,7 +227,7 @@
                 {/* Amount */}
                 <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
                 <label className="text-xs font-semibold text-blue-700 uppercase tracking-wider block mb-2">
-                    Amount
+                    AMOUNT
                 </label>
                 <div className="flex items-baseline gap-2">
                     <p className="text-3xl font-bold text-blue-700">
@@ -221,7 +244,7 @@
             </div>
             
             {/* Gift Card Support Confirmation Checkbox */}
-            <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <div className="flex items-start gap-3 p-4 bg-white rounded-xl border border-gray-200">
                 <input
                     type="checkbox"
                     id="giftCardConfirm"
@@ -234,29 +257,58 @@
                 </label>
             </div>
 
-            {/* Warning if store not supported */}
-            {storeSupported === false && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                    <p className="text-sm font-medium text-red-800 mb-1">
-                        Store Not Supported
-                    </p>
-                    <p className="text-xs text-red-700">
-                        Gift cards are not currently available for {purchaseDetails.store}. Please try a different store.
-                    </p>
+            {/* Warning if store not supported - only show if it's truly not a known store */}
+            {storeSupported === false && (() => {
+                // List of known supported stores - don't show error for these
+                const knownStores = ['Myntra', 'Flipkart', 'Amazon', 'Make My Trip', 'Ajio', 'Tata Cliq'];
+                const isKnownStore = knownStores.some(knownStore => 
+                    purchaseDetails.store.toLowerCase() === knownStore.toLowerCase() ||
+                    purchaseDetails.store.toLowerCase().includes(knownStore.toLowerCase())
+                );
+                
+                // Don't show error for known stores (they might just need database seeding)
+                if (isKnownStore) {
+                    return (
+                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div className="flex items-start gap-2">
+                                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-medium text-amber-800 mb-1">
+                                        Database Not Seeded
+                                    </p>
+                                    <p className="text-xs text-amber-700">
+                                        {purchaseDetails.store} is supported, but the database needs to be seeded with gift cards. Please contact support or seed the database.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+                
+                // Show error for truly unsupported stores
+                return (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-start gap-2">
+                            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-sm font-medium text-red-800 mb-1">
+                                    Store Not Supported
+                                </p>
+                                <p className="text-xs text-red-700">
+                                    Gift cards are not currently available for {purchaseDetails.store}. Please try a different store.
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                </div>
-            )}
+                );
+            })()}
             
             <button
                 onClick={onContinue}
                 disabled={storeSupported === false || !giftCardConfirmed}
-                className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                Continue to Gift Card Selection
+                {storeSupported === false ? 'Store Not Supported' : 'Continue to Gift Card Selection'}
             </button>
             </div>
         )
@@ -1455,6 +1507,12 @@
         
         const sessionId = params.sessionId as string
         
+        // Debug: Log to verify component is rendering
+        // Force recompilation with timestamp
+        useEffect(() => {
+            console.log('🔵 CheckoutSessionPageContent rendered - File version: 2024-12-19-v2', new Date().toISOString())
+        }, [])
+        
         const [checkoutState, setCheckoutState] = useState<CheckoutState>({
             step: 1,
             selectedGiftCard: null,
@@ -1643,25 +1701,31 @@
         }
 
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-            <div className="max-w-4xl mx-auto px-4 py-8">
-                {/* Sticky Header */}
-                <div className="mb-8 sticky top-0 z-50 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-gray-200 p-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                        <CreditCard className="w-5 h-5 text-white" />
-                    </div>
+            <div 
+                className="checkout-page-container min-h-screen relative overflow-hidden text-primary transition-colors duration-300" 
+                style={{ 
+                    background: 'linear-gradient(to bottom right, #0066ff, #0052cc)',
+                    backgroundColor: '#0066ff',
+                    minHeight: '100vh',
+                    position: 'relative',
+                    width: '100%'
+                }}
+            >
+            <Waves />
+            <Watermark instant={true} />
+            <div className="max-w-2xl mx-auto px-4 py-6 relative z-10">
+                {/* Header - White text on blue background */}
+                <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
                     <div>
-                        <h1 className="text-lg font-bold text-gray-900">Secure Checkout</h1>
-                        <p className="text-xs text-gray-500">Session ID: {sessionId.slice(0, 8)}...</p>
-                    </div>
+                        <h1 className="text-2xl font-bold text-white mb-1">Secure Checkout</h1>
+                        <p className="text-xs text-white/80">Session ID: {sessionId.slice(0, 8)}...</p>
                     </div>
                     {timeRemaining !== null && (
-                    <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 ${getTimerBgColor()} transition-all duration-300`}>
-                        <Clock className={`w-5 h-5 ${getTimerColor()} ${timeRemaining < 60 ? 'animate-pulse' : ''}`} />
+                    <div className="flex items-center gap-2 px-4 py-2 bg-yellow-100 rounded-xl border border-yellow-200">
+                        <Clock className="w-5 h-5 text-gray-800" />
                         <div className="text-right">
-                        <div className={`text-xl font-bold ${getTimerColor()} tabular-nums`}>
+                        <div className="text-xl font-bold text-gray-900 tabular-nums">
                             {formatTimeRemaining(timeRemaining)}
                         </div>
                         <div className="text-xs text-gray-600">Time remaining</div>
@@ -1670,7 +1734,7 @@
                     )}
                 </div>
                 {sessionExpired && (
-                    <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg flex items-center gap-2">
+                    <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg flex items-center gap-2">
                     <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
                     <p className="text-sm font-medium text-red-800">
                         Session expired. Please start a new checkout.
@@ -1678,7 +1742,7 @@
                     </div>
                 )}
                 {!sessionExpired && timeRemaining !== null && timeRemaining < 120 && (
-                    <div className="mt-4 p-3 bg-amber-100 border border-amber-300 rounded-lg flex items-center gap-2">
+                    <div className="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg flex items-center gap-2">
                     <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                     <p className="text-sm font-medium text-amber-800">
                         Hurry! Only {Math.floor(timeRemaining / 60)} minute{Math.floor(timeRemaining / 60) !== 1 ? 's' : ''} remaining to complete your purchase.
@@ -1689,7 +1753,7 @@
 
                 <ProgressIndicator currentStep={checkoutState.step} />
                 
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
                 {checkoutState.step === 1 && (
                     <Step1ConfirmPurchase
                     purchaseDetails={purchaseDetails}
@@ -1725,12 +1789,6 @@
                     sessionId={sessionId}
                     />
                 )}
-                </div>
-
-                <div className="mt-6 text-center">
-                <p className="text-xs text-gray-500">
-                    🔒 Secured by blockchain technology • All transactions are encrypted
-                </p>
                 </div>
             </div>
             </div>

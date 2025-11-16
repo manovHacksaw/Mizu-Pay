@@ -2,14 +2,36 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { expireOldSessions } from "@/lib/sessionUtils";
 
+// Load environment variables explicitly (helps in WSL/development)
+// This runs once when the module is loaded
+let envLoaded = false;
+if (typeof window === 'undefined' && !envLoaded) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const dotenv = require('dotenv');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path');
+    // Load .env.local first (higher priority), then .env
+    dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+    dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+    envLoaded = true;
+  } catch (error) {
+    // dotenv might not be available, that's okay - Next.js should handle it
+    console.warn('Could not load dotenv manually (this is okay if Next.js loads it):', error);
+  }
+}
+
 export async function POST(req: Request) {
   console.log("API HIT SUCCESSFULLY - /api/sessions/create");
+  console.log("DATABASE_URL present:", !!process.env.DATABASE_URL);
+  console.log("DATABASE_URL preview:", process.env.DATABASE_URL ? `${process.env.DATABASE_URL.substring(0, 20)}...` : 'NOT SET');
   
   // Verify database connection is available
   if (!process.env.DATABASE_URL) {
     console.error("DATABASE_URL environment variable is not set");
+    console.error("Available env vars:", Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('DB')));
     return NextResponse.json(
-      { error: "Database configuration error", details: "DATABASE_URL not configured" },
+      { error: "Database configuration error", details: "DATABASE_URL not configured. Please check your .env or .env.local file." },
       { status: 500 }
     );
   }
