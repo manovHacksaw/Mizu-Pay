@@ -85,14 +85,14 @@ export function Sidebar({ onLogout }: SidebarProps) {
       fontFamily: 'var(--font-poppins), sans-serif',
     }}>
       {/* Logo */}
-      <div className="h-20 flex items-center px-8 border-b py-4 border-white/20">
-        <div className="flex items-center gap-4">
+      <div className="h-28 flex items-center justify-start px-6 border-b py-4 border-white/20">
+        <div className="flex items-center relative">
           <img 
-            src="/logo.png" 
+            src="/Mizu-logo.png" 
             alt="Mizu Pay" 
-            className="w-20 h-20 object-contain rounded-lg p-2"
+            className="w-32 h-32 object-contain rounded-lg p-2"
           />
-          <span className="font-bold text-white text-xl">Mizu Pay</span>
+          <span className="font-bold text-white text-xl -ml-8 relative z-10">Mizu Pay</span>
         </div>
       </div>
 

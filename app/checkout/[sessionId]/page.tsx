@@ -7,6 +7,7 @@
         import { Clock, CheckCircle, AlertCircle, Wallet, CreditCard, Gift } from 'lucide-react'
         import { useCurrencyStore } from '@/lib/currencyStore'
         import { formatAmountWithConversion } from '@/lib/currencyUtils'
+        import { PreLoader } from '@/components/PreLoader'
         import './checkout-styles.css'
 
         interface GiftCard {
@@ -1899,7 +1900,9 @@ function ProgressIndicator({ currentStep }: { currentStep: number }) {
 
         export default function CheckoutSessionPage() {
         return (
-            <Suspense fallback={
+            <>
+                <PreLoader />
+                <Suspense fallback={
                 <div className="min-h-screen bg-transparent relative overflow-hidden transition-colors duration-300">
                     <div className="relative z-10 px-5 py-16">
                         <div className="max-w-2xl mx-auto">
@@ -1935,6 +1938,7 @@ function ProgressIndicator({ currentStep }: { currentStep: number }) {
             }>
                 <CheckoutSessionPageContent />
             </Suspense>
+            </>
         )
         }
 

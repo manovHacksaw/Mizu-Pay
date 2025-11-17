@@ -38,10 +38,10 @@ export function StackFeature() {
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-8 lg:gap-16 lg:flex-row lg:justify-between relative z-10">
         {/* Left side: Enhanced Orbit animation */}
         <div className="relative flex h-[360px] w-full items-center justify-start overflow-hidden lg:h-[480px] lg:w-1/2">
-          <div className="relative flex h-[46rem] w-[46rem] -translate-x-[40%] items-center justify-center lg:-translate-x-[45%]">
+          <div className="relative flex h-[46rem] w-[46rem] -translate-x-[30%] items-center justify-center lg:-translate-x-[35%]">
             {/* Enhanced Center Circle with glow effect */}
             <div 
-              className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-white to-blue-50 shadow-2xl ring-4 ring-blue-100/50 transition-all duration-1000"
+              className="flex h-48 w-48 items-center justify-center rounded-full bg-gradient-to-br from-white to-blue-50 shadow-2xl ring-4 ring-blue-100/50 transition-all duration-1000"
               style={{
                 opacity: isVisible ? 1 : 0,
                 transform: isVisible ? "scale(1)" : "scale(0.8)",
@@ -50,11 +50,11 @@ export function StackFeature() {
             >
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400/20 to-indigo-400/20 blur-xl animate-pulse" />
               <Image 
-                src="/logo.png" 
+                src="/Mizu-logo.png" 
                 alt="Mizu Pay" 
-                width={64} 
-                height={64} 
-                className="h-16 w-16 object-contain relative z-10 drop-shadow-lg" 
+                width={160} 
+                height={160} 
+                className="h-40 w-40 object-contain relative z-10 drop-shadow-lg" 
               />
             </div>
 

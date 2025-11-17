@@ -1298,7 +1298,7 @@ function injectMizuPayButton() {
     card.className = 'mizu-pay-payment-card';
     
     // Get logo URL from extension
-    const logoUrl = chrome.runtime.getURL('logo.png');
+    const logoUrl = chrome.runtime.getURL('Mizu-logo.png');
     
     // Function to update amount in the card
     const updateCardAmount = () => {

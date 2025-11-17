@@ -74,7 +74,7 @@ const defaultLegalLinks = [
 export const Footer7 = ({
   logo = {
     url: "/",
-    src: "/logo.png",
+    src: "/Mizu-logo.png",
     alt: "Mizu Pay",
     title: "Mizu Pay",
   },
@@ -90,15 +90,15 @@ export const Footer7 = ({
         <div className="flex w-full flex-col justify-between gap-10 lg:flex-row lg:items-start lg:text-left">
           <div className="flex w-full flex-col justify-between gap-6 lg:items-start">
             {/* Logo */}
-            <div className="flex items-center gap-2 lg:justify-start">
+            <div className="flex items-center gap-1 lg:justify-start">
               <Link href={logo.url}>
                 <Image
                   src={logo.src}
                   alt={logo.alt}
                   title={logo.title}
-                  width={32}
-                  height={32}
-                  className="h-8 w-8 object-contain"
+                  width={128}
+                  height={128}
+                  className="h-32 w-32 object-contain"
                 />
               </Link>
               <h2 className="text-xl font-semibold text-slate-900">{logo.title}</h2>
