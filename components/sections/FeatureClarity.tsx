@@ -190,7 +190,7 @@ export function FeatureClarity() {
 
   const features = [
     {
-      title: "Pay with Crypto Anywhere",
+      title: "Pay with Crypto Anywhere                    ",
       description: "Spend your crypto online without converting it to cash. Just choose an amount and checkout.",
       renderVisual: renderFirstCardVisual,
     },
@@ -219,22 +219,6 @@ export function FeatureClarity() {
             Built for fast-growing teams
           </span>
         </div>
-
-        {/* Section Headline */}
-        <h2
-          className="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-4"
-          style={{ color: "var(--foreground)" }}
-        >
-          Pay for what you love using crypto with <span style={{ color: "#0A4DFF" }}>Mizu Pay</span>
-        </h2>
-
-        {/* One-sentence clarifier */}
-        <p
-          className="text-base md:text-lg text-center mb-6 md:mb-8 max-w-2xl mx-auto"
-          style={{ color: "var(--content-text-secondary)" }}
-        >
-          Transform your cUSD and CELO into real purchases on any e-commerce site.
-        </p>
 
         {/* Feature Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">

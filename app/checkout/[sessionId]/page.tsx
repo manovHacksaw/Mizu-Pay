@@ -7,8 +7,6 @@
         import { Clock, CheckCircle, AlertCircle, Wallet, CreditCard, Gift } from 'lucide-react'
         import { useCurrencyStore } from '@/lib/currencyStore'
         import { formatAmountWithConversion } from '@/lib/currencyUtils'
-        import { Waves } from '@/components/decorative/Waves'
-        import { Watermark } from '@/components/decorative/Watermark'
         import './checkout-styles.css'
 
         interface GiftCard {
@@ -24,6 +22,111 @@
         selectedWalletType: "embedded" | "external" | null
         }
 
+const STEP_TABS = [
+    { id: 1, label: 'Confirm', subtitle: 'Payment Method' },
+    { id: 2, label: 'Gift Card', subtitle: 'Select Card' },
+    { id: 3, label: 'Wallet', subtitle: 'Choose Wallet' },
+    { id: 4, label: 'Payment', subtitle: 'Review & Pay' },
+]
+
+const STEP_DETAILS: Record<CheckoutState['step'], { title: string; description: string }> = {
+    1: {
+        title: 'Confirm Purchase Details',
+        description: 'Review the store, product info, and purchase amount before moving ahead.'
+    },
+    2: {
+        title: 'Select a Gift Card',
+        description: 'Choose the best gift card amount that covers your purchase total.'
+    },
+    3: {
+        title: 'Choose Wallet',
+        description: 'Decide whether to pay with the embedded wallet or connect your own.'
+    },
+    4: {
+        title: 'Confirm & Pay',
+        description: 'Approve the wallet transactions to finalize your secure checkout.'
+    }
+}
+
+function StepTabs({ currentStep }: { currentStep: number }) {
+    return (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {STEP_TABS.map((step) => {
+                const isActive = currentStep === step.id
+                const isCompleted = step.id < currentStep
+                return (
+                    <div
+                        key={step.id}
+                        className={`rounded-2xl border px-4 py-3 transition-all duration-200 ${
+                            isActive
+                                ? 'border-blue-500 bg-blue-50 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.2)]'
+                                : isCompleted
+                                ? 'border-emerald-200 bg-emerald-50'
+                                : 'border-slate-200 bg-white'
+                        }`}
+                    >
+                        <p className={`text-xs font-semibold uppercase tracking-[0.35em] ${
+                            isActive ? 'text-blue-600' : isCompleted ? 'text-emerald-600' : 'text-slate-400'
+                        }`}>
+                            Step {step.id}
+                        </p>
+                        <p className="text-base font-semibold text-slate-900">{step.label}</p>
+                        <p className="text-xs text-slate-500">{step.subtitle}</p>
+                    </div>
+                )
+            })}
+        </div>
+    )
+}
+
+function OrderSummaryPanel({
+    purchaseDetails,
+    selectedCard
+}: {
+    purchaseDetails: PurchaseDetails
+    selectedCard: GiftCard | null
+}) {
+    const { formatAmount } = useCurrencyStore.getState()
+    const subtotal = formatAmount(purchaseDetails.amount, purchaseDetails.currency as 'USD' | 'INR')
+    const giftCardValue = selectedCard ? formatAmount(selectedCard.amountUSD, 'USD') : null
+
+    return (
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-200 px-5 py-4">
+                <p className="text-sm font-semibold text-slate-500 tracking-[0.2em] uppercase">
+                    Order Summary
+                </p>
+            </div>
+            <div className="px-5 py-4 space-y-4 text-sm">
+                <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Merchant</span>
+                    <span className="font-semibold text-slate-900">{purchaseDetails.store || '—'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Currency</span>
+                    <span className="font-semibold text-slate-900">{purchaseDetails.currency}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Subtotal</span>
+                    <span className="font-semibold text-slate-900">{subtotal}</span>
+                </div>
+                {giftCardValue && (
+                    <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Gift Card</span>
+                        <span className="font-semibold text-emerald-600">{giftCardValue}</span>
+                    </div>
+                )}
+                <div className="border-t border-dashed border-slate-200 pt-4">
+                    <div className="flex items-center justify-between text-base font-semibold">
+                        <span>Total</span>
+                        <span>{subtotal}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
         interface PurchaseDetails {
         store: string
         amount: number
@@ -32,52 +135,31 @@
         }
 
         // Step Components
-        function ProgressIndicator({ currentStep }: { currentStep: number }) {
-        const steps = [
-            { step: 1, label: 'Confirm', icon: CheckCircle },
-            { step: 2, label: 'Gift Card', icon: Gift },
-            { step: 3, label: 'Wallet', icon: Wallet },
-            { step: 4, label: 'Payment', icon: CreditCard },
-        ]
-        
-        return (
-            <div className="mb-6">
-            <div className="flex items-center justify-between relative">
-                <div className="absolute left-0 right-0 top-5 h-0.5 bg-white/30 -z-10" />
+function ProgressIndicator({ currentStep }: { currentStep: number }) {
+    const steps = [
+        { step: 1, label: 'Confirm', icon: CheckCircle },
+        { step: 2, label: 'Gift Card', icon: Gift },
+        { step: 3, label: 'Wallet', icon: Wallet },
+        { step: 4, label: 'Payment', icon: CreditCard },
+    ]
+
+    const progress = ((currentStep - 1) / (steps.length - 1)) * 100
+    
+    return (
+        <div className="space-y-3">
+            <div className="flex items-center justify-between text-[0.72rem] font-semibold uppercase tracking-[0.35em] text-slate-400">
+                <span>Step {currentStep} of {steps.length}</span>
+                <span className="tracking-[0.2em] text-slate-500">{steps[currentStep - 1]?.label}</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-slate-200 overflow-hidden">
                 <div
-                    className="absolute left-0 top-5 h-0.5 bg-white transition-all duration-500 -z-10"
-                    style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+                    className="h-full rounded-full bg-blue-600 transition-all duration-500 shadow-[0_0_12px_rgba(59,130,246,0.35)]"
+                    style={{ width: `${progress}%` }}
                 />
-                {steps.map(({ step, label, icon: Icon }) => (
-                <div key={step} className="flex flex-col items-center z-10">
-                    <div
-                        className={`w-10 h-10 flex items-center justify-center font-bold text-sm transition-all duration-300 ${
-                            step < currentStep
-                                ? 'bg-blue-600 text-white rounded-full shadow-lg'
-                                : step === currentStep
-                                ? 'bg-blue-600 text-white rounded-full shadow-xl'
-                                : 'bg-white border-2 border-gray-300 text-gray-800 rounded-lg'
-                        }`}
-                    >
-                        {step < currentStep || step === currentStep ? (
-                            <CheckCircle className="w-5 h-5" />
-                        ) : (
-                            <Icon className="w-5 h-5" />
-                        )}
-                    </div>
-                    <span
-                        className={`mt-2 text-xs font-semibold transition-colors ${
-                            step <= currentStep ? 'text-white' : 'text-white/70'
-                        }`}
-                    >
-                        {label}
-                    </span>
-                </div>
-                ))}
             </div>
-            </div>
-        )
-        }
+        </div>
+    )
+}
 
         function Step1ConfirmPurchase({ 
         purchaseDetails, 
@@ -417,7 +499,7 @@
 
             {/* Extra Payment Display */}
             {selectedCard && extraPaymentUSD > 0 && (
-                <div className="p-5 bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-xl shadow-sm">
+                <div className="p-5 bg-white border-2 border-amber-200 rounded-xl shadow-sm">
                     <div className="flex items-start gap-3 mb-3">
                         <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
                             <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -427,7 +509,7 @@
                         <div className="flex-1">
                             <p className="text-sm font-bold text-amber-900 mb-2">Extra Amount You're Paying</p>
                             <p className="text-xs text-amber-700 mb-3">This extra balance will remain on your gift card for future purchases.</p>
-                            <div className="space-y-2 text-sm bg-white/60 rounded-lg p-3">
+                            <div className="space-y-2 text-sm bg-amber-50 rounded-lg p-3">
                                 <div className="flex justify-between items-center">
                                     <span className="text-amber-800 font-medium">cUSD:</span>
                                     <span className="font-bold text-amber-900">{formatAmount(extraPaymentCUSD, 'USD')} cUSD</span>
@@ -1236,39 +1318,23 @@
                     </>
                 ) : (
                     <>
-                        {/* Blockchain-style loading animation */}
-                        <div className="relative mb-8">
-                            <div className="flex items-center justify-center gap-2 mb-4">
-                                {/* Network nodes animation */}
-                                {[0, 1, 2].map((i) => (
-                                    <div
-                                        key={i}
-                                        className="w-3 h-3 rounded-full bg-blue-600 animate-pulse"
-                                        style={{
-                                            animationDelay: `${i * 0.2}s`,
-                                            animationDuration: '1.5s'
-                                        }}
-                                    />
-                                ))}
+                        {/* Simple loader */}
+                        <div className="mb-8 flex flex-col items-center gap-4">
+                            <div className="w-14 h-14 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.4em] text-slate-400">
+                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" style={{ animationDelay: '0.15s' }}></span>
+                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" style={{ animationDelay: '0.3s' }}></span>
                             </div>
-                            <div className="relative w-20 h-20 mx-auto">
-                                <div className="absolute inset-0 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
-                                <div className="absolute inset-2 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                            </div>
-                        </div>
                         </div>
                         <h2 className="text-2xl font-bold text-gray-900 mb-3">
                             {statusMessages[paymentStatus] || 'Processing Payment'}
                         </h2>
                         {/* Show amount being paid */}
                         {selectedCard && (paymentStatus === 'approving' || paymentStatus === 'paying' || paymentStatus === 'confirming') && (
-                            <div className="mb-4 p-4 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
-                                <p className="text-xs text-blue-700 mb-1 font-semibold">Amount to pay:</p>
-                                <p className="text-xl font-bold text-blue-900">
+                            <div className="mb-4 p-4 rounded-lg bg-blue-50 border border-blue-200 shadow-sm">
+                                <p className="text-xs text-blue-700 mb-1 font-semibold tracking-wide uppercase">Amount to pay</p>
+                                <p className="text-xl font-bold text-blue-900 tabular-nums">
                                     ${selectedCard.amountUSD.toFixed(2)} cUSD
                                 </p>
                             </div>
@@ -1673,8 +1739,8 @@
 
         if (!ready || !authenticated) {
             return (
-            <div className="min-h-screen hero-bg flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+            <div className="min-h-screen bg-transparent flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
             )
         }
@@ -1687,110 +1753,146 @@
         }
 
         const getTimerColor = () => {
-            if (!timeRemaining) return 'text-gray-600'
+            if (!timeRemaining) return 'text-slate-600'
             if (timeRemaining > 300) return 'text-emerald-600'
             if (timeRemaining > 120) return 'text-amber-600'
             return 'text-red-600'
         }
 
         const getTimerBgColor = () => {
-            if (!timeRemaining) return 'bg-gray-50 border-gray-200'
-            if (timeRemaining > 300) return 'bg-emerald-50 border-emerald-200'
-            if (timeRemaining > 120) return 'bg-amber-50 border-amber-200'
-            return 'bg-red-50 border-red-200'
+            if (!timeRemaining) return 'bg-slate-50 border border-slate-200'
+            if (timeRemaining > 300) return 'bg-emerald-100 border border-emerald-300'
+            if (timeRemaining > 120) return 'bg-amber-100 border border-amber-300'
+            return 'bg-rose-100 border border-rose-300'
         }
 
-        return (
-            <div 
-                className="checkout-page-container min-h-screen relative overflow-hidden text-primary transition-colors duration-300" 
-                style={{ 
-                    background: 'linear-gradient(to bottom right, #0066ff, #0052cc)',
-                    backgroundColor: '#0066ff',
-                    minHeight: '100vh',
-                    position: 'relative',
-                    width: '100%'
-                }}
-            >
-            <Waves />
-            <Watermark instant={true} />
-            <div className="max-w-2xl mx-auto px-4 py-6 relative z-10">
-                {/* Header - White text on blue background */}
-                <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-white mb-1">Secure Checkout</h1>
-                        <p className="text-xs text-white/80">Session ID: {sessionId.slice(0, 8)}...</p>
-                    </div>
-                    {timeRemaining !== null && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-yellow-100 rounded-xl border border-yellow-200">
-                        <Clock className="w-5 h-5 text-gray-800" />
-                        <div className="text-right">
-                        <div className="text-xl font-bold text-gray-900 tabular-nums">
-                            {formatTimeRemaining(timeRemaining)}
-                        </div>
-                        <div className="text-xs text-gray-600">Time remaining</div>
-                        </div>
-                    </div>
-                    )}
-                </div>
-                {sessionExpired && (
-                    <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    <p className="text-sm font-medium text-red-800">
-                        Session expired. Please start a new checkout.
-                    </p>
-                    </div>
-                )}
-                {!sessionExpired && timeRemaining !== null && timeRemaining < 120 && (
-                    <div className="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                    <p className="text-sm font-medium text-amber-800">
-                        Hurry! Only {Math.floor(timeRemaining / 60)} minute{Math.floor(timeRemaining / 60) !== 1 ? 's' : ''} remaining to complete your purchase.
-                    </p>
-                    </div>
-                )}
-                </div>
+        const currentStepDetails = STEP_DETAILS[checkoutState.step]
+        const timerBgClass = getTimerBgColor()
+        const timerTextClass = getTimerColor()
 
-                <ProgressIndicator currentStep={checkoutState.step} />
-                
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
-                {checkoutState.step === 1 && (
-                    <Step1ConfirmPurchase
-                    purchaseDetails={purchaseDetails}
-                    onContinue={handleStep1Continue}
-                    onUpdateDetails={setPurchaseDetails}
-                    />
-                )}
-                
-                {checkoutState.step === 2 && (
-                    <Step2SelectGiftCard
-                    purchaseDetails={purchaseDetails}
-                    onSelect={handleStep2Select}
-                    selectedCard={checkoutState.selectedGiftCard}
-                    onContinue={handleStep2Continue}
-                    />
-                )}
-                
-                {checkoutState.step === 3 && (
-                    <Step3SelectWallet
-                    onSelect={handleStep3Select}
-                    selectedType={checkoutState.selectedWalletType}
-                    onContinue={handleStep3Continue}
-                    sessionId={sessionId}
-                    />
-                )}
-                
-                {checkoutState.step === 4 && (
-                    <Step4ExecutePayment
-                    purchaseDetails={purchaseDetails}
-                    selectedCard={checkoutState.selectedGiftCard}
-                    selectedWalletType={checkoutState.selectedWalletType}
-                    onPay={handleStep4Pay}
-                    sessionId={sessionId}
-                    />
-                )}
+        return (
+            <div className="checkout-page-container min-h-screen bg-slate-100 px-0 py-0">
+                <div className="w-full min-h-screen bg-white shadow-none border border-transparent overflow-hidden">
+                    <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-500 text-white px-8 py-5">
+                        <div>
+                            <p className="text-xs uppercase tracking-[0.4em] text-white/70">Secure Checkout</p>
+                            <h1 className="text-3xl font-semibold leading-tight">Checkout</h1>
+                        </div>
+                        {timeRemaining !== null && (
+                            <div className={`inline-flex flex-col items-end px-5 py-3 rounded-2xl border border-white/30 bg-white/10 backdrop-blur-md`}>
+                                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
+                                    <Clock className="w-4 h-4" />
+                                    Time remaining
+                                </div>
+                                <div className="text-3xl font-semibold tabular-nums">
+                                    {formatTimeRemaining(timeRemaining)}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="bg-slate-50 py-10 min-h-screen">
+                        <div className="max-w-6xl mx-auto px-6 md:px-10 space-y-8">
+                            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                            <StepTabs currentStep={checkoutState.step} />
+                        </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-[2.2fr,1fr] gap-8">
+                            <div className="rounded-3xl bg-white border border-slate-200 shadow-lg p-6 md:p-8 space-y-6">
+                                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                    <div>
+                                        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
+                                            {currentStepDetails.title}
+                                        </h2>
+                                        <p className="text-sm text-slate-500 mt-1">
+                                            {currentStepDetails.description}
+                                        </p>
+                                        <p className="mt-2 text-xs font-semibold tracking-[0.4em] text-slate-400 uppercase">
+                                            Session ID: {sessionId.slice(0, 8)}...
+                                        </p>
+                                    </div>
+                                    {!sessionExpired && (
+                                        <div className="text-right">
+                                            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Step</p>
+                                            <p className="text-2xl font-bold text-slate-800">
+                                                {checkoutState.step} / 4
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {sessionExpired && (
+                                    <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-start gap-3">
+                                        <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-semibold text-rose-700">Session expired</p>
+                                            <p className="text-sm text-rose-600">
+                                                This checkout session has ended. Please start a new session from your dashboard.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {!sessionExpired && (
+                                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex items-start gap-3">
+                                        <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-semibold text-amber-900">Stay ready to approve</p>
+                                            <p className="text-sm text-amber-800">
+                                                Ensure your wallet is unlocked and has enough balance for gas fees. Approvals happen
+                                                back-to-back, so keep the tab focused until the payment is complete.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-6 shadow-inner space-y-6">
+                                    {checkoutState.step === 1 && (
+                                        <Step1ConfirmPurchase
+                                            purchaseDetails={purchaseDetails}
+                                            onContinue={handleStep1Continue}
+                                            onUpdateDetails={setPurchaseDetails}
+                                        />
+                                    )}
+                                    
+                                    {checkoutState.step === 2 && (
+                                        <Step2SelectGiftCard
+                                            purchaseDetails={purchaseDetails}
+                                            onSelect={handleStep2Select}
+                                            selectedCard={checkoutState.selectedGiftCard}
+                                            onContinue={handleStep2Continue}
+                                        />
+                                    )}
+                                    
+                                    {checkoutState.step === 3 && (
+                                        <Step3SelectWallet
+                                            onSelect={handleStep3Select}
+                                            selectedType={checkoutState.selectedWalletType}
+                                            onContinue={handleStep3Continue}
+                                            sessionId={sessionId}
+                                        />
+                                    )}
+                                    
+                                    {checkoutState.step === 4 && (
+                                        <Step4ExecutePayment
+                                            purchaseDetails={purchaseDetails}
+                                            selectedCard={checkoutState.selectedGiftCard}
+                                            selectedWalletType={checkoutState.selectedWalletType}
+                                            onPay={handleStep4Pay}
+                                            sessionId={sessionId}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+                            <OrderSummaryPanel
+                                purchaseDetails={purchaseDetails}
+                                selectedCard={checkoutState.selectedGiftCard}
+                            />
+                        </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
             </div>
         )
         }
@@ -1798,7 +1900,7 @@
         export default function CheckoutSessionPage() {
         return (
             <Suspense fallback={
-                <div className="min-h-screen hero-bg relative overflow-hidden transition-colors duration-300">
+                <div className="min-h-screen bg-transparent relative overflow-hidden transition-colors duration-300">
                     <div className="relative z-10 px-5 py-16">
                         <div className="max-w-2xl mx-auto">
                             <div className="dashboard-modal-card mb-6">

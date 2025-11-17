@@ -3,7 +3,40 @@
 const DEFAULT_BUTTON_TEXT = 'Continue with Mizu Pay';
 const PROCESSING_BUTTON_TEXT = 'Redirecting...';
 
+function removePopupOverlay() {
+    const root = document.documentElement;
+    if (root) {
+        root.style.background = 'transparent';
+        root.style.overflow = 'hidden';
+    }
+
+    const body = document.body;
+    if (body) {
+        body.style.background = 'transparent';
+        body.style.padding = '0';
+        body.style.margin = '0';
+        body.style.overflow = 'hidden';
+    }
+
+    const popupShell = document.querySelector('.popup-shell');
+    if (popupShell) {
+        popupShell.style.margin = '0';
+    }
+
+    const overlay = document.querySelector('.popup-overlay, .popup-backdrop');
+    if (overlay && overlay.parentElement) {
+        overlay.parentElement.removeChild(overlay);
+    }
+
+    const contentWrapper = document.getElementById('content');
+    if (contentWrapper) {
+        contentWrapper.style.maxHeight = 'none';
+        contentWrapper.style.overflow = 'visible';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+    removePopupOverlay();
     const loading = document.getElementById('loading');
     const emptyState = document.getElementById('emptyState');
     const checkoutSummary = document.getElementById('checkoutSummary');

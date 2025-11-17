@@ -1,22 +1,18 @@
-/* Force blue background for checkout page */
-.checkout-page-container {
-  background: linear-gradient(to bottom right, #0066ff, #0052cc) !important;
-  background-color: #0066ff !important;
-  min-height: 100vh !important;
-  position: relative !important;
-  width: 100% !important;
-  z-index: 0 !important;
+/* Soft gradient backdrop for the new light theme */
+.checkout-page-container,
+body:has(.checkout-page-container),
+html {
+  background: radial-gradient(circle at top, #f8fbff, #eef2ff 40%, #f5f7fb 75%, #edf1f7) !important;
+  background-color: #f5f7fb !important;
 }
 
-/* Override any body background for checkout pages */
-body:has(.checkout-page-container) {
-  background: transparent !important;
-}
-
-/* Force watermark to appear immediately on checkout page */
-.checkout-page-container .watermark {
-  opacity: 1 !important;
-  animation: none !important;
-  animation-delay: 0s !important;
+.checkout-page-container::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(800px at 20% 20%, rgba(99, 102, 241, 0.08), transparent),
+    radial-gradient(700px at 80% 0%, rgba(56, 189, 248, 0.08), transparent);
+  z-index: 0;
+  pointer-events: none;
 }
 
