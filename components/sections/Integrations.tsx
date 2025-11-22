@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 
 export function Integrations() {
   return (
-    <section className="relative w-full overflow-hidden bg-white dark:bg-black py-24 md:py-32">
+    <section className="relative w-full overflow-hidden bg-white py-24 md:py-32">
       <div className="mx-auto max-w-5xl px-6">
         <div className="mx-auto max-w-md px-6 [mask-image:radial-gradient(ellipse_100%_100%_at_50%_0%,#000_70%,transparent_100%)]">
           <motion.div
@@ -17,7 +17,7 @@ export function Integrations() {
               duration: 0.8,
               ease: [0.16, 1, 0.3, 1],
             }}
-            className="bg-blue-900 dark:bg-blue-950 rounded-xl border border-blue-800 dark:border-blue-900 px-6 pb-12 pt-3 shadow-xl"
+            className="bg-blue-900 rounded-xl border border-blue-800 px-6 pb-12 pt-3 shadow-xl"
           >
             <Integration
               icon={
@@ -85,11 +85,11 @@ export function Integrations() {
           }}
           className="mx-auto mt-6 max-w-lg space-y-6 text-center"
         >
-          <h2 className="text-balance text-3xl font-semibold text-slate-900 dark:text-white md:text-4xl lg:text-5xl">
+          <h2 className="text-balance text-3xl font-semibold text-slate-900 md:text-4xl lg:text-5xl">
             New to crypto? We've got you covered.
           </h2>
-          <p className="text-gray-600 dark:text-white text-base md:text-lg">
-            Use <span className="text-blue-600 dark:text-blue-400 font-semibold">Mizu Pay Wallet</span> — an embedded wallet powered by Privy, perfect for beginners. No complex setup or
+          <p className="text-gray-600 text-base md:text-lg">
+            Use <span className="text-blue-600 font-semibold">Mizu Pay Wallet</span> — an embedded wallet powered by Privy, perfect for beginners. No complex setup or
             external extensions. Deposit CELO or cUSD and start paying instantly.
           </p>
         </motion.div>

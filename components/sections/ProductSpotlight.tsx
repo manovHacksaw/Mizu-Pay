@@ -426,15 +426,15 @@ const MetadataDisplay = memo(function MetadataDisplay({ metadata }: MetadataDisp
           initial={{ opacity: 0, scale: 0.5, x: 18 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           transition={{ delay: 0.1, duration: 0.3 }}
-          className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 rounded-lg border border-gray-200/40 dark:border-gray-700/40 bg-white/95 dark:bg-gray-800/95 p-2.5 shadow-lg backdrop-blur"
+          className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 rounded-lg border border-gray-200/40 bg-white/95 p-2.5 shadow-lg backdrop-blur"
         >
           <div className="flex items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center rounded-full" style={{ backgroundColor: "#0A4DFF" }}>
               <DollarSign className="h-3 w-3 text-white" />
             </div>
             <div>
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-300">Price</div>
-              <div className="text-sm font-bold text-gray-900 dark:text-white">{metadata.price}</div>
+              <div className="text-xs font-medium text-gray-500">Price</div>
+              <div className="text-sm font-bold text-gray-900">{metadata.price}</div>
             </div>
           </div>
         </motion.div>
@@ -443,7 +443,7 @@ const MetadataDisplay = memo(function MetadataDisplay({ metadata }: MetadataDisp
           initial={{ opacity: 0, scale: 0.5, x: -18 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           transition={{ delay: 0.2, duration: 0.3 }}
-          className="absolute right-0 top-1/2 translate-x-full -translate-y-1/2 rounded-lg border border-indigo-200/40 dark:border-indigo-700/40 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-gray-800 dark:to-gray-700 p-3 shadow-lg backdrop-blur"
+          className="absolute right-0 top-1/2 translate-x-full -translate-y-1/2 rounded-lg border border-indigo-200/40 bg-gradient-to-br from-indigo-50 to-blue-50 p-3 shadow-lg backdrop-blur"
         >
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: "#0A4DFF" }}>
@@ -460,9 +460,9 @@ const MetadataDisplay = memo(function MetadataDisplay({ metadata }: MetadataDisp
           initial={{ opacity: 0, scale: 0.5, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-full rounded-lg border border-gray-200/40 dark:border-gray-700/40 bg-white/95 dark:bg-gray-800/95 p-3 text-center shadow-lg backdrop-blur"
+          className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-full rounded-lg border border-gray-200/40 bg-white/95 p-3 text-center shadow-lg backdrop-blur"
         >
-          <span className="text-sm font-semibold text-gray-900 dark:text-white">{metadata.name}</span>
+          <span className="text-sm font-semibold text-gray-900">{metadata.name}</span>
         </motion.div>
       </div>
     </motion.div>
@@ -521,7 +521,7 @@ export function ProductSpotlight() {
   }, [])
 
   return (
-    <section className="relative min-h-[70vh] overflow-hidden py-16 bg-white dark:bg-black">
+    <section className="relative min-h-[70vh] overflow-hidden py-16">
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col-reverse items-center gap-12 px-6 lg:flex-row lg:items-center lg:gap-16">
         <motion.div
           className="w-full max-w-xl space-y-6 text-center lg:text-left"
@@ -531,10 +531,10 @@ export function ProductSpotlight() {
           transition={{ duration: 0.6 }}
         >
           <div className="space-y-4">
-            <h2 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
+            <h2 className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
             Buy Anything, Pay in Crypto
             </h2>
-            <p className="text-base text-slate-600 dark:text-white md:text-lg">
+            <p className="text-base text-slate-600 md:text-lg">
             From fashion to gadgets — shop your favorites instantly with CELO or USDC, powered by Mizu Pay.
             </p>
           </div>
@@ -549,7 +549,7 @@ export function ProductSpotlight() {
         >
           <div
             ref={containerRef}
-            className="relative h-[420px] overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 shadow-lg md:h-[520px] lg:h-[560px]"
+            className="relative h-[420px] overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-lg md:h-[520px] lg:h-[560px]"
           >
             {backgroundInstances.map((item) => (
               <AnimatedProduct key={item.id} product={item.product} containerSize={containerSize} />

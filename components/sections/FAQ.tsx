@@ -35,7 +35,7 @@ export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   return (
-    <section className="relative w-full overflow-hidden bg-white dark:bg-black py-20 px-6">
+    <section className="relative w-full overflow-hidden bg-white py-20 px-6">
       <div className="relative max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
           {/* Left Side - Heading and Description */}
@@ -62,7 +62,7 @@ export function FAQ() {
 
             {/* Main Heading */}
             <div className="space-y-2">
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white leading-tight">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
                 Frequently asked
               </h2>
               <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-blue-600 leading-tight">
@@ -71,7 +71,7 @@ export function FAQ() {
             </div>
 
             {/* Description */}
-            <p className="text-base md:text-lg text-gray-600 dark:text-white max-w-lg">
+            <p className="text-base md:text-lg text-gray-600 max-w-lg">
               Choose a plan that fits your business needs and budget. No hidden fees, no surprises—just straightforward pricing for powerful financial management.
             </p>
           </div>
@@ -82,13 +82,13 @@ export function FAQ() {
               <div
                 key={index}
                 className={cn(
-                  "rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 p-5 cursor-pointer transition-all duration-300",
-                  openIndex === index ? "bg-gray-100/50 dark:bg-gray-800/50" : "hover:bg-gray-100/30 dark:hover:bg-gray-800/30"
+                  "rounded-lg border border-gray-200 bg-gray-50/50 p-5 cursor-pointer transition-all duration-300",
+                  openIndex === index ? "bg-gray-100/50" : "hover:bg-gray-100/30"
                 )}
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
               >
                 <div className="flex items-center justify-between gap-4">
-                  <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white flex-1 pr-4">
+                  <h3 className="text-base md:text-lg font-semibold text-slate-900 flex-1 pr-4">
                     {faq.question}
                   </h3>
                   <div
@@ -117,7 +117,7 @@ export function FAQ() {
                 </div>
                 <div
                   className={cn(
-                    "text-sm md:text-base text-gray-600 dark:text-white transition-all duration-500 ease-in-out overflow-hidden",
+                    "text-sm md:text-base text-gray-600 transition-all duration-500 ease-in-out overflow-hidden",
                     openIndex === index
                       ? "opacity-100 max-h-[500px] translate-y-0 pt-4"
                       : "opacity-0 max-h-0 -translate-y-2"
