@@ -7,7 +7,6 @@
         import { Clock, CheckCircle, AlertCircle, Wallet, CreditCard, Gift } from 'lucide-react'
         import { useCurrencyStore } from '@/lib/currencyStore'
         import { formatAmountWithConversion } from '@/lib/currencyUtils'
-        import { PreLoader } from '@/components/PreLoader'
         import './checkout-styles.css'
 
         interface GiftCard {
@@ -49,33 +48,71 @@ const STEP_DETAILS: Record<CheckoutState['step'], { title: string; description: 
     }
 }
 
-function StepTabs({ currentStep }: { currentStep: number }) {
+function ProgressIndicator({ 
+    currentStep, 
+    timeRemaining, 
+    formatTimeRemaining 
+}: { 
+    currentStep: number
+    timeRemaining: number | null
+    formatTimeRemaining: (seconds: number) => string
+}) {
     return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {STEP_TABS.map((step) => {
-                const isActive = currentStep === step.id
-                const isCompleted = step.id < currentStep
-                return (
-                    <div
-                        key={step.id}
-                        className={`rounded-2xl border px-4 py-3 transition-all duration-200 ${
-                            isActive
-                                ? 'border-blue-500 bg-blue-50 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.2)]'
-                                : isCompleted
-                                ? 'border-emerald-200 bg-emerald-50'
-                                : 'border-slate-200 bg-white'
-                        }`}
-                    >
-                        <p className={`text-xs font-semibold uppercase tracking-[0.35em] ${
-                            isActive ? 'text-blue-600' : isCompleted ? 'text-emerald-600' : 'text-slate-400'
-                        }`}>
-                            Step {step.id}
-                        </p>
-                        <p className="text-base font-semibold text-slate-900">{step.label}</p>
-                        <p className="text-xs text-slate-500">{step.subtitle}</p>
-                    </div>
-                )
-            })}
+        <div className="bg-blue-600 py-4 px-8 relative">
+            <div className="flex items-center justify-between max-w-4xl mx-auto">
+                {STEP_TABS.map((step, index) => {
+                    const isActive = currentStep === step.id
+                    const isCompleted = step.id < currentStep
+                    const isLast = index === STEP_TABS.length - 1
+                    
+                    return (
+                        <div key={step.id} className="flex items-center flex-1">
+                            <div className="flex flex-col items-center flex-1">
+                                {/* Step Circle */}
+                                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all mb-2 ${
+                                    isActive
+                                        ? 'bg-white border-white'
+                                        : isCompleted
+                                        ? 'bg-white border-white'
+                                        : 'bg-blue-500 border-white'
+                                }`}>
+                                    {isCompleted ? (
+                                        <CheckCircle className="w-6 h-6 text-blue-600" />
+                                    ) : (
+                                        <span className={`text-sm font-bold ${
+                                            isActive ? 'text-blue-600' : 'text-white'
+                                        }`}>
+                                            {step.id}
+                                        </span>
+                                    )}
+                                </div>
+                                {/* Step Label */}
+                                <span className={`text-xs font-semibold ${
+                                    isActive || isCompleted ? 'text-white' : 'text-blue-200'
+                                }`}>
+                                    {step.label}
+                                </span>
+                            </div>
+                            {/* Connecting Line */}
+                            {!isLast && (
+                                <div className={`flex-1 h-0.5 mx-2 ${
+                                    isCompleted || isActive ? 'bg-white' : 'bg-blue-400'
+                                }`} />
+                            )}
+                        </div>
+                    )
+                })}
+            </div>
+            
+            {/* Timer in top right corner */}
+            {timeRemaining !== null && (
+                <div className="absolute top-4 right-8 flex items-center gap-2 bg-blue-500 border border-blue-400 px-4 py-2 rounded-full">
+                    <Clock className="w-4 h-4 text-white" />
+                    <span className="text-sm font-semibold text-white tabular-nums">
+                        {formatTimeRemaining(timeRemaining)}
+                    </span>
+                </div>
+            )}
         </div>
     )
 }
@@ -87,42 +124,129 @@ function OrderSummaryPanel({
     purchaseDetails: PurchaseDetails
     selectedCard: GiftCard | null
 }) {
-    const { formatAmount } = useCurrencyStore.getState()
-    const subtotal = formatAmount(purchaseDetails.amount, purchaseDetails.currency as 'USD' | 'INR')
-    const giftCardValue = selectedCard ? formatAmount(selectedCard.amountUSD, 'USD') : null
+    const subtotal = purchaseDetails.amount
+    const shipping = 6.00
+    const salesTax = 8.05
+    const total = subtotal + shipping + salesTax
 
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 px-5 py-4">
-                <p className="text-sm font-semibold text-slate-500 tracking-[0.2em] uppercase">
-                    Order Summary
-                </p>
-            </div>
-            <div className="px-5 py-4 space-y-4 text-sm">
-                <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Merchant</span>
-                    <span className="font-semibold text-slate-900">{purchaseDetails.store || '—'}</span>
+        <div>
+            <h3 className="text-xl font-bold text-gray-800 mb-6">Order Summary</h3>
+            
+            <div className="space-y-3">
+                <div className="flex justify-between">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">ORDER SUBTOTAL</span>
+                    <span className="font-semibold text-gray-800">${subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Currency</span>
-                    <span className="font-semibold text-slate-900">{purchaseDetails.currency}</span>
+                
+                <div className="flex justify-between">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">SHIPPING</span>
+                    <span className="font-semibold text-gray-800">${shipping.toFixed(2)}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Subtotal</span>
-                    <span className="font-semibold text-slate-900">{subtotal}</span>
+                
+                <div className="flex justify-between pb-3 border-b border-gray-300">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">SALES TAX</span>
+                    <span className="font-semibold text-gray-800">${salesTax.toFixed(2)}</span>
                 </div>
-                {giftCardValue && (
-                    <div className="flex items-center justify-between">
-                        <span className="text-slate-500">Gift Card</span>
-                        <span className="font-semibold text-emerald-600">{giftCardValue}</span>
+                
+                {selectedCard && (
+                    <div className="flex justify-between pb-3">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Gift Card</span>
+                        <span className="font-semibold text-emerald-600">${selectedCard.amountUSD.toFixed(2)}</span>
                     </div>
                 )}
-                <div className="border-t border-dashed border-slate-200 pt-4">
-                    <div className="flex items-center justify-between text-base font-semibold">
-                        <span>Total</span>
-                        <span>{subtotal}</span>
-                    </div>
+                
+                <div className="flex justify-between pt-2 text-lg">
+                    <span className="font-bold text-gray-900">Payment Due</span>
+                    <span className="font-bold text-blue-600">${total.toFixed(2)}</span>
                 </div>
+            </div>
+            <div className="mt-8 pt-6 border-t border-gray-300">
+                <a href="#" className="text-blue-600 text-sm font-semibold hover:underline">
+                    Return to cart
+                </a>
+            </div>
+        </div>
+    )
+}
+
+function ExtraAmountPanel({
+    purchaseDetails,
+    selectedCard
+}: {
+    purchaseDetails: PurchaseDetails
+    selectedCard: GiftCard | null
+}) {
+    const { formatAmount, exchangeRates, fetchExchangeRates } = useCurrencyStore()
+    const [conversionRate, setConversionRate] = useState<{ rate: number } | null>(null)
+
+    useEffect(() => {
+        // Fetch exchange rates for CELO conversion
+        fetchExchangeRates()
+        
+        // Fetch conversion rate for purchase currency to USD
+        const fetchConversion = async () => {
+            if (purchaseDetails.currency === 'USD') {
+                setConversionRate({ rate: 1 })
+                return
+            }
+            try {
+                const response = await fetch(`/api/conversion?from=${purchaseDetails.currency}&to=USD`)
+                if (response.ok) {
+                    const data = await response.json()
+                    setConversionRate(data)
+                }
+            } catch (error) {
+                console.error('Error fetching conversion:', error)
+            }
+        }
+        
+        fetchConversion()
+    }, [purchaseDetails, fetchExchangeRates])
+    
+    // Calculate purchase amount in USD
+    const purchaseAmountUSD = conversionRate 
+        ? purchaseDetails.amount * conversionRate.rate 
+        : (purchaseDetails.currency === 'USD' ? purchaseDetails.amount : 0)
+    
+    // Calculate extra payment when a card is selected
+    const extraPaymentUSD = selectedCard ? selectedCard.amountUSD - purchaseAmountUSD : 0
+    const extraPaymentCUSD = extraPaymentUSD // cUSD is pegged to USD
+    
+    // Convert extra payment to CELO
+    const extraPaymentCELO = exchangeRates && exchangeRates.celo?.usd > 0 
+        ? extraPaymentUSD / exchangeRates.celo.usd 
+        : 0
+
+    if (!selectedCard || extraPaymentUSD <= 0) {
+        return null
+    }
+
+    return (
+        <div>
+            <h3 className="text-xl font-bold text-gray-800 mb-6">Extra Amount You're Paying</h3>
+            
+            <div className="space-y-3">
+                <p className="text-sm text-gray-600 mb-4">
+                    This extra balance will remain on your gift card for future purchases.
+                </p>
+                
+                <div className="flex justify-between">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">CUSD</span>
+                    <span className="font-semibold text-gray-800">{formatAmount(extraPaymentCUSD, 'USD')} cUSD</span>
+                </div>
+                
+                <div className="flex justify-between">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">USD</span>
+                    <span className="font-semibold text-gray-800">{formatAmount(extraPaymentUSD, 'USD')}</span>
+                </div>
+                
+                {extraPaymentCELO > 0 && (
+                    <div className="flex justify-between pb-3 border-b border-gray-300">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">CELO</span>
+                        <span className="font-semibold text-gray-800">{extraPaymentCELO.toFixed(4)} CELO</span>
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -135,33 +259,6 @@ function OrderSummaryPanel({
         productName?: string
         }
 
-        // Step Components
-function ProgressIndicator({ currentStep }: { currentStep: number }) {
-    const steps = [
-        { step: 1, label: 'Confirm', icon: CheckCircle },
-        { step: 2, label: 'Gift Card', icon: Gift },
-        { step: 3, label: 'Wallet', icon: Wallet },
-        { step: 4, label: 'Payment', icon: CreditCard },
-    ]
-
-    const progress = ((currentStep - 1) / (steps.length - 1)) * 100
-    
-    return (
-        <div className="space-y-3">
-            <div className="flex items-center justify-between text-[0.72rem] font-semibold uppercase tracking-[0.35em] text-slate-400">
-                <span>Step {currentStep} of {steps.length}</span>
-                <span className="tracking-[0.2em] text-slate-500">{steps[currentStep - 1]?.label}</span>
-            </div>
-            <div className="h-1.5 rounded-full bg-slate-200 overflow-hidden">
-                <div
-                    className="h-full rounded-full bg-blue-600 transition-all duration-500 shadow-[0_0_12px_rgba(59,130,246,0.35)]"
-                    style={{ width: `${progress}%` }}
-                />
-            </div>
-        </div>
-    )
-}
-
         function Step1ConfirmPurchase({ 
         purchaseDetails, 
         onContinue,
@@ -171,20 +268,14 @@ function ProgressIndicator({ currentStep }: { currentStep: number }) {
         onContinue: () => void
         onUpdateDetails: (details: PurchaseDetails) => void
         }) {
-        const [productName, setProductName] = useState(purchaseDetails.productName || '')
+        const [productName] = useState(purchaseDetails.productName || 'Demo Product')
         const [conversionRate, setConversionRate] = useState<{ rate: number; from: string; to: string } | null>(null)
-        const [isLoadingConversion, setIsLoadingConversion] = useState(false)
-        const [storeSupported, setStoreSupported] = useState<boolean | null>(null)
-        const [isCheckingStore, setIsCheckingStore] = useState(true)
-        const [giftCardConfirmed, setGiftCardConfirmed] = useState(false)
-        const { selectedDisplayCurrency } = useCurrencyStore()
 
         useEffect(() => {
             // Fetch conversion rate
             const fetchConversion = async () => {
                 if (purchaseDetails.currency === 'USD') return
                 
-                setIsLoadingConversion(true)
                 try {
                     const response = await fetch(`/api/conversion?from=${purchaseDetails.currency}&to=USD`)
                     if (response.ok) {
@@ -193,59 +284,10 @@ function ProgressIndicator({ currentStep }: { currentStep: number }) {
                     }
                 } catch (error) {
                     console.error('Error fetching conversion:', error)
-                } finally {
-                    setIsLoadingConversion(false)
-                }
-            }
-
-            // Check if store supports gift cards
-            const checkStoreSupport = async () => {
-                setIsCheckingStore(true)
-                try {
-                    const response = await fetch(
-                        `/api/gift-cards/options?store=${encodeURIComponent(purchaseDetails.store)}&currency=${encodeURIComponent(purchaseDetails.currency)}&amount=${purchaseDetails.amount}`
-                    )
-                    
-                    if (response.ok) {
-                        const data = await response.json()
-                        // Store is supported if response is OK (even if giftCards array is empty)
-                        // Empty array means store is supported but no cards match the amount
-                        // Also check for database connection warnings or fallback mode
-                        if (data._warning || data._fallback) {
-                            if (data._message) {
-                                console.warn("Store support check:", data._message)
-                            }
-                            // If DB connection issue or fallback mode, assume store is supported (don't block user)
-                            setStoreSupported(true)
-                        } else {
-                            setStoreSupported(true)
-                        }
-                    } else if (response.status === 404) {
-                        // 404 means store doesn't exist in our database
-                        const errorData = await response.json().catch(() => ({}))
-                        console.log("Store not found in database:", {
-                            store: purchaseDetails.store,
-                            currency: purchaseDetails.currency,
-                            availableStores: errorData.details?.availableStores
-                        })
-                        setStoreSupported(false)
-                    } else {
-                        // Other errors - log but don't block (might be temporary DB issue)
-                        console.warn("Store support check failed:", response.status, response.statusText)
-                        // Assume supported to not block user (they can still proceed with checkbox)
-                        setStoreSupported(true)
-                    }
-                } catch (error) {
-                    console.warn("Error checking store support:", error)
-                    // On error, assume supported (don't block user)
-                    setStoreSupported(true)
-                } finally {
-                    setIsCheckingStore(false)
                 }
             }
 
             fetchConversion()
-            checkStoreSupport()
         }, [purchaseDetails])
 
         // Calculate USD equivalent for display
@@ -254,145 +296,36 @@ function ProgressIndicator({ currentStep }: { currentStep: number }) {
             : (purchaseDetails.currency === 'USD' ? purchaseDetails.amount : null)
         
         // Format the original amount in its original currency
-        // Always use the amount from purchaseDetails (which comes from URL params)
         const { formatAmount } = useCurrencyStore()
-        const originalAmount = purchaseDetails.amount // Use original amount directly
+        const originalAmount = purchaseDetails.amount
         const originalAmountFormatted = formatAmount(
             originalAmount, 
             purchaseDetails.currency as 'USD' | 'INR'
         )
         
-        // Format USD equivalent if available
-        const usdEquivalentFormatted = usdAmount ? formatAmount(usdAmount, 'USD') : null
-        
 
         return (
-            <div className="space-y-5 animate-in fade-in duration-500">
-            <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">Confirm Purchase Details</h2>
-                <p className="text-sm text-gray-600">Review your order before proceeding</p>
-            </div>
             <div className="space-y-4">
-                {/* Store */}
-                <div className="p-4 bg-white rounded-xl border border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
-                    STORE
-                </label>
-                <div className="flex items-center gap-2">
-                    <p className="text-lg font-bold text-gray-900">{purchaseDetails.store}</p>
-                    {isCheckingStore ? (
-                    <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-                    ) : storeSupported !== false ? (
-                    <span className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
-                        ✓ Verified
-                    </span>
-                    ) : null}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">
+                        STORE
+                    </label>
+                    <p className="text-base font-semibold text-gray-900">{purchaseDetails.store || 'Demo Store'}</p>
                 </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">
+                        PRODUCT
+                    </label>
+                    <p className="text-base font-semibold text-gray-900">{productName || purchaseDetails.productName || 'Demo Product'}</p>
                 </div>
-
-                {/* Product */}
-                <div className="p-4 bg-white rounded-xl border border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
-                    PRODUCT
-                </label>
-                <input
-                    type="text"
-                    value={productName}
-                    onChange={(e) => {
-                    setProductName(e.target.value)
-                    onUpdateDetails({ ...purchaseDetails, productName: e.target.value })
-                    }}
-                    placeholder="Enter product name (optional)..."
-                    className="w-full text-lg font-bold text-gray-900 bg-transparent border-none outline-none placeholder:text-gray-400"
-                />
-                </div>
-
-                {/* Amount */}
-                <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
-                <label className="text-xs font-semibold text-blue-700 uppercase tracking-wider block mb-2">
-                    AMOUNT
-                </label>
-                <div className="flex items-baseline gap-2">
-                    <p className="text-3xl font-bold text-blue-700">
-                    {originalAmountFormatted}
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-3">
+                    <label className="text-xs font-bold text-blue-700 uppercase tracking-wider block mb-1">
+                        AMOUNT
+                    </label>
+                    <p className="text-2xl font-bold text-blue-700">
+                        {originalAmountFormatted}
                     </p>
-                    {usdEquivalentFormatted && (
-                    <p className="text-sm text-blue-600">{usdEquivalentFormatted}</p>
-                    )}
                 </div>
-                <p className="text-xs text-blue-600 mt-2">
-                    Any extra balance on the gift card can be used for future purchases.
-                </p>
-                </div>
-            </div>
-            
-            {/* Gift Card Support Confirmation Checkbox */}
-            <div className="flex items-start gap-3 p-4 bg-white rounded-xl border border-gray-200">
-                <input
-                    type="checkbox"
-                    id="giftCardConfirm"
-                    checked={giftCardConfirmed}
-                    onChange={(e) => setGiftCardConfirmed(e.target.checked)}
-                    className="mt-1 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <label htmlFor="giftCardConfirm" className="text-sm text-gray-700 cursor-pointer">
-                    I confirm that this store supports gift card payments.
-                </label>
-            </div>
-
-            {/* Warning if store not supported - only show if it's truly not a known store */}
-            {storeSupported === false && (() => {
-                // List of known supported stores - don't show error for these
-                const knownStores = ['Myntra', 'Flipkart', 'Amazon', 'Make My Trip', 'Ajio', 'Tata Cliq'];
-                const isKnownStore = knownStores.some(knownStore => 
-                    purchaseDetails.store.toLowerCase() === knownStore.toLowerCase() ||
-                    purchaseDetails.store.toLowerCase().includes(knownStore.toLowerCase())
-                );
-                
-                // Don't show error for known stores (they might just need database seeding)
-                if (isKnownStore) {
-                    return (
-                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                            <div className="flex items-start gap-2">
-                                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="text-sm font-medium text-amber-800 mb-1">
-                                        Database Not Seeded
-                                    </p>
-                                    <p className="text-xs text-amber-700">
-                                        {purchaseDetails.store} is supported, but the database needs to be seeded with gift cards. Please contact support or seed the database.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                }
-                
-                // Show error for truly unsupported stores
-                return (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <div className="flex items-start gap-2">
-                            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                            <div>
-                                <p className="text-sm font-medium text-red-800 mb-1">
-                                    Store Not Supported
-                                </p>
-                                <p className="text-xs text-red-700">
-                                    Gift cards are not currently available for {purchaseDetails.store}. Please try a different store.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                );
-            })()}
-            
-            <button
-                onClick={onContinue}
-                disabled={storeSupported === false || !giftCardConfirmed}
-                className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {storeSupported === false ? 'Store Not Supported' : 'Continue to Gift Card Selection'}
-            </button>
             </div>
         )
         }
@@ -493,44 +426,6 @@ function ProgressIndicator({ currentStep }: { currentStep: number }) {
 
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
-            <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Gift Card</h2>
-                <p className="text-sm text-gray-600">Choose a card that covers your purchase</p>
-            </div>
-
-            {/* Extra Payment Display */}
-            {selectedCard && extraPaymentUSD > 0 && (
-                <div className="p-5 bg-white border-2 border-amber-200 rounded-xl shadow-sm">
-                    <div className="flex items-start gap-3 mb-3">
-                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                            <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-sm font-bold text-amber-900 mb-2">Extra Amount You're Paying</p>
-                            <p className="text-xs text-amber-700 mb-3">This extra balance will remain on your gift card for future purchases.</p>
-                            <div className="space-y-2 text-sm bg-amber-50 rounded-lg p-3">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-amber-800 font-medium">cUSD:</span>
-                                    <span className="font-bold text-amber-900">{formatAmount(extraPaymentCUSD, 'USD')} cUSD</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-amber-800 font-medium">USD:</span>
-                                    <span className="font-bold text-amber-900">{formatAmount(extraPaymentUSD, 'USD')}</span>
-                        </div>
-                        {extraPaymentCELO > 0 && (
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-amber-800 font-medium">CELO:</span>
-                                        <span className="font-bold text-amber-900">{extraPaymentCELO.toFixed(4)} CELO</span>
-                            </div>
-                        )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {giftCards.map((card) => {
                 const cardAmount = card.amountMinor / 100
@@ -750,11 +645,6 @@ function ProgressIndicator({ currentStep }: { currentStep: number }) {
 
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
-            <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Wallet</h2>
-                <p className="text-sm text-gray-600">Choose your payment method</p>
-            </div>
-
             {signError && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-red-800">{signError}</p>
@@ -1499,11 +1389,6 @@ function ProgressIndicator({ currentStep }: { currentStep: number }) {
 
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
-            <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Confirm Payment</h2>
-                <p className="text-sm text-gray-600">Review and complete your purchase</p>
-            </div>
-
             <div className="space-y-4">
                 <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
                 <div className="space-y-3">
@@ -1772,125 +1657,115 @@ function ProgressIndicator({ currentStep }: { currentStep: number }) {
         const timerTextClass = getTimerColor()
 
         return (
-            <div className="checkout-page-container min-h-screen bg-slate-100 px-0 py-0">
-                <div className="w-full min-h-screen bg-white shadow-none border border-transparent overflow-hidden">
-                    <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-500 text-white px-8 py-5">
-                        <div>
-                            <p className="text-xs uppercase tracking-[0.4em] text-white/70">Secure Checkout</p>
-                            <h1 className="text-3xl font-semibold leading-tight">Checkout</h1>
-                        </div>
-                        {timeRemaining !== null && (
-                            <div className={`inline-flex flex-col items-end px-5 py-3 rounded-2xl border border-white/30 bg-white/10 backdrop-blur-md`}>
-                                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
-                                    <Clock className="w-4 h-4" />
-                                    Time remaining
-                                </div>
-                                <div className="text-3xl font-semibold tabular-nums">
-                                    {formatTimeRemaining(timeRemaining)}
-                                </div>
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+                {/* Card Container */}
+                <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden">
+                    {/* Progress Indicator with Blue Header */}
+                    <ProgressIndicator 
+                        currentStep={checkoutState.step}
+                        timeRemaining={timeRemaining}
+                        formatTimeRemaining={formatTimeRemaining}
+                    />
+
+                    {/* Main Content */}
+                    <div className="px-6 sm:px-10 py-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* Left Column - Order Summary or Extra Amount Panel */}
+                            <div className="lg:col-span-1 border-r border-gray-200 pr-0 lg:pr-8">
+                                {checkoutState.step === 2 ? (
+                                    <ExtraAmountPanel
+                                        purchaseDetails={purchaseDetails}
+                                        selectedCard={checkoutState.selectedGiftCard}
+                                    />
+                                ) : (
+                                    <OrderSummaryPanel
+                                        purchaseDetails={purchaseDetails}
+                                        selectedCard={checkoutState.selectedGiftCard}
+                                    />
+                                )}
                             </div>
-                        )}
-                    </div>
 
-                    <div className="bg-slate-50 py-10 min-h-screen">
-                        <div className="max-w-6xl mx-auto px-6 md:px-10 space-y-8">
-                            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-                            <StepTabs currentStep={checkoutState.step} />
-                        </div>
+                            {/* Right Column - Form */}
+                            <div className="lg:col-span-2">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                {currentStepDetails.title}
+                            </h2>
+                            <p className="text-sm text-gray-600 mb-6">
+                                {currentStepDetails.description}
+                            </p>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-[2.2fr,1fr] gap-8">
-                            <div className="rounded-3xl bg-white border border-slate-200 shadow-lg p-6 md:p-8 space-y-6">
-                                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            {sessionExpired && (
+                                <div className="rounded-lg border border-red-200 bg-red-50 p-4 flex items-start gap-3 mb-6">
+                                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                                     <div>
-                                        <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
-                                            {currentStepDetails.title}
-                                        </h2>
-                                        <p className="text-sm text-slate-500 mt-1">
-                                            {currentStepDetails.description}
-                                        </p>
-                                        <p className="mt-2 text-xs font-semibold tracking-[0.4em] text-slate-400 uppercase">
-                                            Session ID: {sessionId.slice(0, 8)}...
+                                        <p className="text-sm font-semibold text-red-700">Session expired</p>
+                                        <p className="text-sm text-red-600">
+                                            This checkout session has ended. Please start a new session from your dashboard.
                                         </p>
                                     </div>
-                                    {!sessionExpired && (
-                                        <div className="text-right">
-                                            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Step</p>
-                                            <p className="text-2xl font-bold text-slate-800">
-                                                {checkoutState.step} / 4
-                                            </p>
-                                        </div>
-                                    )}
                                 </div>
+                            )}
 
-                                {sessionExpired && (
-                                    <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-start gap-3">
-                                        <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-semibold text-rose-700">Session expired</p>
-                                            <p className="text-sm text-rose-600">
-                                                This checkout session has ended. Please start a new session from your dashboard.
-                                            </p>
-                                        </div>
+                            {/* Form Content */}
+                            {checkoutState.step === 1 && (
+                                <Step1ConfirmPurchase
+                                    purchaseDetails={purchaseDetails}
+                                    onContinue={handleStep1Continue}
+                                    onUpdateDetails={setPurchaseDetails}
+                                />
+                            )}
+                            
+                            {checkoutState.step === 2 && (
+                                <Step2SelectGiftCard
+                                    purchaseDetails={purchaseDetails}
+                                    onSelect={handleStep2Select}
+                                    selectedCard={checkoutState.selectedGiftCard}
+                                    onContinue={handleStep2Continue}
+                                />
+                            )}
+                            
+                            {checkoutState.step === 3 && (
+                                <Step3SelectWallet
+                                    onSelect={handleStep3Select}
+                                    selectedType={checkoutState.selectedWalletType}
+                                    onContinue={handleStep3Continue}
+                                    sessionId={sessionId}
+                                />
+                            )}
+                            
+                            {checkoutState.step === 4 && (
+                                <Step4ExecutePayment
+                                    purchaseDetails={purchaseDetails}
+                                    selectedCard={checkoutState.selectedGiftCard}
+                                    selectedWalletType={checkoutState.selectedWalletType}
+                                    onPay={handleStep4Pay}
+                                    sessionId={sessionId}
+                                />
+                            )}
+
+                            {/* Action Buttons */}
+                            {checkoutState.step === 1 && (
+                                <>
+                                    <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
+                                        <button
+                                            onClick={handleStep1Continue}
+                                            className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
+                                        >
+                                            Next
+                                        </button>
                                     </div>
-                                )}
 
-                                {!sessionExpired && (
-                                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex items-start gap-3">
-                                        <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-semibold text-amber-900">Stay ready to approve</p>
-                                            <p className="text-sm text-amber-800">
-                                                Ensure your wallet is unlocked and has enough balance for gas fees. Approvals happen
-                                                back-to-back, so keep the tab focused until the payment is complete.
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
+                                    {/* Security Message */}
+                                    <p className="text-xs text-gray-500 text-center mt-4 flex items-center justify-center gap-1">
+                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                        </svg>
+                                        This is a secure transaction
+                                    </p>
+                                </>
+                            )}
 
-                                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-6 shadow-inner space-y-6">
-                                    {checkoutState.step === 1 && (
-                                        <Step1ConfirmPurchase
-                                            purchaseDetails={purchaseDetails}
-                                            onContinue={handleStep1Continue}
-                                            onUpdateDetails={setPurchaseDetails}
-                                        />
-                                    )}
-                                    
-                                    {checkoutState.step === 2 && (
-                                        <Step2SelectGiftCard
-                                            purchaseDetails={purchaseDetails}
-                                            onSelect={handleStep2Select}
-                                            selectedCard={checkoutState.selectedGiftCard}
-                                            onContinue={handleStep2Continue}
-                                        />
-                                    )}
-                                    
-                                    {checkoutState.step === 3 && (
-                                        <Step3SelectWallet
-                                            onSelect={handleStep3Select}
-                                            selectedType={checkoutState.selectedWalletType}
-                                            onContinue={handleStep3Continue}
-                                            sessionId={sessionId}
-                                        />
-                                    )}
-                                    
-                                    {checkoutState.step === 4 && (
-                                        <Step4ExecutePayment
-                                            purchaseDetails={purchaseDetails}
-                                            selectedCard={checkoutState.selectedGiftCard}
-                                            selectedWalletType={checkoutState.selectedWalletType}
-                                            onPay={handleStep4Pay}
-                                            sessionId={sessionId}
-                                        />
-                                    )}
-                                </div>
                             </div>
-
-                            <OrderSummaryPanel
-                                purchaseDetails={purchaseDetails}
-                                selectedCard={checkoutState.selectedGiftCard}
-                            />
-                        </div>
                         </div>
                     </div>
                 </div>
@@ -1901,7 +1776,6 @@ function ProgressIndicator({ currentStep }: { currentStep: number }) {
         export default function CheckoutSessionPage() {
         return (
             <>
-                <PreLoader />
                 <Suspense fallback={
                 <div className="min-h-screen bg-transparent relative overflow-hidden transition-colors duration-300">
                     <div className="relative z-10 px-5 py-16">
@@ -1941,4 +1815,6 @@ function ProgressIndicator({ currentStep }: { currentStep: number }) {
             </>
         )
         }
+
+
 

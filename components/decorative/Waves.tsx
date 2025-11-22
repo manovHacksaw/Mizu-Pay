@@ -3,7 +3,7 @@ export function Waves() {
     <div className="absolute bottom-0 left-0 w-full h-[100px] wave-container pointer-events-none">
       <svg className="w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none">
         {/* First Wave - Lower with reduced height */}
-        <path d="M0,5 Q300,25 600,15 T1200,10 L1200,120 L0,120 Z" className="wave-fill-1" opacity="0.05">
+        <path d="M0,5 Q300,25 600,15 T1200,10 L1200,120 L0,120 Z" className="wave-fill-1 wave-opacity-1">
           <animate
             attributeName="d"
             dur="20s"
@@ -18,7 +18,7 @@ export function Waves() {
           />
         </path>
         {/* Second Wave - Higher, moves OPPOSITE to first wave */}
-        <path d="M0,80 Q300,45 600,65 T1200,60 L1200,120 L0,120 Z" className="wave-fill-2" opacity="0.1">
+        <path d="M0,80 Q300,45 600,65 T1200,60 L1200,120 L0,120 Z" className="wave-fill-2 wave-opacity-2">
           <animate
             attributeName="d"
             dur="20s"

@@ -47,7 +47,7 @@ export function FeatureClarity() {
   }, [isLandingPage])
 
   const renderFirstCardVisual = (isAnimated: boolean, staggerDelay: number = 0) => (
-    <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 mb-4 h-48 flex flex-col items-center justify-center overflow-hidden transition-shadow duration-500 ease-in-out hover:shadow-[0_0_25px_rgba(14,118,255,0.22)]">
+    <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 rounded-xl p-6 mb-4 h-48 flex flex-col items-center justify-center overflow-hidden transition-shadow duration-500 ease-in-out hover:shadow-[0_0_25px_rgba(14,118,255,0.22)]">
       {/* Decorative circles */}
       <div className="absolute top-4 left-4 w-16 h-16 bg-white/30 rounded-full"></div>
       <div className="absolute bottom-4 right-4 w-20 h-20 bg-white/20 rounded-full"></div>
@@ -79,7 +79,7 @@ export function FeatureClarity() {
   )
 
   const renderSecondCardVisual = (isAnimated: boolean, staggerDelay: number = 0) => (
-    <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 mb-4 h-48 flex flex-col items-center justify-center overflow-hidden transition-shadow duration-500 ease-in-out hover:shadow-[0_0_25px_rgba(14,118,255,0.22)]">
+    <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl p-6 mb-4 h-48 flex flex-col items-center justify-center overflow-hidden transition-shadow duration-500 ease-in-out hover:shadow-[0_0_25px_rgba(14,118,255,0.22)]">
       {/* Decorative circles */}
       <div className="absolute top-4 left-4 w-16 h-16 bg-white/30 rounded-full"></div>
       <div className="absolute bottom-4 right-4 w-20 h-20 bg-white/20 rounded-full"></div>
@@ -113,10 +113,10 @@ export function FeatureClarity() {
 
       {/* FX Rate and Speed indicators */}
       <div className="absolute bottom-2 left-4 right-4 flex gap-2">
-        <div className="bg-white/90 rounded px-2 py-1 text-xs font-semibold flex-1">
+        <div className="bg-white/90 dark:bg-gray-800/90 rounded px-2 py-1 text-xs font-semibold flex-1">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 border-l-2 border-b-2 border-blue-600 transform rotate-45"></div>
-            <span>USD 0.01 = INR 0.089</span>
+            <div className="w-3 h-3 border-l-2 border-b-2 border-blue-600 dark:border-blue-400 transform rotate-45"></div>
+            <span className="text-gray-900 dark:text-white">USD 0.01 = INR 0.089</span>
           </div>
         </div>
         <div className="bg-blue-600 text-white rounded px-2 py-1 text-xs font-semibold flex items-center gap-1">
@@ -128,7 +128,7 @@ export function FeatureClarity() {
   )
 
   const renderThirdCardVisual = (isAnimated: boolean, staggerDelay: number = 0) => (
-    <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 mb-4 h-48 flex flex-col items-center justify-center overflow-hidden transition-shadow duration-500 ease-in-out hover:shadow-[0_0_25px_rgba(14,118,255,0.22)]">
+    <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl p-6 mb-4 h-48 flex flex-col items-center justify-center overflow-hidden transition-shadow duration-500 ease-in-out hover:shadow-[0_0_25px_rgba(14,118,255,0.22)]">
       {/* Decorative circles */}
       <div className="absolute top-4 left-4 w-16 h-16 bg-white/30 rounded-full"></div>
       <div className="absolute bottom-4 right-4 w-20 h-20 bg-white/20 rounded-full"></div>
@@ -164,24 +164,24 @@ export function FeatureClarity() {
           transitionDelay: isAnimated ? `${staggerDelay + 0.25}s` : "0s",
         }}
       >
-        <div className="bg-white rounded-lg p-3 shadow-md border border-gray-200 transition-all duration-500 ease-in-out hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-md border border-gray-200 dark:border-gray-700 transition-all duration-500 ease-in-out hover:translate-y-[-2px] hover:shadow-lg">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-semibold text-gray-700">SECURE</span>
+            <span className="text-xs font-semibold text-gray-700 dark:text-white">SECURE</span>
             <span className="text-xs font-semibold text-green-600">✓</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">Blockchain</span>
-            <span className="text-sm font-bold text-gray-900">ReFi</span>
+            <span className="text-xs text-gray-600 dark:text-white">Blockchain</span>
+            <span className="text-sm font-bold text-gray-900 dark:text-white">ReFi</span>
           </div>
         </div>
-        <div className="bg-white rounded-lg p-3 shadow-md border border-gray-200 transition-all duration-500 ease-in-out hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-md border border-gray-200 dark:border-gray-700 transition-all duration-500 ease-in-out hover:translate-y-[-2px] hover:shadow-lg">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-semibold text-gray-700">VERIFIED</span>
+            <span className="text-xs font-semibold text-gray-700 dark:text-white">VERIFIED</span>
             <span className="text-xs font-semibold text-green-600">✓</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">CELO Network</span>
-            <span className="text-sm font-bold text-gray-900">cUSD</span>
+            <span className="text-xs text-gray-600 dark:text-white">CELO Network</span>
+            <span className="text-sm font-bold text-gray-900 dark:text-white">cUSD</span>
           </div>
         </div>
       </div>
@@ -207,13 +207,12 @@ export function FeatureClarity() {
   ]
 
   return (
-    <section ref={sectionRef} className="relative py-12 md:py-16 px-5" style={{ backgroundColor: "var(--background)" }}>
+    <section ref={sectionRef} className="relative py-12 md:py-16 px-5 bg-white dark:bg-black">
       <div className="max-w-6xl mx-auto">
         {/* Tagline */}
         <div className="text-center mb-4">
           <span
-            className="inline-flex items-center gap-2 text-sm md:text-base font-medium"
-            style={{ color: "var(--content-text-secondary)" }}
+            className="inline-flex items-center gap-2 text-sm md:text-base font-medium text-gray-600 dark:text-white"
           >
             <span className="text-yellow-500">⚡</span>
             Built for fast-growing teams
@@ -257,9 +256,8 @@ export function FeatureClarity() {
 
                 {/* Description */}
                 <p
-                  className="text-sm md:text-base leading-relaxed"
+                  className="text-sm md:text-base leading-relaxed text-gray-600 dark:text-white"
                   style={{
-                    color: "var(--content-text-secondary)",
                     opacity: isAnimated ? 1 : 0,
                     transform: isAnimated ? "translateY(0)" : "translateY(16px)",
                     transition: "opacity 0.5s ease-out, transform 0.5s ease-out",

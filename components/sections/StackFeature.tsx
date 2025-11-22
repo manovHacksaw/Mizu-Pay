@@ -29,11 +29,10 @@ export function StackFeature() {
 
   return (
     <section 
-      className="relative w-full overflow-hidden px-6 py-16 md:py-24" 
-      style={{ backgroundColor: "var(--background)" }}
+      className="relative w-full overflow-hidden px-6 py-16 md:py-24 bg-white dark:bg-black" 
     >
       {/* Background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-indigo-50/20 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-indigo-50/20 dark:from-transparent dark:via-transparent dark:to-transparent pointer-events-none" />
       
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-8 lg:gap-16 lg:flex-row lg:justify-between relative z-10">
         {/* Left side: Enhanced Orbit animation */}
@@ -139,8 +138,7 @@ export function StackFeature() {
             </h2>
             
             <p 
-              className="text-base sm:text-lg leading-relaxed"
-              style={{ color: "var(--content-text-secondary)" }}
+              className="text-base sm:text-lg leading-relaxed text-gray-600 dark:text-white"
             >
               With Mizu Pay, enjoy unified crypto payments across your favorite online marketplaces — simple, fast, and secure.
             </p>

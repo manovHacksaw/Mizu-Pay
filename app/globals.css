@@ -43,6 +43,8 @@
   --wave-opacity: 0.8;
   --wave-fill-1: white;
   --wave-fill-2: white;
+  --wave-opacity-1: 0.05;
+  --wave-opacity-2: 0.1;
   
   /* Watermark */
   --watermark-color: rgba(255, 255, 255, 0.09);
@@ -109,6 +111,8 @@
   --wave-opacity: 0.1;
   --wave-fill-1: #9ca3af;
   --wave-fill-2: #d1d5db;
+  --wave-opacity-1: 0.3;
+  --wave-opacity-2: 0.4;
   
   /* Watermark */
   --watermark-color: rgba(107, 114, 128, 0.15);
@@ -276,6 +280,14 @@ body:not(:has(.pre-loader)) {
 
 .wave-fill-2 {
   fill: var(--wave-fill-2);
+}
+
+.wave-opacity-1 {
+  opacity: var(--wave-opacity-1);
+}
+
+.wave-opacity-2 {
+  opacity: var(--wave-opacity-2);
 }
 
 /* Watermark */

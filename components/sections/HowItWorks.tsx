@@ -175,7 +175,7 @@ export function HowItWorks() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   return (
-    <section ref={containerRef} className="relative w-full overflow-hidden bg-white py-32 px-6">
+    <section ref={containerRef} className="relative w-full overflow-hidden bg-white dark:bg-black py-32 px-6">
       <div className="relative max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -184,10 +184,10 @@ export function HowItWorks() {
           transition={{ duration: 0.6 }}
           className="text-center mb-24"
         >
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-6">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white mb-6">
           Start Your Crypto Journey in 8 Simple Steps
           </h2>
-          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-600 dark:text-white max-w-3xl mx-auto">
             Mizu Pay brings everything together in one intelligent platform that understands crypto payments, not just
             transactions. Our system creates payments that are actually secure, blockchain-verified, and designed for
             seamless e-commerce integration.

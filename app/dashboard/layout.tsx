@@ -2,7 +2,6 @@
 
 import { Sidebar } from '@/components/dashboard/Sidebar';
 import { ThemeInit } from '@/components/ThemeInit';
-import { PreLoader } from '@/components/PreLoader';
 import { CurrencySelectionModal } from '@/components/CurrencySelectionModal';
 import { useRouter, usePathname } from 'next/navigation';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
@@ -183,7 +182,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <>
       <ThemeInit />
-      <PreLoader />
       <CurrencySelectionModal
         isOpen={showCurrencyModal}
         onSelect={handleCurrencySelect}
