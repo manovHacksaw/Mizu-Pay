@@ -531,12 +531,13 @@ export function ProductSpotlight() {
           transition={{ duration: 0.6 }}
         >
           <div className="space-y-4">
-            <h2 className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
-            Buy Anything, Pay in Crypto
-            </h2>
-            <p className="text-base text-slate-600 md:text-lg">
-            From fashion to gadgets — shop your favorites instantly with CELO or USDC, powered by Mizu Pay.
-            </p>
+          <h2 className="text-4xl font-bold tracking-tight dark:text-ProductSpotlight-heading md:text-5xl lg:text-6xl">
+          Buy Anything, Pay in Crypto
+          </h2>
+          <p className="text-base dark:text-ProductSpotlight-subtext md:text-lg">
+          From fashion to gadgets — shop your favorites instantly with CELO or USDC, powered by Mizu Pay.
+          </p>
+
           </div>
         </motion.div>
 

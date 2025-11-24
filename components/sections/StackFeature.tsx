@@ -33,7 +33,7 @@ export function StackFeature() {
       style={{ backgroundColor: "var(--background)" }}
     >
       {/* Background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-indigo-50/20 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-indigo-50/20 pointer-events-none dark:opacity-0" />
       
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-8 lg:gap-16 lg:flex-row lg:justify-between relative z-10">
         {/* Left side: Enhanced Orbit animation */}

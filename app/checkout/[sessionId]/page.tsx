@@ -61,18 +61,18 @@ function ProgressIndicator({
         <div className="bg-blue-600 py-4 px-8 relative">
             <div className="flex items-center justify-between max-w-4xl mx-auto">
                 {STEP_TABS.map((step, index) => {
-                    const isActive = currentStep === step.id
-                    const isCompleted = step.id < currentStep
+                const isActive = currentStep === step.id
+                const isCompleted = step.id < currentStep
                     const isLast = index === STEP_TABS.length - 1
                     
-                    return (
+                return (
                         <div key={step.id} className="flex items-center flex-1">
                             <div className="flex flex-col items-center flex-1">
                                 {/* Step Circle */}
                                 <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all mb-2 ${
-                                    isActive
+                            isActive
                                         ? 'bg-white border-white'
-                                        : isCompleted
+                                : isCompleted
                                         ? 'bg-white border-white'
                                         : 'bg-blue-500 border-white'
                                 }`}>
@@ -81,7 +81,7 @@ function ProgressIndicator({
                                     ) : (
                                         <span className={`text-sm font-bold ${
                                             isActive ? 'text-blue-600' : 'text-white'
-                                        }`}>
+                        }`}>
                                             {step.id}
                                         </span>
                                     )}
@@ -99,9 +99,9 @@ function ProgressIndicator({
                                     isCompleted || isActive ? 'bg-white' : 'bg-blue-400'
                                 }`} />
                             )}
-                        </div>
-                    )
-                })}
+                    </div>
+                )
+            })}
             </div>
             
             {/* Timer in top right corner */}
@@ -137,7 +137,7 @@ function OrderSummaryPanel({
                 <div className="flex justify-between">
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">ORDER SUBTOTAL</span>
                     <span className="font-semibold text-gray-800">${subtotal.toFixed(2)}</span>
-                </div>
+            </div>
                 
                 <div className="flex justify-between">
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">SHIPPING</span>
@@ -159,8 +159,8 @@ function OrderSummaryPanel({
                 <div className="flex justify-between pt-2 text-lg">
                     <span className="font-bold text-gray-900">Payment Due</span>
                     <span className="font-bold text-blue-600">${total.toFixed(2)}</span>
+                    </div>
                 </div>
-            </div>
             <div className="mt-8 pt-6 border-t border-gray-300">
                 <a href="#" className="text-blue-600 text-sm font-semibold hover:underline">
                     Return to cart
@@ -221,12 +221,12 @@ function ExtraAmountPanel({
     if (!selectedCard || extraPaymentUSD <= 0) {
         return null
     }
-
+    
     return (
         <div>
             <h3 className="text-xl font-bold text-gray-800 mb-6">Extra Amount You're Paying</h3>
             
-            <div className="space-y-3">
+        <div className="space-y-3">
                 <p className="text-sm text-gray-600 mb-4">
                     This extra balance will remain on your gift card for future purchases.
                 </p>
@@ -234,7 +234,7 @@ function ExtraAmountPanel({
                 <div className="flex justify-between">
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">CUSD</span>
                     <span className="font-semibold text-gray-800">{formatAmount(extraPaymentCUSD, 'USD')} cUSD</span>
-                </div>
+            </div>
                 
                 <div className="flex justify-between">
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">USD</span>
@@ -257,7 +257,7 @@ function ExtraAmountPanel({
         amount: number
         currency: string
         productName?: string
-        }
+}
 
         function Step1ConfirmPurchase({ 
         purchaseDetails, 
@@ -308,22 +308,22 @@ function ExtraAmountPanel({
             <div className="space-y-4">
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                        STORE
-                    </label>
+                    STORE
+                </label>
                     <p className="text-base font-semibold text-gray-900">{purchaseDetails.store || 'Demo Store'}</p>
                 </div>
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                        PRODUCT
-                    </label>
+                    PRODUCT
+                </label>
                     <p className="text-base font-semibold text-gray-900">{productName || purchaseDetails.productName || 'Demo Product'}</p>
                 </div>
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-3">
                     <label className="text-xs font-bold text-blue-700 uppercase tracking-wider block mb-1">
-                        AMOUNT
-                    </label>
+                    AMOUNT
+                </label>
                     <p className="text-2xl font-bold text-blue-700">
-                        {originalAmountFormatted}
+                    {originalAmountFormatted}
                     </p>
                 </div>
             </div>
@@ -1682,66 +1682,66 @@ function ExtraAmountPanel({
                                         purchaseDetails={purchaseDetails}
                                         selectedCard={checkoutState.selectedGiftCard}
                                     />
-                                )}
-                            </div>
+                        )}
+                    </div>
 
                             {/* Right Column - Form */}
                             <div className="lg:col-span-2">
                             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                                {currentStepDetails.title}
-                            </h2>
+                                            {currentStepDetails.title}
+                                        </h2>
                             <p className="text-sm text-gray-600 mb-6">
-                                {currentStepDetails.description}
-                            </p>
+                                            {currentStepDetails.description}
+                                        </p>
 
-                            {sessionExpired && (
+                                {sessionExpired && (
                                 <div className="rounded-lg border border-red-200 bg-red-50 p-4 flex items-start gap-3 mb-6">
                                     <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                                    <div>
+                                        <div>
                                         <p className="text-sm font-semibold text-red-700">Session expired</p>
                                         <p className="text-sm text-red-600">
-                                            This checkout session has ended. Please start a new session from your dashboard.
-                                        </p>
+                                                This checkout session has ended. Please start a new session from your dashboard.
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
                             {/* Form Content */}
-                            {checkoutState.step === 1 && (
-                                <Step1ConfirmPurchase
-                                    purchaseDetails={purchaseDetails}
-                                    onContinue={handleStep1Continue}
-                                    onUpdateDetails={setPurchaseDetails}
-                                />
-                            )}
-                            
-                            {checkoutState.step === 2 && (
-                                <Step2SelectGiftCard
-                                    purchaseDetails={purchaseDetails}
-                                    onSelect={handleStep2Select}
-                                    selectedCard={checkoutState.selectedGiftCard}
-                                    onContinue={handleStep2Continue}
-                                />
-                            )}
-                            
-                            {checkoutState.step === 3 && (
-                                <Step3SelectWallet
-                                    onSelect={handleStep3Select}
-                                    selectedType={checkoutState.selectedWalletType}
-                                    onContinue={handleStep3Continue}
-                                    sessionId={sessionId}
-                                />
-                            )}
-                            
-                            {checkoutState.step === 4 && (
-                                <Step4ExecutePayment
-                                    purchaseDetails={purchaseDetails}
-                                    selectedCard={checkoutState.selectedGiftCard}
-                                    selectedWalletType={checkoutState.selectedWalletType}
-                                    onPay={handleStep4Pay}
-                                    sessionId={sessionId}
-                                />
-                            )}
+                                    {checkoutState.step === 1 && (
+                                        <Step1ConfirmPurchase
+                                            purchaseDetails={purchaseDetails}
+                                            onContinue={handleStep1Continue}
+                                            onUpdateDetails={setPurchaseDetails}
+                                        />
+                                    )}
+                                    
+                                    {checkoutState.step === 2 && (
+                                        <Step2SelectGiftCard
+                                            purchaseDetails={purchaseDetails}
+                                            onSelect={handleStep2Select}
+                                            selectedCard={checkoutState.selectedGiftCard}
+                                            onContinue={handleStep2Continue}
+                                        />
+                                    )}
+                                    
+                                    {checkoutState.step === 3 && (
+                                        <Step3SelectWallet
+                                            onSelect={handleStep3Select}
+                                            selectedType={checkoutState.selectedWalletType}
+                                            onContinue={handleStep3Continue}
+                                            sessionId={sessionId}
+                                        />
+                                    )}
+                                    
+                                    {checkoutState.step === 4 && (
+                                        <Step4ExecutePayment
+                                            purchaseDetails={purchaseDetails}
+                                            selectedCard={checkoutState.selectedGiftCard}
+                                            selectedWalletType={checkoutState.selectedWalletType}
+                                            onPay={handleStep4Pay}
+                                            sessionId={sessionId}
+                                        />
+                                    )}
 
                             {/* Action Buttons */}
                             {checkoutState.step === 1 && (
@@ -1753,7 +1753,7 @@ function ExtraAmountPanel({
                                         >
                                             Next
                                         </button>
-                                    </div>
+                            </div>
 
                                     {/* Security Message */}
                                     <p className="text-xs text-gray-500 text-center mt-4 flex items-center justify-center gap-1">
@@ -1765,7 +1765,7 @@ function ExtraAmountPanel({
                                 </>
                             )}
 
-                            </div>
+                        </div>
                         </div>
                     </div>
                 </div>
